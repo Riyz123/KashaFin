@@ -6,6 +6,7 @@ use App\Models\AiProvider;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Expense;
+use App\Models\Income;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -104,6 +105,68 @@ class ChatToolCallingTest extends TestCase
         $this->assertDatabaseHas('budgets', [
             'user_id' => $user->id,
             'amount' => 300,
+        ]);
+    }
+
+    public function test_ai_tool_call_creates_a_fixed_income_with_next_occurrence(): void
+    {
+        $user = User::factory()->create();
+        $this->fakeProvider();
+
+        Http::fake([
+            'fake-ai.test/*' => Http::response(
+                $this->openAiToolCallResponse('add_income', [
+                    'amount' => 850,
+                    'type' => 'fijo',
+                    'frequency' => 'mensual',
+                    'description' => 'Beca universitaria',
+                ]),
+                200
+            ),
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('chat.send'), [
+            'message' => 'me depositaron mi beca de 850 soles, es fija mensual',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonFragment(['reply' => '✅ Ingreso registrado: S/ 850.00 (fijo (mensual)), con fecha de hoy.']);
+
+        $this->assertDatabaseHas('incomes', [
+            'user_id' => $user->id,
+            'amount' => 850,
+            'type' => 'fijo',
+            'frequency' => 'mensual',
+        ]);
+
+        $income = Income::where('user_id', $user->id)->first();
+        $this->assertNotNull($income->next_occurrence_date);
+    }
+
+    public function test_ai_tool_call_creates_a_variable_income(): void
+    {
+        $user = User::factory()->create();
+        $this->fakeProvider();
+
+        Http::fake([
+            'fake-ai.test/*' => Http::response(
+                $this->openAiToolCallResponse('add_income', ['amount' => 60, 'type' => 'variable']),
+                200
+            ),
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('chat.send'), [
+            'message' => 'vendí unos apuntes por 60 soles',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonFragment(['reply' => '✅ Ingreso registrado: S/ 60.00 (variable), con fecha de hoy.']);
+
+        $this->assertDatabaseHas('incomes', [
+            'user_id' => $user->id,
+            'amount' => 60,
+            'type' => 'variable',
+            'frequency' => null,
         ]);
     }
 

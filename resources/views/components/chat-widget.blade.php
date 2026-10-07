@@ -20,7 +20,7 @@
         <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
             <div>
                 <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Asistente KashaFin</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Pregúntame, o di &quot;agrega un gasto&quot; / &quot;crea un presupuesto&quot;</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Pregúntame, o di &quot;agrega un gasto&quot;, &quot;un ingreso&quot; o &quot;un presupuesto&quot;</p>
             </div>
             <button @click="speechEnabled = !speechEnabled" title="Leer respuestas en voz alta" class="text-gray-400 hover:text-brand-600">
                 <x-icon name="speaker" class="w-5 h-5" x-show="speechEnabled" />
@@ -30,7 +30,7 @@
 
         <div x-ref="scrollArea" class="flex-1 space-y-3 overflow-y-auto px-4 py-3">
             <template x-if="messages.length === 0">
-                <p class="text-sm text-gray-500 dark:text-gray-400">¡Hola! Puedo darte recomendaciones, análisis de tus finanzas, o ayudarte a registrar un gasto o crear un presupuesto. Prueba escribiendo "agrega un gasto" o "crea un presupuesto".</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">¡Hola! Puedo darte recomendaciones, análisis de tus finanzas, o ayudarte a registrar un gasto, un ingreso o un presupuesto. Prueba escribiendo "agrega un gasto", "agrega un ingreso" o "crea un presupuesto".</p>
             </template>
             <template x-for="(msg, index) in messages" :key="index">
                 <div :class="msg.role === 'user' ? 'text-right' : 'text-left'">

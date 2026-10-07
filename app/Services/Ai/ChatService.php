@@ -24,6 +24,7 @@ class ChatService
         private ReportService $reports,
         private ExpenseChatIntent $expenseIntent,
         private BudgetChatIntent $budgetIntent,
+        private IncomeChatIntent $incomeIntent,
     ) {}
 
     /**
@@ -74,6 +75,7 @@ class ChatService
         return match ($aiReply->toolName) {
             'add_expense' => $this->expenseIntent->createFromToolCall($user, $aiReply->toolArguments),
             'add_budget' => $this->budgetIntent->createFromToolCall($user, $aiReply->toolArguments),
+            'add_income' => $this->incomeIntent->createFromToolCall($user, $aiReply->toolArguments),
             default => 'No reconocí esa acción, ¿puedes reformularla?',
         };
     }
@@ -139,6 +141,34 @@ class ChatService
                     'required' => ['category', 'amount'],
                 ],
             ],
+            [
+                'name' => 'add_income',
+                'description' => 'Registra un ingreso nuevo cuando el estudiante diga que recibió dinero o pida anotar/agregar un ingreso, en cualquier forma en que lo exprese.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'amount' => [
+                            'type' => 'number',
+                            'description' => 'Monto exacto que el estudiante mencionó. Nunca inventes un número si no lo dio.',
+                        ],
+                        'type' => [
+                            'type' => 'string',
+                            'enum' => ['fijo', 'variable'],
+                            'description' => 'Si el ingreso se repite periódicamente (fijo, como una beca o sueldo) o es ocasional (variable). Pregunta si no está claro.',
+                        ],
+                        'frequency' => [
+                            'type' => 'string',
+                            'enum' => ['semanal', 'quincenal', 'mensual'],
+                            'description' => 'Obligatorio solo si type es "fijo": cada cuánto se repite.',
+                        ],
+                        'description' => [
+                            'type' => 'string',
+                            'description' => 'Descripción breve opcional del ingreso (ej. "Beca universitaria").',
+                        ],
+                    ],
+                    'required' => ['amount', 'type'],
+                ],
+            ],
         ];
     }
 
@@ -179,11 +209,14 @@ class ChatService
             "qué puedes ayudar; si te piden un reporte, análisis o recomendación, usa los datos reales de abajo ".
             "para dar una respuesta concreta (no hace falta que sea breve si piden detalle); para preguntas ".
             "simples, responde corto.\n\n".
-            "Tienes dos herramientas disponibles: add_expense y add_budget. Úsalas cuando el estudiante quiera ".
-            "registrar un gasto o definir un presupuesto, sin importar cómo lo exprese (\"me gasté 20 en \", ".
-            "\"anota que pagué...\", \"quiero poner un tope de...\", etc.). Usa siempre el monto exacto que haya ".
-            "dado — nunca inventes ni redondees un número. Si falta un dato obligatorio (el monto), no invoques ".
-            "la herramienta todavía: pregúntale primero en texto normal y espera su respuesta.\n\n".
+            "Tienes tres herramientas disponibles: add_expense, add_budget y add_income. Úsalas cuando el ".
+            "estudiante quiera registrar un gasto, definir un presupuesto o anotar un ingreso, sin importar ".
+            "cómo lo exprese (\"me gasté 20 en \", \"anota que pagué...\", \"quiero poner un tope de...\", ".
+            "\"me depositaron...\", \"recibí mi beca...\", etc.). Usa siempre el monto exacto que haya dado — ".
+            "nunca inventes ni redondees un número. Para add_income necesitas saber si es fijo (se repite) o ".
+            "variable (ocasional), y si es fijo, cada cuánto se repite — pregúntalo si no está claro. Si falta ".
+            "cualquier dato obligatorio, no invoques la herramienta todavía: pregúntale primero en texto normal ".
+            "y espera su respuesta.\n\n".
             "Datos actuales del estudiante:\n".$this->studentSummary($user);
     }
 
