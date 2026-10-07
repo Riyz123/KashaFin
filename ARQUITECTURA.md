@@ -9,11 +9,12 @@
 3. [Estructura de carpetas](#3-estructura-de-carpetas)
 4. [Base de datos](#4-base-de-datos)
 5. [Roles y panel de administración](#5-roles-y-panel-de-administración)
-6. [Requerimientos implementados](#6-requerimientos-implementados)
-7. [Requerimientos fuera de alcance](#7-requerimientos-fuera-de-alcance)
-8. [Paquetes instalados además del esqueleto base](#8-paquetes-instalados-además-del-esqueleto-base)
-9. [Rutas principales](#9-rutas-principales)
-10. [Cómo ejecutar el proyecto](#10-cómo-ejecutar-el-proyecto)
+6. [Asistente de IA (chatbot)](#6-asistente-de-ia-chatbot)
+7. [Requerimientos implementados](#7-requerimientos-implementados)
+8. [Requerimientos fuera de alcance](#8-requerimientos-fuera-de-alcance)
+9. [Paquetes instalados además del esqueleto base](#9-paquetes-instalados-además-del-esqueleto-base)
+10. [Rutas principales](#10-rutas-principales)
+11. [Cómo ejecutar el proyecto](#11-cómo-ejecutar-el-proyecto)
 
 ---
 
@@ -114,7 +115,7 @@ routes/web.php, console.php
 
 ## 4. Base de datos
 
-Motor: **SQLite**, con `foreign_key_constraints = true` (borrado en cascada real). Además de las tablas por defecto de Laravel (`users`, `cache`, `jobs`), se agregaron **8 tablas nuevas**. La tabla `users` y la tabla `categories` recibieron además columnas extra para soportar roles y administración (ver [sección 5](#5-roles-y-panel-de-administración)):
+Motor: **SQLite**, con `foreign_key_constraints = true` (borrado en cascada real). Además de las tablas por defecto de Laravel (`users`, `cache`, `jobs`), se agregaron **12 tablas nuevas**: las 8 del núcleo financiero descritas abajo, más `ai_providers`, `ai_usage_logs`, `chat_messages` y `chat_states` para el asistente de IA (ver [sección 6](#6-asistente-de-ia-chatbot)). La tabla `users` y la tabla `categories` recibieron además columnas extra para soportar roles y administración (ver [sección 5](#5-roles-y-panel-de-administración)):
 
 - `users.role` — enum `estudiante` \| `admin`, por defecto `estudiante`.
 - `users.is_active` — boolean, por defecto `true`; permite al administrador bloquear una cuenta.
@@ -254,9 +255,31 @@ KashaFin tiene **dos tipos de cuenta** sobre la misma tabla `users`, diferenciad
 
 ### Cuentas de prueba
 
-El seeder crea **dos usuarios**: el admin (`admin@kashafin.test`) y el estudiante demo (`demo@kashafin.test`), ambos con contraseña `password`. Ver [sección 10](#10-cómo-ejecutar-el-proyecto).
+El seeder crea **dos usuarios**: el admin (`admin@kashafin.test`) y el estudiante demo (`demo@kashafin.test`), ambos con contraseña `password`. Ver [sección 11](#11-cómo-ejecutar-el-proyecto).
 
-## 6. Requerimientos implementados
+## 6. Asistente de IA (chatbot)
+
+Burbuja flotante visible en toda la app de estudiante (`resources/views/components/chat-widget.blade.php`, incluida solo en `layouts/app.blade.php`), que da recomendaciones financieras y permite registrar gastos por voz o texto.
+
+### Rotación entre proveedores gratuitos
+
+El admin agrega proveedores de IA desde `/admin/ia` (tabla `ai_providers`): nombre, tipo (`openai_compatible` — Groq, OpenRouter, etc. — o `gemini`, que tiene un formato de API distinto), URL base, modelo, API key (guardada con cast `encrypted`, nunca se muestra en texto plano) y prioridad. `App\Services\Ai\AiProviderRouter` toma el primero activo y disponible por prioridad; `App\Services\Ai\ChatService` lo intenta, y si tira una `QuotaExceededException` (HTTP 429 o mensaje de cuota agotada) lo marca `is_exhausted` y sigue con el siguiente — hasta 3 por mensaje para no colgar la respuesta. Un proveedor agotado se recupera solo cuando pasa su `period_reset_at` (configurable: cada cuántos días se reinicia), sin necesidad de un cron aparte. Si fallan todos (o no hay ninguno configurado), el chat responde con un resumen de los datos del estudiante calculado sin IA, en vez de un error.
+
+El panel admin muestra el **% de uso** de cada proveedor (`requests_used` / `quota_limit`, con `<x-progress-bar>`) y el estado (activo/inactivo/agotado).
+
+### Personalización ("aprender" de cada estudiante)
+
+No es reentrenamiento del modelo — ninguna API gratuita de terceros lo expone. En cada mensaje, `ChatService` arma un resumen fresco con los datos reales del estudiante (saldo actual, ingresos/gastos del mes, presupuestos, metas activas, proyección de liquidez — reutilizando `LiquidityProjectionService` y `ReportService`) y se lo manda al modelo como contexto, junto con los últimos 10 mensajes de la conversación (`chat_messages`). Así las respuestas son personalizadas sin entrenar nada.
+
+### "Agrega un gasto" (determinístico, no vía IA)
+
+`App\Services\Ai\ExpenseChatIntent` detecta frases gatillo ("agrega/registra/anota un gasto") y completa monto/categoría con regex y coincidencia de texto contra las categorías reales del estudiante — **nunca** se deja que la IA decida el monto o cree el registro, para que no pueda alucinar un gasto. El estado de la conversación en curso (`chat_states`, una fila por estudiante) guarda qué falta por preguntar. `ChatController` prueba primero este flujo determinístico; si el mensaje no es parte de un flujo de gasto, lo pasa a `ChatService` para una respuesta libre de la IA.
+
+### Voz
+
+Web Speech API del navegador (sin backend ni costo): `SpeechRecognition` dicta y autoenvía el mensaje, `speechSynthesis` lee la respuesta en voz alta (toggle en el widget). **Requiere HTTPS en producción** — si el hosting no tiene HTTPS, el micrófono no funcionará ahí aunque sí en local.
+
+## 7. Requerimientos implementados
 
 Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad completa de extremo a extremo (modelo + validación + UI), no como una cobertura superficial.
 
@@ -284,7 +307,7 @@ Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad complet
 - **Alertas (RF19-21)**: umbral configurable por usuario, verificación automática al cargar el dashboard (con límite de una alerta por día) y botón manual "Revisar ahora" en Notificaciones que ignora ese límite.
 - **Aportes a metas (RF24)**: si un aporte haría caer la proyección de liquidez por debajo del umbral, se muestra una advertencia en vez de bloquear la acción; el usuario puede confirmar igual.
 
-## 7. Requerimientos fuera de alcance
+## 8. Requerimientos fuera de alcance
 
 No implementados en esta versión (documentado explícitamente, sin dejar código a medias):
 
@@ -297,7 +320,7 @@ No implementados en esta versión (documentado explícitamente, sin dejar códig
 - F018 — Configuración inicial / onboarding guiado
 - F019 — Accesibilidad dedicada (más allá de HTML semántico y contraste razonable ya presentes)
 
-## 8. Paquetes instalados además del esqueleto base
+## 9. Paquetes instalados además del esqueleto base
 
 El proyecto partió de un Laravel 12 recién creado (solo `laravel/framework` y `laravel/tinker`, Tailwind v4 sin configurar). Se instaló:
 
@@ -325,7 +348,7 @@ El proyecto partió de un Laravel 12 recién creado (solo `laravel/framework` y 
 - `APP_NAME=KashaFin`
 - `tailwind.config.js`: `darkMode: 'class'` + paleta de marca (`brand.dark/DEFAULT/light/surface`)
 
-## 9. Rutas principales
+## 10. Rutas principales
 
 Todas bajo `middleware(['auth', 'active'])`, más las rutas de invitado que trae Breeze (`login`, `register`, `forgot-password`, etc.):
 
@@ -354,8 +377,11 @@ Bajo `middleware(['auth', 'active', 'admin'])`, prefijo `/admin`:
 | `GET/POST /admin/categorias` | Crear categorías globales |
 | `PATCH /admin/categorias/{id}` | Renombrar una categoría global |
 | `PATCH /admin/categorias/{id}/estado` | Activar/desactivar una categoría global |
+| `GET/POST /admin/ia`, `PUT /admin/ia/{id}`, `PATCH .../estado`, `DELETE /admin/ia/{id}` | Gestión de proveedores de IA |
 
-## 10. Cómo ejecutar el proyecto
+Y en el grupo de estudiante: `POST /asistente/mensaje` (`chat.send`) — envía un mensaje al asistente (recomendaciones o "agrega un gasto") y devuelve la respuesta en JSON.
+
+## 11. Cómo ejecutar el proyecto
 
 ```bash
 composer install
@@ -373,3 +399,5 @@ Cuentas de prueba ya cargadas por el seeder (ambas con contraseña `password`):
 |---|---|---|
 | Administrador | `admin@kashafin.test` | `admin` — entra directo al panel `/admin` |
 | Estudiante demo | `demo@kashafin.test` | `estudiante` — incluye ingresos, gastos, presupuestos y metas de ejemplo para que el dashboard no se vea vacío |
+
+Sin ningún proveedor de IA configurado, el asistente sigue funcionando: "agrega un gasto" funciona igual (es determinístico) y las preguntas libres devuelven el resumen de datos sin IA. Para que responda con un modelo real, entra como admin a `/admin/ia` y agrega al menos un proveedor con su API key.

@@ -91,4 +91,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(LiquidityAlert::class);
     }
+
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+
+    public function chatState(): HasOne
+    {
+        return $this->hasOne(ChatState::class);
+    }
 }

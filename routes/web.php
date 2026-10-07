@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AiProviderController as AdminAiProviderController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\GoalContributionController;
@@ -74,6 +76,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('asistente/mensaje', [ChatController::class, 'send'])->name('chat.send');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])->group(function () {
@@ -87,6 +91,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])-
     Route::post('categorias', [AdminCategoryController::class, 'store'])->name('categories.store');
     Route::patch('categorias/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
     Route::patch('categorias/{category}/estado', [AdminCategoryController::class, 'toggleActive'])->name('categories.toggle-active');
+
+    Route::get('ia', [AdminAiProviderController::class, 'index'])->name('ai.index');
+    Route::post('ia', [AdminAiProviderController::class, 'store'])->name('ai.store');
+    Route::put('ia/{aiProvider}', [AdminAiProviderController::class, 'update'])->name('ai.update');
+    Route::patch('ia/{aiProvider}/estado', [AdminAiProviderController::class, 'toggleActive'])->name('ai.toggle-active');
+    Route::delete('ia/{aiProvider}', [AdminAiProviderController::class, 'destroy'])->name('ai.destroy');
 });
 
 require __DIR__.'/auth.php';

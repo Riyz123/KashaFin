@@ -3,6 +3,7 @@ $navItems = [
     ['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'home'],
     ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'user'],
     ['route' => 'admin.categories.index', 'label' => 'Categorías globales', 'icon' => 'wallet'],
+    ['route' => 'admin.ai.index', 'label' => 'Asistente IA', 'icon' => 'chat'],
 ];
 @endphp
 
