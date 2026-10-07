@@ -12,19 +12,45 @@ class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $expenses = $request->user()->expenses()
-            ->with('category')
-            ->orderByDesc('date')
-            ->paginate(10);
+        $user = $request->user();
+        $sort = $request->string('sort')->toString();
 
-        $totalMonth = $request->user()->expenses()
+        $expenses = $user->expenses()
+            ->with('category')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->where('description', 'like', '%'.$request->string('search').'%');
+            })
+            ->when($request->filled('category_id'), function ($query) use ($request) {
+                $query->where('category_id', $request->integer('category_id'));
+            })
+            ->when($request->filled('from'), function ($query) use ($request) {
+                $query->whereDate('date', '>=', $request->date('from'));
+            })
+            ->when($request->filled('to'), function ($query) use ($request) {
+                $query->whereDate('date', '<=', $request->date('to'));
+            })
+            ->when($sort === 'amount_desc', fn ($query) => $query->orderByDesc('amount'))
+            ->when($sort === 'amount_asc', fn ($query) => $query->orderBy('amount'))
+            ->when(! in_array($sort, ['amount_desc', 'amount_asc'], true), fn ($query) => $query->orderByDesc('date'))
+            ->paginate(10)
+            ->withQueryString();
+
+        $categories = Category::query()->forUser($user)->orderBy('name')->get();
+
+        $totalMonth = $user->expenses()
             ->whereMonth('date', now()->month)
             ->whereYear('date', now()->year)
             ->sum('amount');
 
         return view('expenses.index', [
             'expenses' => $expenses,
+            'categories' => $categories,
             'totalMonth' => (float) $totalMonth,
+            'search' => $request->string('search')->toString(),
+            'categoryId' => $request->string('category_id')->toString(),
+            'from' => $request->string('from')->toString(),
+            'to' => $request->string('to')->toString(),
+            'sort' => $sort,
         ]);
     }
 
