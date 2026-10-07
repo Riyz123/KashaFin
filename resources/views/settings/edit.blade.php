@@ -25,6 +25,16 @@
             </div>
 
             <div>
+                <x-input-label for="language" value="Idioma del asistente" />
+                <select id="language" name="language" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                    <option value="es" @selected($settings->language === 'es')>Español</option>
+                    <option value="en" @selected($settings->language === 'en')>English</option>
+                    <option value="qu" @selected($settings->language === 'qu')>Runasimi (quechua)</option>
+                </select>
+                <x-input-error :messages="$errors->get('language')" class="mt-2" />
+            </div>
+
+            <div>
                 <x-input-label for="week_start_day" value="Día de inicio de semana" />
                 <select id="week_start_day" name="week_start_day" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
                     <option value="0" @selected($settings->week_start_day === 0)>Domingo</option>

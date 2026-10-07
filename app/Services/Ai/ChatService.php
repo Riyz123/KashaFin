@@ -205,10 +205,11 @@ class ChatService
      */
     private function systemPrompt(User $user): string
     {
+        $language = $user->settings->languageName();
+
         return AiSetting::current()->promptOrDefault()."\n\n".
-            "Entiendes español, inglés y quechua. Responde siempre en el mismo idioma en que te escriba el ".
-            "estudiante (si te escribe en inglés, responde en inglés; si te escribe en quechua, responde en ".
-            "quechua; por defecto, español).\n\n".
+            "Entiendes español, inglés y quechua. El estudiante configuró {$language} como su idioma preferido ".
+            "en sus ajustes — responde siempre en {$language}, sin importar en qué idioma te escriba él.\n\n".
             "Tienes tres herramientas disponibles: add_expense, add_budget y add_income. Úsalas cuando el ".
             "estudiante quiera registrar un gasto, definir un presupuesto o anotar un ingreso, sin importar ".
             "cómo lo exprese (\"me gasté 20 en \", \"anota que pagué...\", \"quiero poner un tope de...\", ".

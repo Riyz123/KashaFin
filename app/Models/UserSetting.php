@@ -11,6 +11,7 @@ class UserSetting extends Model
         'user_id',
         'currency',
         'theme',
+        'language',
         'week_start_day',
         'liquidity_threshold',
         'notify_low_liquidity_by_email',
@@ -37,6 +38,15 @@ class UserSetting extends Model
         return match ($this->currency) {
             'USD' => '$',
             default => 'S/',
+        };
+    }
+
+    public function languageName(): string
+    {
+        return match ($this->language) {
+            'en' => 'inglés',
+            'qu' => 'quechua',
+            default => 'español',
         };
     }
 
