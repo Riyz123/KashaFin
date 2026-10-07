@@ -35,6 +35,22 @@ export function registerChatWidget(Alpine) {
                 this.recognition.maxAlternatives = 1;
 
                 this.finalTranscript = '';
+                this.silenceTimer = null;
+
+                // continuous:true keeps the mic open indefinitely — Chrome no
+                // longer ends the session on its own after a short pause, so
+                // without this timer the user would have to click the mic
+                // button every single time. Resetting it on every result and
+                // firing after ~1.5s of silence gives the "stops talking for
+                // a second or two → sends automatically" behavior.
+                this.resetSilenceTimer = () => {
+                    clearTimeout(this.silenceTimer);
+                    this.silenceTimer = setTimeout(() => {
+                        if (this.listening) {
+                            this.recognition.stop();
+                        }
+                    }, 1500);
+                };
 
                 this.recognition.onresult = (event) => {
                     let interim = '';
@@ -50,13 +66,20 @@ export function registerChatWidget(Alpine) {
                     }
 
                     this.draft = (this.finalTranscript + interim).trim();
+                    this.resetSilenceTimer();
                 };
                 this.recognition.onerror = () => {
                     this.listening = false;
+                    clearTimeout(this.silenceTimer);
                 };
                 this.recognition.onend = () => {
                     this.listening = false;
+                    clearTimeout(this.silenceTimer);
 
+                    // Covers both ways a session can end: natural silence
+                    // (via the timer above calling stop()) and the user
+                    // manually clicking the mic button to pause it early —
+                    // either way, whatever was captured gets sent.
                     const message = this.finalTranscript.trim() || this.draft.trim();
                     this.finalTranscript = '';
 
@@ -83,6 +106,7 @@ export function registerChatWidget(Alpine) {
                 return;
             }
 
+            clearTimeout(this.silenceTimer);
             this.finalTranscript = '';
             this.draft = '';
             this.listening = true;
