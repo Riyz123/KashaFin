@@ -93,19 +93,65 @@ class ExpenseChatIntent
 
     private function createExpense(User $user, ChatState $state, array $data): string
     {
+        $reply = $this->persistExpense($user, $data['amount'], $data['category_id'] ?? null, null);
+        $state->clear();
+
+        return $reply;
+    }
+
+    /**
+     * Called by ChatService when the AI decides to invoke the "add_expense"
+     * tool. The amount is still validated here — the tool schema asking the
+     * model for a number is not a guarantee, so we never trust it blindly.
+     */
+    public function createFromToolCall(User $user, array $arguments): string
+    {
+        $amount = $this->coerceAmount($arguments['amount'] ?? null);
+
+        if ($amount === null) {
+            return 'Necesito un monto válido (mayor a 0) para registrar el gasto.';
+        }
+
+        // The tool's "category" parameter is constrained to an enum of this
+        // student's real category names, so an exact match is expected —
+        // no fuzzy/substring matching needed here (unlike the regex path).
+        $categoryId = null;
+
+        if (! empty($arguments['category'])) {
+            $categoryId = Category::query()->forUser($user)
+                ->where('name', $arguments['category'])
+                ->value('id');
+        }
+
+        $description = is_string($arguments['description'] ?? null) ? trim($arguments['description']) : null;
+
+        return $this->persistExpense($user, $amount, $categoryId, $description ?: null);
+    }
+
+    private function persistExpense(User $user, float $amount, ?int $categoryId, ?string $description): string
+    {
         $expense = Expense::create([
             'user_id' => $user->id,
-            'category_id' => $data['category_id'] ?? null,
-            'amount' => $data['amount'],
+            'category_id' => $categoryId,
+            'amount' => $amount,
             'date' => now()->toDateString(),
-            'description' => 'Agregado por el asistente',
+            'description' => $description ?: 'Agregado por el asistente',
         ]);
-
-        $state->clear();
 
         $categoryName = $expense->category?->name ?? 'sin categoría';
 
-        return "✅ Gasto registrado: S/ ".number_format((float) $expense->amount, 2)." en {$categoryName}, con fecha de hoy.";
+        return "✅ Gasto registrado: S/ ".number_format($amount, 2)." en {$categoryName}, con fecha de hoy.";
+    }
+
+    private function coerceAmount(mixed $value): ?float
+    {
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $amount = (float) $value;
+
+        return $amount > 0 ? $amount : null;
     }
 
     private function extractAmount(string $message): ?float

@@ -16,6 +16,7 @@ class CategoryFactory extends Factory
             'name' => fake()->unique()->word(),
             'icon' => null,
             'is_default' => false,
+            'is_active' => true,
         ];
     }
 }

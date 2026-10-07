@@ -90,30 +90,74 @@ class BudgetChatIntent
 
     private function createBudget(User $user, ChatState $state, array $data): string
     {
+        $reply = $this->persistBudget($user, $data['category_id'], $data['amount']);
+        $state->clear();
+
+        return $reply;
+    }
+
+    /**
+     * Called by ChatService when the AI decides to invoke the "add_budget"
+     * tool. The amount is still validated here, never trusted blindly.
+     */
+    public function createFromToolCall(User $user, array $arguments): string
+    {
+        $amount = $this->coerceAmount($arguments['amount'] ?? null);
+
+        if ($amount === null) {
+            return 'Necesito un monto válido (mayor a 0) para el presupuesto.';
+        }
+
+        // The tool's "category" parameter is constrained to an enum of this
+        // student's real category names, so an exact match is expected.
+        $categoryId = Category::query()->forUser($user)
+            ->where('name', $arguments['category'] ?? null)
+            ->value('id');
+
+        if ($categoryId === null) {
+            $categories = Category::query()->forUser($user)->orderBy('name')->pluck('name')->implode(', ');
+
+            return "No reconocí esa categoría. ¿Cuál de estas? ({$categories})";
+        }
+
+        return $this->persistBudget($user, $categoryId, $amount);
+    }
+
+    private function persistBudget(User $user, int $categoryId, float $amount): string
+    {
         $periodMonth = Carbon::now()->startOfMonth();
 
         $budget = Budget::query()
             ->where('user_id', $user->id)
-            ->where('category_id', $data['category_id'])
+            ->where('category_id', $categoryId)
             ->whereDate('period_month', $periodMonth->toDateString())
             ->first();
 
         if ($budget) {
-            $budget->update(['amount' => $data['amount']]);
+            $budget->update(['amount' => $amount]);
         } else {
             $budget = Budget::create([
                 'user_id' => $user->id,
-                'category_id' => $data['category_id'],
+                'category_id' => $categoryId,
                 'period_month' => $periodMonth,
-                'amount' => $data['amount'],
+                'amount' => $amount,
             ]);
         }
 
-        $state->clear();
-
         $categoryName = $budget->category->name;
 
-        return "✅ Presupuesto guardado: S/ ".number_format((float) $budget->amount, 2)." para {$categoryName} este mes.";
+        return "✅ Presupuesto guardado: S/ ".number_format($amount, 2)." para {$categoryName} este mes.";
+    }
+
+    private function coerceAmount(mixed $value): ?float
+    {
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $amount = (float) $value;
+
+        return $amount > 0 ? $amount : null;
     }
 
     private function extractAmount(string $message): ?float

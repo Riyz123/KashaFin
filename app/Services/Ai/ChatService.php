@@ -3,6 +3,7 @@
 namespace App\Services\Ai;
 
 use App\Models\AiProvider;
+use App\Models\Category;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\Ai\Drivers\AiDriverInterface;
@@ -21,34 +22,43 @@ class ChatService
         private AiProviderRouter $router,
         private LiquidityProjectionService $projection,
         private ReportService $reports,
+        private ExpenseChatIntent $expenseIntent,
+        private BudgetChatIntent $budgetIntent,
     ) {}
 
     /**
      * Generate a reply for a free-form message, persisting both sides of
-     * the conversation. Falls back to a data-only summary (no AI) if every
-     * configured provider is unavailable or fails.
+     * the conversation. If the model decides to invoke a tool (add_expense /
+     * add_budget), it's executed here and a deterministic confirmation is
+     * returned — never a second round-trip asking the AI to "phrase it",
+     * which would cost extra quota and risk drifting from the real amount
+     * saved. Falls back to a data-only summary (no AI) if every configured
+     * provider is unavailable or fails.
      */
     public function reply(User $user, string $userMessage): string
     {
         ChatMessage::create(['user_id' => $user->id, 'role' => 'user', 'content' => $userMessage]);
 
         $messages = $this->buildMessages($user, $userMessage);
+        $tools = $this->toolSchemas($user);
 
-        $reply = $this->tryProviders($messages) ?? $this->fallbackSummary($user);
+        $reply = $this->tryProviders($user, $messages, $tools) ?? $this->fallbackSummary($user);
 
         ChatMessage::create(['user_id' => $user->id, 'role' => 'assistant', 'content' => $reply]);
 
         return $reply;
     }
 
-    private function tryProviders(array $messages): ?string
+    private function tryProviders(User $user, array $messages, array $tools): ?string
     {
         foreach ($this->router->candidates() as $provider) {
             try {
-                $reply = $this->driverFor($provider)->send($provider, $messages);
+                $aiReply = $this->driverFor($provider)->send($provider, $messages, $tools);
                 $provider->recordUsage(success: true);
 
-                return $reply;
+                return $aiReply->isToolCall()
+                    ? $this->executeTool($user, $aiReply)
+                    : $aiReply->content;
             } catch (QuotaExceededException $e) {
                 $provider->recordUsage(success: false, exhausted: true, errorMessage: $e->getMessage());
             } catch (\Throwable $e) {
@@ -59,12 +69,77 @@ class ChatService
         return null;
     }
 
+    private function executeTool(User $user, AiReply $aiReply): string
+    {
+        return match ($aiReply->toolName) {
+            'add_expense' => $this->expenseIntent->createFromToolCall($user, $aiReply->toolArguments),
+            'add_budget' => $this->budgetIntent->createFromToolCall($user, $aiReply->toolArguments),
+            default => 'No reconocí esa acción, ¿puedes reformularla?',
+        };
+    }
+
     private function driverFor(AiProvider $provider): AiDriverInterface
     {
         return match ($provider->driver) {
             'gemini' => new GeminiDriver,
             default => new OpenAiCompatibleDriver,
         };
+    }
+
+    /**
+     * Provider-agnostic tool/function schemas (JSON Schema parameters).
+     * Constraining "category" to an enum of this student's real category
+     * names means a compliant model can only ever return an exact match —
+     * no fuzzy/substring matching needed on the receiving end.
+     */
+    private function toolSchemas(User $user): array
+    {
+        $categoryNames = Category::query()->forUser($user)->orderBy('name')->pluck('name')->values()->all();
+
+        return [
+            [
+                'name' => 'add_expense',
+                'description' => 'Registra un gasto nuevo cuando el estudiante diga que gastó dinero o pida anotar/agregar un gasto, en cualquier forma en que lo exprese.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'amount' => [
+                            'type' => 'number',
+                            'description' => 'Monto exacto que el estudiante mencionó. Nunca inventes un número si no lo dio.',
+                        ],
+                        'category' => [
+                            'type' => 'string',
+                            'enum' => $categoryNames,
+                            'description' => 'La categoría del gasto, si se puede inferir. Omitir si no es clara.',
+                        ],
+                        'description' => [
+                            'type' => 'string',
+                            'description' => 'Descripción breve opcional del gasto.',
+                        ],
+                    ],
+                    'required' => ['amount'],
+                ],
+            ],
+            [
+                'name' => 'add_budget',
+                'description' => 'Crea o actualiza el presupuesto mensual de una categoría cuando el estudiante lo pida, en cualquier forma en que lo exprese.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'category' => [
+                            'type' => 'string',
+                            'enum' => $categoryNames,
+                            'description' => 'La categoría para la que se define el presupuesto.',
+                        ],
+                        'amount' => [
+                            'type' => 'number',
+                            'description' => 'Monto exacto del presupuesto que el estudiante mencionó.',
+                        ],
+                    ],
+                    'required' => ['category', 'amount'],
+                ],
+            ],
+        ];
     }
 
     /**
@@ -100,12 +175,15 @@ class ChatService
     private function systemPrompt(User $user): string
     {
         return "Eres el asistente financiero de KashaFin, una app para estudiantes universitarios. ".
-            "Responde en español, en tono cercano. Si te piden un reporte, análisis o recomendación, usa los ".
-            "datos reales de abajo para dar una respuesta concreta y bien explicada (no hace falta que sea ".
-            "breve si te piden detalle o un análisis); para preguntas simples, responde corto. ".
-            "No inventes montos ni muevas dinero: si el estudiante quiere registrar un gasto o crear un ".
-            "presupuesto, dile que escriba algo como 'agrega un gasto' o 'crea un presupuesto' y el sistema ".
-            "lo guiará paso a paso — tú nunca ejecutas esa acción directamente.\n\n".
+            "Responde en español, en tono cercano y natural — si te saludan, saluda de vuelta y pregunta en ".
+            "qué puedes ayudar; si te piden un reporte, análisis o recomendación, usa los datos reales de abajo ".
+            "para dar una respuesta concreta (no hace falta que sea breve si piden detalle); para preguntas ".
+            "simples, responde corto.\n\n".
+            "Tienes dos herramientas disponibles: add_expense y add_budget. Úsalas cuando el estudiante quiera ".
+            "registrar un gasto o definir un presupuesto, sin importar cómo lo exprese (\"me gasté 20 en \", ".
+            "\"anota que pagué...\", \"quiero poner un tope de...\", etc.). Usa siempre el monto exacto que haya ".
+            "dado — nunca inventes ni redondees un número. Si falta un dato obligatorio (el monto), no invoques ".
+            "la herramienta todavía: pregúntale primero en texto normal y espera su respuesta.\n\n".
             "Datos actuales del estudiante:\n".$this->studentSummary($user);
     }
 
