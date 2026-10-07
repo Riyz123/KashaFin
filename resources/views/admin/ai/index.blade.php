@@ -2,6 +2,24 @@
     <x-page-header title="Proveedores de IA" subtitle="Se usan en orden de prioridad: cuando uno se agota, el sistema sigue con el siguiente." />
 
     <x-card class="mb-6">
+        <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Prompt del asistente</h3>
+        <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+            Esto define la personalidad y el tono del asistente. El manejo de idiomas (español/inglés/quechua) y las
+            herramientas para registrar gastos, presupuestos e ingresos siguen funcionando sin importar este texto.
+        </p>
+        <form method="POST" action="{{ route('admin.ai.prompt.update') }}">
+            @csrf @method('PUT')
+            <textarea name="system_prompt" rows="5" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" placeholder="{{ \App\Models\AiSetting::DEFAULT_PROMPT }}">{{ old('system_prompt', $aiSetting->system_prompt) }}</textarea>
+            <x-input-error :messages="$errors->get('system_prompt')" class="mt-1" />
+            <x-primary-button class="mt-3">Guardar prompt</x-primary-button>
+        </form>
+        <form method="POST" action="{{ route('admin.ai.prompt.reset') }}" class="mt-2" onsubmit="return confirm('¿Restaurar el prompt por defecto?');">
+            @csrf @method('DELETE')
+            <button type="submit" class="text-sm text-gray-500 hover:underline dark:text-gray-400">Restaurar por defecto</button>
+        </form>
+    </x-card>
+
+    <x-card class="mb-6">
         <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Agregar proveedor</h3>
         <form method="POST" action="{{ route('admin.ai.store') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             @csrf

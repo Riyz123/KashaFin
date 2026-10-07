@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiProvider;
+use App\Models\AiSetting;
 use Illuminate\Http\Request;
 
 class AiProviderController extends Controller
@@ -11,8 +12,9 @@ class AiProviderController extends Controller
     public function index()
     {
         $providers = AiProvider::query()->ordered()->get();
+        $aiSetting = AiSetting::current();
 
-        return view('admin.ai.index', ['providers' => $providers]);
+        return view('admin.ai.index', ['providers' => $providers, 'aiSetting' => $aiSetting]);
     }
 
     public function store(Request $request)

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AiProviderController as AdminAiProviderController;
+use App\Http\Controllers\Admin\AiPromptController as AdminAiPromptController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -97,6 +98,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])-
     Route::put('ia/{aiProvider}', [AdminAiProviderController::class, 'update'])->name('ai.update');
     Route::patch('ia/{aiProvider}/estado', [AdminAiProviderController::class, 'toggleActive'])->name('ai.toggle-active');
     Route::delete('ia/{aiProvider}', [AdminAiProviderController::class, 'destroy'])->name('ai.destroy');
+    Route::put('ia-prompt', [AdminAiPromptController::class, 'update'])->name('ai.prompt.update');
+    Route::delete('ia-prompt', [AdminAiPromptController::class, 'reset'])->name('ai.prompt.reset');
 });
 
 require __DIR__.'/auth.php';
