@@ -18,6 +18,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(CategorySeeder::class);
 
+        User::factory()->admin()->create([
+            'name' => 'Administrador KashaFin',
+            'email' => 'admin@kashafin.test',
+        ]);
+
         $user = User::factory()->create([
             'name' => 'Estudiante Demo',
             'email' => 'demo@kashafin.test',

@@ -25,6 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
         User::observe(UserObserver::class);
 
-        View::composer('layouts.app', LayoutComposer::class);
+        View::composer(['layouts.app', 'layouts.admin'], LayoutComposer::class);
     }
 }

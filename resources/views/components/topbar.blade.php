@@ -39,6 +39,9 @@
                 </button>
             </x-slot>
             <x-slot name="content">
+                @if (auth()->user()->isAdmin())
+                    <x-dropdown-link :href="route('admin.dashboard')">Panel de administración</x-dropdown-link>
+                @endif
                 <x-dropdown-link :href="route('profile.edit')">Mi perfil</x-dropdown-link>
                 <x-dropdown-link :href="route('settings.edit')">Configuración</x-dropdown-link>
                 <form method="POST" action="{{ route('logout') }}">

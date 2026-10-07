@@ -14,12 +14,14 @@ class Category extends Model
         'name',
         'icon',
         'is_default',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'is_default' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -40,7 +42,7 @@ class Category extends Model
 
     public function scopeForUser(Builder $query, User $user): Builder
     {
-        return $query->where(function (Builder $q) use ($user) {
+        return $query->where('is_active', true)->where(function (Builder $q) use ($user) {
             $q->whereNull('user_id')->orWhere('user_id', $user->id);
         });
     }

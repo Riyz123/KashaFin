@@ -8,11 +8,12 @@
 2. [Arquitectura de la aplicación](#2-arquitectura-de-la-aplicación)
 3. [Estructura de carpetas](#3-estructura-de-carpetas)
 4. [Base de datos](#4-base-de-datos)
-5. [Requerimientos implementados](#5-requerimientos-implementados)
-6. [Requerimientos fuera de alcance](#6-requerimientos-fuera-de-alcance)
-7. [Paquetes instalados además del esqueleto base](#7-paquetes-instalados-además-del-esqueleto-base)
-8. [Rutas principales](#8-rutas-principales)
-9. [Cómo ejecutar el proyecto](#9-cómo-ejecutar-el-proyecto)
+5. [Roles y panel de administración](#5-roles-y-panel-de-administración)
+6. [Requerimientos implementados](#6-requerimientos-implementados)
+7. [Requerimientos fuera de alcance](#7-requerimientos-fuera-de-alcance)
+8. [Paquetes instalados además del esqueleto base](#8-paquetes-instalados-además-del-esqueleto-base)
+9. [Rutas principales](#9-rutas-principales)
+10. [Cómo ejecutar el proyecto](#10-cómo-ejecutar-el-proyecto)
 
 ---
 
@@ -74,6 +75,8 @@ app/
 │   ├── Controllers/          # Dashboard, Income, Expense, Category, Budget,
 │   │                         # Projection, Goal, GoalContribution, Report,
 │   │                         # History, Notification, Settings, Profile (Breeze)
+│   │   └── Admin/            # DashboardController, UserController, CategoryController
+│   ├── Middleware/            # EnsureUserIsAdmin, EnsureAccountIsActive
 │   └── Requests/             # Store/Update*Request por cada formulario
 ├── Mail/LowLiquidityAlertMail.php
 ├── Models/                   # User, UserSetting, Category, Income, Expense,
@@ -84,7 +87,7 @@ app/
 │                              # LiquidityAlertService, ReportService
 ├── Support/WeekHelper.php
 └── View/
-    ├── Components/AppLayout.php, GuestLayout.php
+    ├── Components/AppLayout.php, GuestLayout.php, AdminLayout.php
     └── Composers/LayoutComposer.php
 
 database/
@@ -98,9 +101,10 @@ resources/
 │   ├── app.js                  # bootstrap Alpine + montaje de gráficos
 │   └── charts/                 # liquidity-chart.js, report-charts.js
 └── views/
-    ├── layouts/, components/   # shell y piezas reutilizables
+    ├── layouts/, components/   # shell y piezas reutilizables (incluye admin-sidebar, layouts/admin.blade.php)
     ├── dashboard/, incomes/, expenses/, budgets/, projections/,
     │   goals/, reports/, history/, notifications/, settings/, pdf/
+    ├── admin/                  # dashboard.blade.php, users/index.blade.php, categories/index.blade.php
     ├── auth/, profile/         # generadas por Breeze
     └── emails/low-liquidity.blade.php
 
@@ -110,7 +114,11 @@ routes/web.php, console.php
 
 ## 4. Base de datos
 
-Motor: **SQLite**, con `foreign_key_constraints = true` (borrado en cascada real). Además de las tablas por defecto de Laravel (`users`, `cache`, `jobs`), se agregaron **8 tablas nuevas**:
+Motor: **SQLite**, con `foreign_key_constraints = true` (borrado en cascada real). Además de las tablas por defecto de Laravel (`users`, `cache`, `jobs`), se agregaron **8 tablas nuevas**. La tabla `users` y la tabla `categories` recibieron además columnas extra para soportar roles y administración (ver [sección 5](#5-roles-y-panel-de-administración)):
+
+- `users.role` — enum `estudiante` \| `admin`, por defecto `estudiante`.
+- `users.is_active` — boolean, por defecto `true`; permite al administrador bloquear una cuenta.
+- `categories.is_active` — boolean, por defecto `true`; permite al administrador desactivar una categoría global sin borrarla (evita romper gastos/presupuestos existentes que la referencian).
 
 ### `user_settings` (1:1 con `users`)
 Preferencias y configuración financiera del estudiante.
@@ -218,9 +226,39 @@ SavingsGoal 1─N GoalContribution
 
 Todas las FK hacia `user_id` tienen `cascadeOnDelete()`, por lo que eliminar una cuenta (RF30) borra automáticamente todos sus datos.
 
-## 5. Requerimientos implementados
+## 5. Roles y panel de administración
 
-Se implementaron **41 de los 64 RF (~64%)**, agrupados por funcionalidad completa de extremo a extremo (modelo + validación + UI), no como una cobertura superficial.
+KashaFin tiene **dos tipos de cuenta** sobre la misma tabla `users`, diferenciadas por la columna `role`:
+
+- **`estudiante`** (por defecto): accede a toda la app descrita en las secciones anteriores — ingresos, gastos, presupuesto, proyecciones, metas, reportes, historial, configuración y perfil.
+- **`admin`**: accede a un panel separado en `/admin/*`, con su propio layout, sidebar y navegación (`resources/views/layouts/admin.blade.php` + `<x-admin-sidebar>`), visualmente distinto (sidebar oscuro) para que no se confunda con la app de estudiante.
+
+### Cómo se separan las dos áreas
+
+- **Registro público** (`/register`): siempre crea cuentas con `role = estudiante`. No hay forma de auto-registrarse como administrador — las cuentas admin solo se crean por seeder o directamente en base de datos.
+- **Middleware `admin`** (`app/Http/Middleware/EnsureUserIsAdmin.php`, alias registrado en `bootstrap/app.php`): protege todas las rutas bajo `Route::prefix('admin')`; devuelve `403` si el usuario autenticado no es admin.
+- **Redirección post-login**: `AuthenticatedSessionController` revisa `$user->isAdmin()` y manda al admin a `admin.dashboard` en vez de `dashboard`. La ruta raíz `/` hace lo mismo.
+- **Acceso cruzado**: un admin puede entrar a la app de estudiante desde el enlace "Ver app de estudiante" en su sidebar (sin restricción, ya que no hay necesidad de bloquearlo); un estudiante que intente visitar `/admin/*` recibe `403`.
+
+### Control de cuentas (lo pedido explícitamente)
+
+- **`users.is_active`**: el administrador activa/desactiva cualquier cuenta de estudiante desde `/admin/usuarios` (`AdminUserController::toggleActive`). Las cuentas admin están protegidas: no se pueden desactivar ni eliminar entre sí.
+- **Bloqueo en el login**: `LoginRequest::authenticate()` revisa `is_active` justo después de validar la contraseña; si la cuenta está desactivada, cierra la sesión y muestra "Tu cuenta ha sido desactivada. Contacta a un administrador."
+- **Bloqueo en caliente**: el middleware `app/Http/Middleware/EnsureAccountIsActive.php` (alias `active`, aplicado a todos los grupos de rutas autenticadas) cierra la sesión inmediatamente si el admin desactiva a un estudiante que ya tenía una sesión abierta — no espera a que vuelva a iniciar sesión.
+- **Eliminar cuenta**: `AdminUserController::destroy` borra al estudiante y, por los `cascadeOnDelete()` ya descritos, todos sus ingresos/gastos/metas/etc.
+
+### Qué más gestiona el panel admin
+
+- **Dashboard** (`/admin/dashboard`, RF36): métricas agregadas y anónimas — total de estudiantes, cuentas activas/desactivadas, cantidad de ingresos/gastos/presupuestos/metas/categorías registrados en todo el sistema. **No** expone montos ni movimientos de ningún estudiante en particular.
+- **Categorías globales** (`/admin/categorias`, RF35): el admin crea, renombra y activa/desactiva las categorías de gasto compartidas (`categories.user_id = NULL`). Una categoría desactivada deja de aparecer en el selector de gastos de los estudiantes (`Category::scopeForUser` filtra por `is_active = true`), pero no se borra — así no rompe gastos/presupuestos existentes que ya la usan.
+
+### Cuentas de prueba
+
+El seeder crea **dos usuarios**: el admin (`admin@kashafin.test`) y el estudiante demo (`demo@kashafin.test`), ambos con contraseña `password`. Ver [sección 10](#10-cómo-ejecutar-el-proyecto).
+
+## 6. Requerimientos implementados
+
+Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad completa de extremo a extremo (modelo + validación + UI), no como una cobertura superficial.
 
 | Código funcionalidad | Funcionalidad | RF cubiertos |
 |---|---|---|
@@ -233,8 +271,11 @@ Se implementaron **41 de los 64 RF (~64%)**, agrupados por funcionalidad complet
 | F007 | Reportes y visualización financiera | RF25, RF26, RF27 |
 | F008 | Gestión de perfil de usuario | RF28, RF29, RF30 |
 | F009 | Historial y búsqueda de movimientos | RF31, RF32, RF33, RF34 |
+| F010 | Administración del sistema | RF35, RF36 (ver [sección 5](#5-roles-y-panel-de-administración)) |
 | F013 | Presupuestos por categoría | RF46, RF47, RF48 |
 | F016 | Configuración general y preferencias | RF56, RF57, RF58 |
+
+> F010 se amplió más allá de lo original: además de las métricas agregadas (RF36) y la gestión de categorías globales (RF35), el admin ahora puede **activar/desactivar y eliminar cuentas de estudiante** — control de acceso que no estaba en la tabla de requerimientos original pero se pidió explícitamente.
 
 ### Decisiones de diseño relevantes
 
@@ -243,11 +284,11 @@ Se implementaron **41 de los 64 RF (~64%)**, agrupados por funcionalidad complet
 - **Alertas (RF19-21)**: umbral configurable por usuario, verificación automática al cargar el dashboard (con límite de una alerta por día) y botón manual "Revisar ahora" en Notificaciones que ignora ese límite.
 - **Aportes a metas (RF24)**: si un aporte haría caer la proyección de liquidez por debajo del umbral, se muestra una advertencia en vez de bloquear la acción; el usuario puede confirmar igual.
 
-## 6. Requerimientos fuera de alcance
+## 7. Requerimientos fuera de alcance
 
 No implementados en esta versión (documentado explícitamente, sin dejar código a medias):
 
-- F010 — Administración del sistema (panel admin)
+- RF37 — Registro simple de incidencias reportadas por estudiantes (el resto de F010 sí está implementado, ver arriba)
 - F011 — Notificaciones y recordatorios (más allá de la alerta de iliquidez): recordatorio de 3 días sin gastos (RF38), confirmación de ingreso esperado (RF39), toggles individuales por tipo (RF40)
 - RF41-44 — Exportación de historial completo, eliminación de historial conservando meta, resumen semanal automático por correo, comparación contra periodo anterior
 - F014 — Gestión de préstamos entre personas
@@ -256,7 +297,7 @@ No implementados en esta versión (documentado explícitamente, sin dejar códig
 - F018 — Configuración inicial / onboarding guiado
 - F019 — Accesibilidad dedicada (más allá de HTML semántico y contraste razonable ya presentes)
 
-## 7. Paquetes instalados además del esqueleto base
+## 8. Paquetes instalados además del esqueleto base
 
 El proyecto partió de un Laravel 12 recién creado (solo `laravel/framework` y `laravel/tinker`, Tailwind v4 sin configurar). Se instaló:
 
@@ -284,9 +325,9 @@ El proyecto partió de un Laravel 12 recién creado (solo `laravel/framework` y 
 - `APP_NAME=KashaFin`
 - `tailwind.config.js`: `darkMode: 'class'` + paleta de marca (`brand.dark/DEFAULT/light/surface`)
 
-## 8. Rutas principales
+## 9. Rutas principales
 
-Todas bajo `middleware(['auth'])`, más las rutas de invitado que trae Breeze (`login`, `register`, `forgot-password`, etc.):
+Todas bajo `middleware(['auth', 'active'])`, más las rutas de invitado que trae Breeze (`login`, `register`, `forgot-password`, etc.):
 
 | Ruta | Descripción |
 |---|---|
@@ -302,7 +343,19 @@ Todas bajo `middleware(['auth'])`, más las rutas de invitado que trae Breeze (`
 | `GET/PATCH /configuracion` | Preferencias del usuario |
 | `GET/PATCH/DELETE /profile` | Perfil (Breeze) |
 
-## 9. Cómo ejecutar el proyecto
+Bajo `middleware(['auth', 'active', 'admin'])`, prefijo `/admin`:
+
+| Ruta | Descripción |
+|---|---|
+| `GET /admin/dashboard` | Métricas agregadas del sistema |
+| `GET /admin/usuarios` | Lista de estudiantes (buscar, filtrar por estado) |
+| `PATCH /admin/usuarios/{id}/estado` | Activar/desactivar una cuenta |
+| `DELETE /admin/usuarios/{id}` | Eliminar una cuenta y todos sus datos |
+| `GET/POST /admin/categorias` | Crear categorías globales |
+| `PATCH /admin/categorias/{id}` | Renombrar una categoría global |
+| `PATCH /admin/categorias/{id}/estado` | Activar/desactivar una categoría global |
+
+## 10. Cómo ejecutar el proyecto
 
 ```bash
 composer install
@@ -314,9 +367,9 @@ npm run build           # o `npm run dev` en desarrollo
 php artisan serve
 ```
 
-Usuario de prueba ya cargado por el seeder:
+Cuentas de prueba ya cargadas por el seeder (ambas con contraseña `password`):
 
-- **Email:** `demo@kashafin.test`
-- **Contraseña:** `password`
-
-Incluye ingresos, gastos, presupuestos y metas de ejemplo para que el dashboard no se vea vacío.
+| Cuenta | Email | Rol |
+|---|---|---|
+| Administrador | `admin@kashafin.test` | `admin` — entra directo al panel `/admin` |
+| Estudiante demo | `demo@kashafin.test` | `estudiante` — incluye ingresos, gastos, presupuestos y metas de ejemplo para que el dashboard no se vea vacío |
