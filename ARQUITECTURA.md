@@ -319,7 +319,7 @@ KashaFin envía correos reales (contraseñas temporales) vía **Resend** (`resen
 **Para que funcione en producción**, el usuario del proyecto debe:
 1. Crear una cuenta gratis en [resend.com](https://resend.com).
 2. Verificar un dominio propio en Resend (agregar los registros DNS que te da) **o**, para probar rápido sin dominio propio, usar el remitente de pruebas `onboarding@resend.dev` — pero ese remitente de pruebas de Resend solo entrega al correo de la cuenta de Resend, no a correos `@upn.edu.pe` reales. Para que los estudiantes reciban su contraseña de verdad, hace falta verificar un dominio propio.
-3. Copiar la API key generada a `RESEND_KEY` en `.env`, y poner `MAIL_MAILER=resend` (en local se deja en `log`: el correo se escribe en `storage/logs/laravel.log` en vez de enviarse, para no gastar cuota probando).
+3. Copiar la API key generada a `RESEND_API_KEY` en `.env` (ojo: es `RESEND_API_KEY`, no `RESEND_KEY` — así la lee `config/services.php`), y poner `MAIL_MAILER=resend` (en local se deja en `log`: el correo se escribe en `storage/logs/laravel.log` en vez de enviarse, para no gastar cuota probando).
 
 `App\Mail\TemporaryPasswordMail` es el único correo transaccional del sistema — lo dispara `AdminUserController::grantAccess()`, compartido por dos caminos:
 - **Aprobación individual**: un estudiante se autoregistra (`/register`, solo correo `@upn.edu.pe` + facultad, sin contraseña — queda con `approved_at = NULL`), su decano lo ve como "Pendiente" en `/admin/usuarios` y lo aprueba con un clic.
