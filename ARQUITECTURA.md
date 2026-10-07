@@ -15,6 +15,7 @@
 9. [Paquetes instalados además del esqueleto base](#9-paquetes-instalados-además-del-esqueleto-base)
 10. [Rutas principales](#10-rutas-principales)
 11. [Cómo ejecutar el proyecto](#11-cómo-ejecutar-el-proyecto)
+12. [Despliegue en hosting compartido](#12-despliegue-en-hosting-compartido)
 
 ---
 
@@ -75,42 +76,52 @@ app/
 ├── Http/
 │   ├── Controllers/          # Dashboard, Income, Expense, Category, Budget,
 │   │                         # Projection, Goal, GoalContribution, Report,
-│   │                         # History, Notification, Settings, Profile (Breeze)
-│   │   └── Admin/            # DashboardController, UserController, CategoryController
+│   │                         # History, Notification, Settings, Chat, Profile (Breeze)
+│   │   └── Admin/            # DashboardController, UserController, CategoryController, AiProviderController
 │   ├── Middleware/            # EnsureUserIsAdmin, EnsureAccountIsActive
 │   └── Requests/             # Store/Update*Request por cada formulario
 ├── Mail/LowLiquidityAlertMail.php
-├── Models/                   # User, UserSetting, Category, Income, Expense,
-│                             # Budget, SavingsGoal, GoalContribution, LiquidityAlert
+├── Models/                   # User, UserSetting, Category, Income, Expense, Budget,
+│                             # SavingsGoal, GoalContribution, LiquidityAlert,
+│                             # AiProvider, AiUsageLog, ChatMessage, ChatState
 ├── Observers/UserObserver.php
 ├── Providers/AppServiceProvider.php
-├── Services/                  # LiquidityProjectionService, RecurringIncomeService,
-│                              # LiquidityAlertService, ReportService
+├── Services/
+│   ├── LiquidityProjectionService.php, RecurringIncomeService.php,
+│   │   LiquidityAlertService.php, ReportService.php
+│   └── Ai/                    # ChatService, AiProviderRouter, AiReply,
+│       ├── Drivers/           #   OpenAiCompatibleDriver, GeminiDriver (+ AiDriverInterface)
+│       ├── Exceptions/        #   QuotaExceededException
+│       ├── ExpenseChatIntent.php, BudgetChatIntent.php
 ├── Support/WeekHelper.php
 └── View/
     ├── Components/AppLayout.php, GuestLayout.php, AdminLayout.php
-    └── Composers/LayoutComposer.php
+    └── Composers/LayoutComposer.php, ChatWidgetComposer.php
 
 database/
-├── migrations/                # 8 migraciones propias + las 3 de Laravel/Breeze
+├── migrations/                # 14 migraciones propias + las 3 de Laravel/Breeze
 ├── factories/                 # Category, Income, Expense, Budget, SavingsGoal, GoalContribution
 └── seeders/                   # DatabaseSeeder, CategorySeeder
 
 resources/
 ├── css/app.css                 # Tailwind + tokens de marca
 ├── js/
-│   ├── app.js                  # bootstrap Alpine + montaje de gráficos
+│   ├── app.js                  # bootstrap Alpine + montaje de gráficos + chat
+│   ├── chat-voice.js            # Web Speech API (dictado continuo + lectura en voz alta)
 │   └── charts/                 # liquidity-chart.js, report-charts.js
 └── views/
-    ├── layouts/, components/   # shell y piezas reutilizables (incluye admin-sidebar, layouts/admin.blade.php)
+    ├── layouts/, components/   # shell y piezas reutilizables (sidebar, admin-sidebar,
+    │                           # layouts/admin.blade.php, chat-widget.blade.php)
     ├── dashboard/, incomes/, expenses/, budgets/, projections/,
     │   goals/, reports/, history/, notifications/, settings/, pdf/
-    ├── admin/                  # dashboard.blade.php, users/index.blade.php, categories/index.blade.php
+    ├── admin/                  # dashboard, users/index, categories/index, ai/index
     ├── auth/, profile/         # generadas por Breeze
     └── emails/low-liquidity.blade.php
 
 lang/es.json                    # traducciones de las cadenas en inglés de Breeze
 routes/web.php, console.php
+
+tests/Feature/                  # ExampleTest, Auth/*, ProfileTest, ChatToolCallingTest
 ```
 
 ## 4. Base de datos
@@ -307,6 +318,8 @@ Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad complet
 
 > F010 se amplió más allá de lo original: además de las métricas agregadas (RF36) y la gestión de categorías globales (RF35), el admin ahora puede **activar/desactivar y eliminar cuentas de estudiante** — control de acceso que no estaba en la tabla de requerimientos original pero se pidió explícitamente.
 
+> F003 también se amplió: además del CRUD de gastos (RF10-14), la lista en `/gastos` tiene filtros independientes por descripción, categoría y rango de fechas, más orden por monto (mayor a menor / menor a mayor) o por fecha — se combinan todos entre sí (AND) y se conservan al paginar (`ExpenseController::index`, con `withQueryString()`).
+
 ### Decisiones de diseño relevantes
 
 - **Ingresos fijos**: la fila `fijo` actúa como plantilla con `next_occurrence_date`; un comando programado diario (`incomes:generate-recurring`) clona la ocurrencia real y avanza la plantilla (RF08).
@@ -408,3 +421,19 @@ Cuentas de prueba ya cargadas por el seeder (ambas con contraseña `password`):
 | Estudiante demo | `demo@kashafin.test` | `estudiante` — incluye ingresos, gastos, presupuestos y metas de ejemplo para que el dashboard no se vea vacío |
 
 Sin ningún proveedor de IA configurado, el asistente sigue funcionando: "agrega un gasto" funciona igual (es determinístico) y las preguntas libres devuelven el resumen de datos sin IA. Para que responda con un modelo real, entra como admin a `/admin/ia` y agrega al menos un proveedor con su API key.
+
+## 12. Despliegue en hosting compartido
+
+El proyecto está desplegado en un hosting compartido (InfinityFree) que no permite apuntar el dominio directo a `public/`. El layout en el hosting es distinto al de desarrollo local:
+
+```
+htdocs/                  ← raíz pública del hosting
+├── index.php            ← copia modificada (ver abajo)
+├── build/                ← contenido de public/build/ copiado aquí (CSS/JS compilado, gitignored)
+└── kashafin/             ← el proyecto completo (app/, vendor/, bootstrap/, routes/, etc.)
+```
+
+- **`index.php`**: en el repo (`public/index.php`) se mantiene siempre como el Laravel estándar (`../vendor/autoload.php`, `../bootstrap/app.php`) para que el desarrollo local no se vea afectado. **Antes de subir al hosting**, esos `require` deben apuntar a `kashafin/vendor/autoload.php` y `kashafin/bootstrap/app.php` en vez de `../`, porque en el hosting este archivo vive un nivel arriba de esa carpeta, no dentro de `public/`. Avisar explícitamente cuándo corresponde hacer ese cambio antes de cada despliegue.
+- **Assets compilados**: `public/build/` está en `.gitignore`, así que no viaja por git — hay que copiarlo a mano a `htdocs/build/` cada vez que cambie algo en `resources/js/` o `resources/css/` (correr `npm run build` localmente primero).
+- **Base de datos**: el hosting usa MySQL (phpMyAdmin), no SQLite. El archivo `kashafin.sql` en la raíz del repo es un volcado (`mysqldump --add-drop-table`, sin sentencias `CREATE/DROP DATABASE` porque la cuenta del hosting no tiene permiso para crearlas) listo para importar por la pestaña **Importar** de phpMyAdmin — reemplaza todas las tablas y las recarga con los datos de ejemplo del seeder. Se regenera corriendo las migraciones contra un MySQL local (XAMPP) y volviendo a hacer el dump cada vez que cambia el esquema (columnas o tablas nuevas) — ya pasó dos veces en este proyecto (roles/admin, y luego el asistente de IA).
+- **`.env` de producción**: vive solo en el hosting, nunca se sube por git (está en `.gitignore`). Apunta a la base MySQL real del hosting — nunca debe sobrescribirse con el `.env` local (que usa SQLite para desarrollo).
