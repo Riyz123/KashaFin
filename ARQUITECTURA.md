@@ -240,14 +240,22 @@ Todas las FK hacia `user_id` tienen `cascadeOnDelete()`, por lo que eliminar una
 
 ## 5. Roles y panel de administración
 
-KashaFin tiene **dos tipos de cuenta** sobre la misma tabla `users`, diferenciadas por la columna `role`:
+KashaFin tiene **tres tipos de cuenta** sobre la misma tabla `users`, diferenciadas por la columna `role`:
 
 - **`estudiante`** (por defecto): accede a toda la app descrita en las secciones anteriores — ingresos, gastos, presupuesto, proyecciones, metas, reportes, historial, configuración y perfil.
-- **`admin`**: accede a un panel separado en `/admin/*`, con su propio layout, sidebar y navegación (`resources/views/layouts/admin.blade.php` + `<x-admin-sidebar>`), visualmente distinto (sidebar oscuro) para que no se confunda con la app de estudiante.
+- **`decano`**: cuenta de staff acotada a **una sola facultad** (`users.faculty_id`). Ve y administra (activar/desactivar/eliminar) solo a los estudiantes de su propia facultad, más el panel de categorías globales compartido — nada de panel de IA, métricas globales ni gestión de facultades. Puede exportar un CSV de sus propios estudiantes (activos/inactivos) desde `/admin/usuarios/exportar`.
+- **`admin`** (master): accede a un panel separado en `/admin/*`, con su propio layout, sidebar y navegación (`resources/views/layouts/admin.blade.php` + `<x-admin-sidebar>`), visualmente distinto (sidebar oscuro). Ve y controla todo: todos los estudiantes de todas las facultades, todas las cuentas de decano, proveedores de IA, y la creación de facultades/decanos.
+
+### Facultades y decanos (`App\Models\Faculty`, `Admin\FacultyController`)
+
+- Cada facultad (`facultades`) tiene como máximo un decano. El admin master las crea y les asigna un decano desde `/admin/decanos` (nombre, correo, contraseña — la cuenta queda creada ya verificada, no pasa por el flujo de autoregistro).
+- `User::canManage(User $target)` centraliza la regla de autorización: un admin puede gestionar cualquier cuenta que no sea admin; un decano solo estudiantes de su propia `faculty_id`. La usan `AdminUserController::toggleActive/destroy`.
+- Middleware `staff` (`EnsureUserIsStaff`, admin **o** decano) protege `/admin/usuarios` y `/admin/categorias`; middleware `admin` (solo master) protege `/admin/dashboard`, `/admin/ia` y `/admin/decanos`.
+- Un decano que inicia sesión cae directo en `/admin/usuarios` (no tiene dashboard de estudiante); el middleware `student-app` (`EnsureUserIsStudentApp`) lo redirige ahí si intenta entrar a cualquier ruta de la app de estudiante. El admin master sigue pudiendo entrar a la app de estudiante a propósito, vía "Ver app de estudiante".
 
 ### Cómo se separan las dos áreas
 
-- **Registro público** (`/register`): siempre crea cuentas con `role = estudiante`. No hay forma de auto-registrarse como administrador — las cuentas admin solo se crean por seeder o directamente en base de datos.
+- **Registro público** (`/register`): siempre crea cuentas con `role = estudiante`, exige un correo que termine en `@upn.edu.pe` (regla `ends_with`) y una facultad (selector poblado desde `faculties`). La cuenta queda sin verificar hasta que el estudiante confirme el correo que le manda Breeze (`MustVerifyEmail` reactivado en `User`, middleware `verified` en el grupo de rutas de la app) — no hay forma de auto-registrarse como admin o decano, esas cuentas solo se crean desde el panel.
 - **Middleware `admin`** (`app/Http/Middleware/EnsureUserIsAdmin.php`, alias registrado en `bootstrap/app.php`): protege todas las rutas bajo `Route::prefix('admin')`; devuelve `403` si el usuario autenticado no es admin.
 - **Redirección post-login**: `AuthenticatedSessionController` revisa `$user->isAdmin()` y manda al admin a `admin.dashboard` en vez de `dashboard`. La ruta raíz `/` hace lo mismo.
 - **Acceso cruzado**: un admin puede entrar a la app de estudiante desde el enlace "Ver app de estudiante" en su sidebar (sin restricción, ya que no hay necesidad de bloquearlo); un estudiante que intente visitar `/admin/*` recibe `403`.
@@ -266,7 +274,7 @@ KashaFin tiene **dos tipos de cuenta** sobre la misma tabla `users`, diferenciad
 
 ### Cuentas de prueba
 
-El seeder crea **dos usuarios**: el admin (`admin@kashafin.test`) y el estudiante demo (`demo@kashafin.test`), ambos con contraseña `password`. Ver [sección 11](#11-cómo-ejecutar-el-proyecto).
+El seeder crea 6 facultades (`FacultySeeder`) y **tres usuarios**: el admin master (`admin@kashafin.test`), un decano demo (`decano@kashafin.test`, asignado a la primera facultad) y el estudiante demo (`demo@kashafin.test`, misma facultad que el decano), los tres con contraseña `password`. Ver [sección 11](#11-cómo-ejecutar-el-proyecto).
 
 ## 6. Asistente de IA (chatbot)
 
@@ -293,9 +301,14 @@ Para todo lo que no sea una de esas dos acciones (saludos, preguntas, pedir un a
 
 Probado con `tests/Feature/ChatToolCallingTest.php` usando `Http::fake()` (sin depender de ninguna API key real): simula la respuesta de un proveedor con un `tool_call` de cada tipo, una respuesta de texto plano normal, y un caso donde el modelo manda un monto inválido (confirma que se rechaza en vez de guardarse).
 
+### Idiomas y prompt editable
+
+- **Español, inglés y quechua**: el system prompt instruye al modelo a entender los tres y responder en el idioma que el estudiante configuró en `/configuracion` (`user_settings.language`, `es`/`en`/`qu`) — no en el que detecte del último mensaje, para que la conversación no cambie de idioma sola a media conversación.
+- **Prompt editable desde el panel** (`App\Models\AiSetting`, fila única; `/admin/ia`): el admin master edita el párrafo de personalidad/tono del asistente, con botón "Restaurar por defecto". El manejo de idiomas y las tres herramientas (`add_expense`/`add_budget`/`add_income`) quedan fuera de ese texto — son parte fija del código, así un prompt mal editado nunca puede romper la funcionalidad, solo el tono.
+
 ### Voz
 
-Web Speech API del navegador (sin backend ni costo): `SpeechRecognition` dicta y autoenvía el mensaje, `speechSynthesis` lee la respuesta en voz alta (toggle en el widget). **Requiere HTTPS en producción** — si el hosting no tiene HTTPS, el micrófono no funcionará ahí aunque sí en local.
+Web Speech API del navegador (sin backend ni costo): `SpeechRecognition` dicta con `continuous: true` (para no cortar tras una sola palabra) y se autoenvía sola tras ~1.5s de silencio sin habla nueva, o de inmediato si el estudiante pulsa el botón del micrófono para pausar antes; `speechSynthesis` lee la respuesta en voz alta (toggle en el widget). **Requiere HTTPS en producción** — si el hosting no tiene HTTPS, el micrófono no funcionará ahí aunque sí en local.
 
 ## 7. Requerimientos implementados
 
@@ -316,7 +329,7 @@ Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad complet
 | F013 | Presupuestos por categoría | RF46, RF47, RF48 |
 | F016 | Configuración general y preferencias | RF56, RF57, RF58 |
 
-> F010 se amplió más allá de lo original: además de las métricas agregadas (RF36) y la gestión de categorías globales (RF35), el admin ahora puede **activar/desactivar y eliminar cuentas de estudiante** — control de acceso que no estaba en la tabla de requerimientos original pero se pidió explícitamente.
+> F010 se amplió más allá de lo original: además de las métricas agregadas (RF36) y la gestión de categorías globales (RF35), el admin master puede **activar/desactivar y eliminar cuentas de estudiante**, y ahora existe un segundo nivel de administración — **decanos acotados por facultad** (ver [sección 5](#5-roles-y-panel-de-administración)) — ninguno de los dos estaba en la tabla de requerimientos original, se pidieron explícitamente.
 
 > F003 también se amplió: además del CRUD de gastos (RF10-14), la lista en `/gastos` tiene filtros independientes por descripción, categoría y rango de fechas, más orden por monto (mayor a menor / menor a mayor) o por fecha — se combinan todos entre sí (AND) y se conservan al paginar (`ExpenseController::index`, con `withQueryString()`).
 
@@ -398,6 +411,9 @@ Bajo `middleware(['auth', 'active', 'admin'])`, prefijo `/admin`:
 | `PATCH /admin/categorias/{id}` | Renombrar una categoría global |
 | `PATCH /admin/categorias/{id}/estado` | Activar/desactivar una categoría global |
 | `GET/POST /admin/ia`, `PUT /admin/ia/{id}`, `PATCH .../estado`, `DELETE /admin/ia/{id}` | Gestión de proveedores de IA |
+| `PUT /admin/ia-prompt`, `DELETE /admin/ia-prompt` | Editar o restaurar el prompt del asistente (solo admin master) |
+| `GET /admin/usuarios/exportar` | CSV de estudiantes (acotado a la facultad si es decano) |
+| `GET/POST /admin/decanos`, `POST /admin/decanos/{faculty}/decano` | Crear facultades y asignarles un decano (solo admin master) |
 
 Y en el grupo de estudiante: `POST /asistente/mensaje` (`chat.send`) — envía un mensaje al asistente (recomendaciones o "agrega un gasto") y devuelve la respuesta en JSON.
 
@@ -413,12 +429,13 @@ npm run build           # o `npm run dev` en desarrollo
 php artisan serve
 ```
 
-Cuentas de prueba ya cargadas por el seeder (ambas con contraseña `password`):
+Cuentas de prueba ya cargadas por el seeder (las tres con contraseña `password`):
 
 | Cuenta | Email | Rol |
 |---|---|---|
-| Administrador | `admin@kashafin.test` | `admin` — entra directo al panel `/admin` |
-| Estudiante demo | `demo@kashafin.test` | `estudiante` — incluye ingresos, gastos, presupuestos y metas de ejemplo para que el dashboard no se vea vacío |
+| Administrador | `admin@kashafin.test` | `admin` — entra directo al panel `/admin`, ve y controla todo |
+| Decano demo | `decano@kashafin.test` | `decano` — acotado a la primera facultad sembrada, entra directo a `/admin/usuarios` |
+| Estudiante demo | `demo@kashafin.test` | `estudiante` (misma facultad que el decano demo) — incluye ingresos, gastos, presupuestos y metas de ejemplo para que el dashboard no se vea vacío |
 
 Sin ningún proveedor de IA configurado, el asistente sigue funcionando: "agrega un gasto" funciona igual (es determinístico) y las preguntas libres devuelven el resumen de datos sin IA. Para que responda con un modelo real, entra como admin a `/admin/ia` y agrega al menos un proveedor con su API key.
 
