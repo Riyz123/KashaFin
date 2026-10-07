@@ -273,7 +273,7 @@ No es reentrenamiento del modelo — ninguna API gratuita de terceros lo expone.
 
 ### "Agrega un gasto" (determinístico, no vía IA)
 
-`App\Services\Ai\ExpenseChatIntent` detecta frases gatillo ("agrega/registra/anota un gasto") y completa monto/categoría con regex y coincidencia de texto contra las categorías reales del estudiante — **nunca** se deja que la IA decida el monto o cree el registro, para que no pueda alucinar un gasto. El estado de la conversación en curso (`chat_states`, una fila por estudiante) guarda qué falta por preguntar. `ChatController` prueba primero este flujo determinístico; si el mensaje no es parte de un flujo de gasto, lo pasa a `ChatService` para una respuesta libre de la IA.
+`App\Services\Ai\ExpenseChatIntent` (gastos) y `App\Services\Ai\BudgetChatIntent` (presupuestos) detectan frases gatillo ("agrega/registra/anota un gasto", "crea/define un presupuesto") y completan monto/categoría con regex y coincidencia de texto contra las categorías reales del estudiante — **nunca** se deja que la IA decida el monto o cree el registro, para que no pueda alucinar un movimiento. La coincidencia de categoría normaliza acentos (`Str::ascii`), porque el dictado por voz y la escritura casual suelen omitirlos ("alimentacion" igual encuentra "Alimentación"). El estado de la conversación en curso (`chat_states`, una fila por estudiante) guarda qué falta por preguntar. `ChatController` prueba primero estos flujos determinísticos, en orden; si el mensaje no es parte de ninguno, lo pasa a `ChatService` para una respuesta libre de la IA (recomendaciones, análisis, reportes — usando el mismo resumen de datos como contexto, ahora con el desglose de gastos por categoría del mes incluido).
 
 ### Voz
 

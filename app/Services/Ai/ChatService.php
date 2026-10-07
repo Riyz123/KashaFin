@@ -100,10 +100,12 @@ class ChatService
     private function systemPrompt(User $user): string
     {
         return "Eres el asistente financiero de KashaFin, una app para estudiantes universitarios. ".
-            "Responde en español, en tono cercano y breve (máximo 4-5 líneas salvo que te pidan más detalle). ".
-            "Da recomendaciones concretas basadas en los datos reales del estudiante que te paso a continuación. ".
-            "No inventes montos ni muevas dinero: si el estudiante quiere registrar un gasto, dile que escriba ".
-            "algo como 'agrega un gasto' y el sistema lo guiará paso a paso.\n\n".
+            "Responde en español, en tono cercano. Si te piden un reporte, análisis o recomendación, usa los ".
+            "datos reales de abajo para dar una respuesta concreta y bien explicada (no hace falta que sea ".
+            "breve si te piden detalle o un análisis); para preguntas simples, responde corto. ".
+            "No inventes montos ni muevas dinero: si el estudiante quiere registrar un gasto o crear un ".
+            "presupuesto, dile que escriba algo como 'agrega un gasto' o 'crea un presupuesto' y el sistema ".
+            "lo guiará paso a paso — tú nunca ejecutas esa acción directamente.\n\n".
             "Datos actuales del estudiante:\n".$this->studentSummary($user);
     }
 
@@ -130,9 +132,14 @@ class ChatService
             ->map(fn ($goal) => "{$goal->name} ({$goal->progress_percent}%)")
             ->implode(' · ') ?: 'sin metas activas';
 
+        $categoryLine = $this->reports->expensesByCategory($user, $monthStart, $monthEnd)
+            ->map(fn ($row) => "{$row['category']}: S/ {$row['total']}")
+            ->implode(' · ') ?: 'sin gastos registrados este mes';
+
         return implode("\n", [
             "- Saldo actual: S/ {$balance}",
             "- Ingresos del mes: S/ {$summary['income']} | Gastos del mes: S/ {$summary['expense']}",
+            "- Gastos del mes por categoría: {$categoryLine}",
             "- Proyección más baja (7 días): S/ {$lowest['balance']} el {$lowest['date']}",
             "- Presupuestos: {$budgetsLine}",
             "- Metas activas: {$goalsLine}",

@@ -119,10 +119,12 @@ class ExpenseChatIntent
 
     private function extractCategory(User $user, string $message): ?int
     {
-        $lower = Str::lower($message);
+        // Normalize accents too: voice-to-text and casual typing often drop
+        // them ("alimentacion" should still match "Alimentación").
+        $normalized = Str::lower(Str::ascii($message));
 
         foreach (Category::query()->forUser($user)->get() as $category) {
-            if (str_contains($lower, Str::lower($category->name))) {
+            if (str_contains($normalized, Str::lower(Str::ascii($category->name)))) {
                 return $category->id;
             }
         }
@@ -132,8 +134,8 @@ class ExpenseChatIntent
 
     private function mentionsNoCategory(string $message): bool
     {
-        $lower = Str::lower($message);
+        $normalized = Str::lower(Str::ascii($message));
 
-        return str_contains($lower, 'ningun') || str_contains($lower, 'sin categor');
+        return str_contains($normalized, 'ningun') || str_contains($normalized, 'sin categor');
     }
 }
