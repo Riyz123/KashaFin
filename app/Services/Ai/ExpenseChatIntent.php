@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\ChatState;
 use App\Models\Expense;
 use App\Models\User;
-use Illuminate\Support\Str;
 
 /**
  * Deterministic slot-filling for "add an expense" via chat/voice. Amount and
@@ -169,8 +168,7 @@ class ExpenseChatIntent
 
     private function mentionsNoCategory(string $message): bool
     {
-        $normalized = Str::lower(Str::ascii($message));
-
-        return str_contains($normalized, 'ningun') || str_contains($normalized, 'sin categor');
+        return FuzzyMatch::hasWord($message, ['ningun', 'ninguna'])
+            || (FuzzyMatch::hasWord($message, ['sin']) && FuzzyMatch::hasWord($message, ['categoria'], 2));
     }
 }

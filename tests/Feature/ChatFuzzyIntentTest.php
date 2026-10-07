@@ -81,6 +81,21 @@ class ChatFuzzyIntentTest extends TestCase
         $this->assertDatabaseMissing('expenses', ['user_id' => $user->id]);
     }
 
+    public function test_a_typo_in_ninguna_category_still_skips_the_category_step(): void
+    {
+        $user = User::factory()->create();
+        Category::factory()->create(['name' => 'Alimentación']);
+
+        $this->actingAs($user)->postJson(route('chat.send'), ['message' => 'agrega un gasto']);
+
+        $response = $this->actingAs($user)->postJson(route('chat.send'), [
+            'message' => '20, ningna', // typo'd "ninguna"
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonFragment(['reply' => '✅ Gasto registrado: S/ 20.00 en sin categoría, con fecha de hoy.']);
+    }
+
     public function test_fuzzy_income_type_and_frequency_with_typos(): void
     {
         $user = User::factory()->create();
