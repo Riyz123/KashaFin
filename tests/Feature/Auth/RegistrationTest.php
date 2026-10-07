@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\Faculty;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,20 +18,24 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_new_users_can_register(): void
+    public function test_new_users_create_a_pending_request_instead_of_logging_in(): void
     {
         $faculty = Faculty::factory()->create();
 
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@upn.edu.pe',
-            'password' => 'password',
-            'password_confirmation' => 'password',
             'faculty_id' => $faculty->id,
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // No password field at all — the account isn't usable until a dean
+        // approves it and a real password gets generated and emailed.
+        $this->assertGuest();
+        $response->assertRedirect(route('login'));
+
+        $user = User::where('email', 'test@upn.edu.pe')->first();
+        $this->assertNotNull($user);
+        $this->assertTrue($user->isPendingApproval());
     }
 
     public function test_registration_is_rejected_for_non_upn_emails(): void
@@ -40,8 +45,6 @@ class RegistrationTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@gmail.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
             'faculty_id' => $faculty->id,
         ]);
 

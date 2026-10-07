@@ -255,7 +255,9 @@ KashaFin tiene **tres tipos de cuenta** sobre la misma tabla `users`, diferencia
 
 ### Cómo se separan las dos áreas
 
-- **Registro público** (`/register`): siempre crea cuentas con `role = estudiante`, exige un correo que termine en `@upn.edu.pe` (regla `ends_with`) y una facultad (selector poblado desde `faculties`). La cuenta queda sin verificar hasta que el estudiante confirme el correo que le manda Breeze (`MustVerifyEmail` reactivado en `User`, middleware `verified` en el grupo de rutas de la app) — no hay forma de auto-registrarse como admin o decano, esas cuentas solo se crean desde el panel.
+- **Registro público** (`/register`): siempre crea una **solicitud pendiente** de estudiante (`role = estudiante`, `approved_at = NULL`, contraseña aleatoria que nadie conoce), exigiendo un correo `@upn.edu.pe` y una facultad. No hay forma de auto-registrarse como admin o decano, esas cuentas solo se crean desde el panel.
+- **Aprobación por el decano** (reemplaza la verificación por correo de Breeze, que se quitó — ver más abajo): el decano de esa facultad (o el admin master) ve la solicitud en `/admin/usuarios` con badge "Pendiente" y la aprueba con un clic (`AdminUserController::approve`). Al aprobar, se genera una contraseña real al azar (`Str::password`), se marca `approved_at`/`is_active`/`must_change_password = true`, y se envía por correo (`App\Mail\TemporaryPasswordMail`, ver [sección 6.1](#61-correo-y-alta-de-estudiantes)). El estudiante entra con esa contraseña y el middleware `password-fresh` (`EnsurePasswordIsFresh`) lo manda directo a `/cambiar-contrasena` antes de dejarlo tocar cualquier otra cosa; al guardar su propia contraseña, el flag se limpia y ya es un estudiante normal.
+- **Alta masiva por CSV** (`/admin/usuarios/importar`, mismo botón "Importar CSV" en la lista de usuarios): el decano (o el admin, eligiendo la facultad) sube un CSV con columnas `nombre,correo` — cada fila válida nace **ya aprobada** (sin esperar un segundo clic) con el mismo mecanismo de contraseña aleatoria + correo. Filas con correo que no termina en `@upn.edu.pe` o ya existente se omiten y se listan en el mensaje de resultado, nunca se descartan en silencio. No se soporta `.xls` directamente (ver nota sobre `maatwebsite/excel` en la [sección 9](#9-paquetes-instalados-además-del-esqueleto-base)) — hay que guardarlo como CSV primero.
 - **Middleware `admin`** (`app/Http/Middleware/EnsureUserIsAdmin.php`, alias registrado en `bootstrap/app.php`): protege todas las rutas bajo `Route::prefix('admin')`; devuelve `403` si el usuario autenticado no es admin.
 - **Redirección post-login**: `AuthenticatedSessionController` revisa `$user->isAdmin()` y manda al admin a `admin.dashboard` en vez de `dashboard`. La ruta raíz `/` hace lo mismo.
 - **Acceso cruzado**: un admin puede entrar a la app de estudiante desde el enlace "Ver app de estudiante" en su sidebar (sin restricción, ya que no hay necesidad de bloquearlo); un estudiante que intente visitar `/admin/*` recibe `403`.
@@ -310,6 +312,21 @@ Probado con `tests/Feature/ChatToolCallingTest.php` usando `Http::fake()` (sin d
 
 Web Speech API del navegador (sin backend ni costo): `SpeechRecognition` dicta con `continuous: true` (para no cortar tras una sola palabra) y se autoenvía sola tras ~1.5s de silencio sin habla nueva, o de inmediato si el estudiante pulsa el botón del micrófono para pausar antes; `speechSynthesis` lee la respuesta en voz alta (toggle en el widget). **Requiere HTTPS en producción** — si el hosting no tiene HTTPS, el micrófono no funcionará ahí aunque sí en local.
 
+### 6.1 Correo y alta de estudiantes
+
+KashaFin envía correos reales (contraseñas temporales) vía **Resend** (`resend/resend-php`, mailer nativo de Laravel 12 — `MAIL_MAILER=resend`). No hay ninguna integración con Outlook/Microsoft Graph: se eligió Resend porque se configura con una sola API key, sin que el hosting necesite credenciales de tu cuenta de correo ni registrar una app en Azure AD.
+
+**Para que funcione en producción**, el usuario del proyecto debe:
+1. Crear una cuenta gratis en [resend.com](https://resend.com).
+2. Verificar un dominio propio en Resend (agregar los registros DNS que te da) **o**, para probar rápido sin dominio propio, usar el remitente de pruebas `onboarding@resend.dev` — pero ese remitente de pruebas de Resend solo entrega al correo de la cuenta de Resend, no a correos `@upn.edu.pe` reales. Para que los estudiantes reciban su contraseña de verdad, hace falta verificar un dominio propio.
+3. Copiar la API key generada a `RESEND_KEY` en `.env`, y poner `MAIL_MAILER=resend` (en local se deja en `log`: el correo se escribe en `storage/logs/laravel.log` en vez de enviarse, para no gastar cuota probando).
+
+`App\Mail\TemporaryPasswordMail` es el único correo transaccional del sistema — lo dispara `AdminUserController::grantAccess()`, compartido por dos caminos:
+- **Aprobación individual**: un estudiante se autoregistra (`/register`, solo correo `@upn.edu.pe` + facultad, sin contraseña — queda con `approved_at = NULL`), su decano lo ve como "Pendiente" en `/admin/usuarios` y lo aprueba con un clic.
+- **Importación CSV** (`/admin/usuarios/importar`): el decano sube un roster con columnas `nombre,correo` y cada fila válida se da de alta ya aprobada, sin pasar por el paso de solicitud pendiente.
+
+En ambos casos se genera una contraseña real al azar (nunca elegida por nadie), se envía por correo, y la cuenta queda con `must_change_password = true` — el middleware `password-fresh` obliga a cambiarla en el primer login (`/cambiar-contrasena`) antes de dejar pasar a cualquier otra ruta. Esto **reemplazó** la verificación de correo por clic de Breeze (que se quitó del proyecto: controladores, rutas y test de `EmailVerificationTest` eliminados) — recibir esa contraseña ya es la prueba de que el correo es real y de que el decano aprobó a esa persona, así que un segundo paso de verificación habría sido redundante.
+
 ## 7. Requerimientos implementados
 
 Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad completa de extremo a extremo (modelo + validación + UI), no como una cobertura superficial.
@@ -361,10 +378,11 @@ El proyecto partió de un Laravel 12 recién creado (solo `laravel/framework` y 
 
 | Paquete | Versión | Uso |
 |---|---|---|
-| `laravel/breeze` (dev) | ^2.4 | Scaffolding de autenticación (stack Blade): login, registro, recuperación de contraseña, verificación de email, perfil |
+| `laravel/breeze` (dev) | ^2.4 | Scaffolding de autenticación (stack Blade): login, registro, recuperación de contraseña, perfil (la verificación de email que trae por defecto se quitó, ver [sección 6.1](#61-correo-y-alta-de-estudiantes)) |
 | `barryvdh/laravel-dompdf` | ^3.1 | Exportación de reportes a PDF (RF27) |
+| `resend/resend-php` | ^1.16 | SDK que usa el mailer nativo `resend` de Laravel para enviar la contraseña temporal a estudiantes nuevos |
 
-> Se probó `maatwebsite/excel`, pero solo instalaba una versión antigua (v1.1.5, con `phpoffice/phpexcel` **abandonado** y 20 advisories de seguridad) por requerir PHP ^8.3 la versión actual. Se descartó y se optó por **CSV nativo** (`fputcsv` + `streamDownload`), que Excel abre sin problema — mismo endpoint, sin dependencias inseguras.
+> Se probó `maatwebsite/excel`, pero solo instalaba una versión antigua (v1.1.5, con `phpoffice/phpexcel` **abandonado** y 20 advisories de seguridad) por requerir PHP ^8.3 la versión actual. Se descartó y se optó por **CSV nativo** (`fputcsv`/`fgetcsv`), que Excel abre y guarda sin problema — mismo enfoque para export (reportes, listados) e import (alta de estudiantes), sin dependencias inseguras.
 
 ### npm
 
@@ -413,6 +431,9 @@ Bajo `middleware(['auth', 'active', 'admin'])`, prefijo `/admin`:
 | `GET/POST /admin/ia`, `PUT /admin/ia/{id}`, `PATCH .../estado`, `DELETE /admin/ia/{id}` | Gestión de proveedores de IA |
 | `PUT /admin/ia-prompt`, `DELETE /admin/ia-prompt` | Editar o restaurar el prompt del asistente (solo admin master) |
 | `GET /admin/usuarios/exportar` | CSV de estudiantes (acotado a la facultad si es decano) |
+| `GET/POST /admin/usuarios/importar` | Alta masiva de estudiantes por CSV (ya aprobados) |
+| `PATCH /admin/usuarios/{id}/aprobar` | Aprobar una solicitud pendiente (genera y envía la contraseña) |
+| `GET/PUT /cambiar-contrasena` | Forzar el cambio de contraseña temporal en el primer login |
 | `GET/POST /admin/decanos`, `POST /admin/decanos/{faculty}/decano` | Crear facultades y asignarles un decano (solo admin master) |
 
 Y en el grupo de estudiante: `POST /asistente/mensaje` (`chat.send`) — envía un mensaje al asistente (recomendaciones o "agrega un gasto") y devuelve la respuesta en JSON.

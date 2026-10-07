@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -49,8 +48,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'approved_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 
@@ -67,6 +68,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isStaff(): bool
     {
         return $this->isAdmin() || $this->isDean();
+    }
+
+    /**
+     * Self-registered students start with approved_at = null and an
+     * unusable random password — they can't log in until staff approves
+     * them (see FacultyController/UserController@approve). Accounts
+     * created directly by staff (dean/admin, CSV import) are born
+     * approved, so this is never true for them.
+     */
+    public function isPendingApproval(): bool
+    {
+        return $this->role === 'estudiante' && $this->approved_at === null;
     }
 
     /**

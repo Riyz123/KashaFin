@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ForcePasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\GoalContributionController;
@@ -34,7 +35,12 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::middleware(['auth', 'active', 'verified', 'student-app'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
+    Route::get('cambiar-contrasena', [ForcePasswordController::class, 'edit'])->name('password.force-edit');
+    Route::put('cambiar-contrasena', [ForcePasswordController::class, 'update'])->name('password.force-update');
+});
+
+Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('ingresos', IncomeController::class)
@@ -88,10 +94,13 @@ Route::middleware(['auth', 'active', 'verified', 'student-app'])->group(function
 
 // Accesible por admin master Y por decanos (acotado a su propia facultad
 // dentro de cada controller — ver User::canManage() y scopedStudents()).
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'verified', 'staff'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-fresh', 'staff'])->group(function () {
     Route::get('usuarios', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('usuarios/exportar', [AdminUserController::class, 'export'])->name('users.export');
+    Route::get('usuarios/importar', [AdminUserController::class, 'importForm'])->name('users.import-form');
+    Route::post('usuarios/importar', [AdminUserController::class, 'import'])->name('users.import');
     Route::patch('usuarios/{user}/estado', [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
+    Route::patch('usuarios/{user}/aprobar', [AdminUserController::class, 'approve'])->name('users.approve');
     Route::delete('usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
     Route::get('categorias', [AdminCategoryController::class, 'index'])->name('categories.index');
@@ -102,7 +111,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'verified'
 
 // Solo admin master: métricas globales, proveedores de IA, y gestión de
 // facultades/decanos.
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'verified', 'admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-fresh', 'admin'])->group(function () {
     Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('ia', [AdminAiProviderController::class, 'index'])->name('ai.index');

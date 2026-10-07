@@ -32,7 +32,20 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'role' => 'estudiante',
             'is_active' => true,
+            'approved_at' => now(),
+            'must_change_password' => false,
         ];
+    }
+
+    /**
+     * Indicate that the student's registration request is still awaiting
+     * their dean's approval (no usable password, not active yet).
+     */
+    public function pendingApproval(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'approved_at' => null,
+        ]);
     }
 
     /**
