@@ -6,21 +6,23 @@ use App\Models\ChatState;
 use App\Models\Income;
 use App\Models\User;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 /**
  * Deterministic slot-filling for "add an income" via chat/voice, mirroring
  * ExpenseChatIntent/BudgetChatIntent: amount, type and frequency are parsed
- * with string/regex matching, never left to the AI to decide.
+ * with fuzzy word matching, never left to the AI to decide.
  */
 class IncomeChatIntent
 {
-    private const TRIGGERS = [
-        'agrega un ingreso', 'agregar un ingreso', 'agregar ingreso', 'agregame un ingreso',
-        'registra un ingreso', 'registrar un ingreso', 'registrar ingreso',
-        'anota un ingreso', 'anotar un ingreso', 'anotar ingreso',
-        'nuevo ingreso', 'quiero agregar un ingreso', 'quiero registrar un ingreso',
+    // Deliberately doesn't include generic verbs like "quiero" — those show
+    // up in unrelated questions too, and pairing them with just the noun
+    // "ingreso" would misfire too easily.
+    private const ACTION_WORDS = [
+        'agrega', 'agregar', 'registra', 'registrar', 'anota', 'anotar',
+        'pon', 'poner', 'nuevo', 'nueva',
     ];
+
+    private const NOUN = 'ingreso';
 
     private const FREQUENCIES = ['semanal', 'quincenal', 'mensual'];
 
@@ -43,15 +45,8 @@ class IncomeChatIntent
 
     private function looksLikeTrigger(string $message): bool
     {
-        $normalized = Str::lower(Str::ascii($message));
-
-        foreach (self::TRIGGERS as $trigger) {
-            if (str_contains($normalized, Str::ascii($trigger))) {
-                return true;
-            }
-        }
-
-        return false;
+        return FuzzyMatch::hasWord($message, [self::NOUN])
+            && FuzzyMatch::hasWord($message, self::ACTION_WORDS);
     }
 
     private function continueIncome(User $user, ChatState $state, string $message): string
@@ -209,13 +204,11 @@ class IncomeChatIntent
 
     private function extractType(string $message): ?string
     {
-        $normalized = Str::lower(Str::ascii($message));
-
-        if (str_contains($normalized, 'variable')) {
+        if (FuzzyMatch::hasWord($message, ['variable'])) {
             return 'variable';
         }
 
-        if (str_contains($normalized, 'fijo') || str_contains($normalized, 'fija')) {
+        if (FuzzyMatch::hasWord($message, ['fijo', 'fija'])) {
             return 'fijo';
         }
 
@@ -224,10 +217,8 @@ class IncomeChatIntent
 
     private function extractFrequency(string $message): ?string
     {
-        $normalized = Str::lower(Str::ascii($message));
-
         foreach (self::FREQUENCIES as $frequency) {
-            if (str_contains($normalized, $frequency)) {
+            if (FuzzyMatch::hasWord($message, [$frequency], 2)) {
                 return $frequency;
             }
         }

@@ -10,17 +10,20 @@ use Illuminate\Support\Str;
 
 /**
  * Deterministic slot-filling for "add an expense" via chat/voice. Amount and
- * category are parsed with regex/string matching — never handed to the AI —
+ * category are parsed with fuzzy word matching — never handed to the AI —
  * so a money-creating action can never be hallucinated.
  */
 class ExpenseChatIntent
 {
-    private const TRIGGERS = [
-        'agrega un gasto', 'agregar un gasto', 'agregar gasto',
-        'registra un gasto', 'registrar un gasto', 'registrar gasto',
-        'anota un gasto', 'anotar un gasto', 'anotar gasto',
-        'nuevo gasto', 'quiero agregar un gasto', 'quiero registrar un gasto',
+    // Deliberately doesn't include generic verbs like "quiero" — those show
+    // up in all kinds of unrelated questions ("quiero saber cuánto gasté"),
+    // and pairing them with just the noun "gasto" would misfire too easily.
+    private const ACTION_WORDS = [
+        'agrega', 'agregar', 'registra', 'registrar', 'anota', 'anotar',
+        'pon', 'poner', 'nuevo', 'nueva',
     ];
+
+    private const NOUN = 'gasto';
 
     /**
      * Returns the reply text if this message was handled as part of the
@@ -45,15 +48,8 @@ class ExpenseChatIntent
 
     private function looksLikeTrigger(string $message): bool
     {
-        $message = Str::lower($message);
-
-        foreach (self::TRIGGERS as $trigger) {
-            if (str_contains($message, $trigger)) {
-                return true;
-            }
-        }
-
-        return false;
+        return FuzzyMatch::hasWord($message, [self::NOUN])
+            && FuzzyMatch::hasWord($message, self::ACTION_WORDS);
     }
 
     private function continueExpense(User $user, ChatState $state, string $message): string
@@ -114,7 +110,7 @@ class ExpenseChatIntent
 
         // The tool's "category" parameter is constrained to an enum of this
         // student's real category names, so an exact match is expected —
-        // no fuzzy/substring matching needed here (unlike the regex path).
+        // no fuzzy matching needed here (unlike the regex path).
         $categoryId = null;
 
         if (! empty($arguments['category'])) {
@@ -165,17 +161,10 @@ class ExpenseChatIntent
 
     private function extractCategory(User $user, string $message): ?int
     {
-        // Normalize accents too: voice-to-text and casual typing often drop
-        // them ("alimentacion" should still match "Alimentación").
-        $normalized = Str::lower(Str::ascii($message));
+        $categories = Category::query()->forUser($user)->orderBy('name')->get();
+        $bestName = FuzzyMatch::bestMatch($message, $categories->pluck('name')->all());
 
-        foreach (Category::query()->forUser($user)->get() as $category) {
-            if (str_contains($normalized, Str::lower(Str::ascii($category->name)))) {
-                return $category->id;
-            }
-        }
-
-        return null;
+        return $bestName ? $categories->firstWhere('name', $bestName)?->id : null;
     }
 
     private function mentionsNoCategory(string $message): bool

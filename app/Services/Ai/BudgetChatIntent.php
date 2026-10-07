@@ -7,22 +7,23 @@ use App\Models\Category;
 use App\Models\ChatState;
 use App\Models\User;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 /**
  * Deterministic slot-filling for "set a budget" via chat/voice, mirroring
- * ExpenseChatIntent: category and amount are parsed with string/regex
+ * ExpenseChatIntent: category and amount are parsed with fuzzy word
  * matching, never left to the AI to decide.
  */
 class BudgetChatIntent
 {
-    private const TRIGGERS = [
-        'agrega un presupuesto', 'agregar un presupuesto', 'agregar presupuesto',
-        'crea un presupuesto', 'crear un presupuesto', 'crear presupuesto',
-        'establece un presupuesto', 'define un presupuesto', 'definir presupuesto',
-        'nuevo presupuesto', 'pon un presupuesto', 'poner un presupuesto',
-        'quiero crear un presupuesto', 'quiero agregar un presupuesto',
+    // Deliberately doesn't include generic verbs like "quiero" — those show
+    // up in unrelated questions too, and pairing them with just the noun
+    // "presupuesto" would misfire too easily.
+    private const ACTION_WORDS = [
+        'agrega', 'agregar', 'registra', 'registrar', 'crea', 'crear',
+        'establece', 'define', 'definir', 'pon', 'poner', 'nuevo', 'nueva',
     ];
+
+    private const NOUN = 'presupuesto';
 
     public function handle(User $user, string $message): ?string
     {
@@ -44,15 +45,8 @@ class BudgetChatIntent
 
     private function looksLikeTrigger(string $message): bool
     {
-        $message = Str::lower($message);
-
-        foreach (self::TRIGGERS as $trigger) {
-            if (str_contains($message, $trigger)) {
-                return true;
-            }
-        }
-
-        return false;
+        return FuzzyMatch::hasWord($message, [self::NOUN])
+            && FuzzyMatch::hasWord($message, self::ACTION_WORDS);
     }
 
     private function continueBudget(User $user, ChatState $state, string $message): string
@@ -171,16 +165,9 @@ class BudgetChatIntent
 
     private function extractCategory(User $user, string $message): ?int
     {
-        // Normalize accents too: voice-to-text and casual typing often drop
-        // them ("alimentacion" should still match "Alimentación").
-        $normalized = Str::lower(Str::ascii($message));
+        $categories = Category::query()->forUser($user)->orderBy('name')->get();
+        $bestName = FuzzyMatch::bestMatch($message, $categories->pluck('name')->all());
 
-        foreach (Category::query()->forUser($user)->get() as $category) {
-            if (str_contains($normalized, Str::lower(Str::ascii($category->name)))) {
-                return $category->id;
-            }
-        }
-
-        return null;
+        return $bestName ? $categories->firstWhere('name', $bestName)?->id : null;
     }
 }

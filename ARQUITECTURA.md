@@ -89,7 +89,7 @@ app/
 ├── Services/
 │   ├── LiquidityProjectionService.php, RecurringIncomeService.php,
 │   │   LiquidityAlertService.php, ReportService.php
-│   └── Ai/                    # ChatService, AiProviderRouter, AiReply,
+│   └── Ai/                    # ChatService, AiProviderRouter, AiReply, FuzzyMatch,
 │       ├── Drivers/           #   OpenAiCompatibleDriver, GeminiDriver (+ AiDriverInterface)
 │       ├── Exceptions/        #   QuotaExceededException
 │       ├── ExpenseChatIntent.php, BudgetChatIntent.php, IncomeChatIntent.php
@@ -121,7 +121,7 @@ resources/
 lang/es.json                    # traducciones de las cadenas en inglés de Breeze
 routes/web.php, console.php
 
-tests/Feature/                  # ExampleTest, Auth/*, ProfileTest, ChatToolCallingTest
+tests/Feature/                  # ExampleTest, Auth/*, ProfileTest, ChatToolCallingTest, ChatFuzzyIntentTest
 ```
 
 ## 4. Base de datos
@@ -286,7 +286,7 @@ No es reentrenamiento del modelo — ninguna API gratuita de terceros lo expone.
 
 Hay dos caminos para registrar un gasto, un ingreso o un presupuesto por chat, en este orden:
 
-1. **Frases gatillo exactas, sin IA** (`App\Services\Ai\ExpenseChatIntent` / `BudgetChatIntent` / `IncomeChatIntent`, método `handle()`): reconoce frases como "agrega/registra/anota un gasto", "crea/define un presupuesto" o "agrega/registra/anota un ingreso" con regex y `str_contains`, y completa monto/categoría/tipo/frecuencia con la misma técnica (normalizando acentos con `Str::ascii`, ya que la voz y la escritura casual suelen omitirlos). Para ingresos pregunta además si es fijo o variable y, si es fijo, cada cuánto se repite (reutiliza `Income::nextOccurrenceAfter()` para calcular `next_occurrence_date`, igual que el formulario normal). Es gratis e instantáneo, y sigue funcionando aunque el estudiante no tenga ningún proveedor de IA configurado. El estado de la conversación en curso (`chat_states`, una fila por estudiante) guarda qué falta por preguntar.
+1. **Reconocimiento difuso, sin IA** (`App\Services\Ai\ExpenseChatIntent` / `BudgetChatIntent` / `IncomeChatIntent`, método `handle()`): detecta la intención de agregar un gasto/presupuesto/ingreso buscando una palabra de acción ("agrega", "registra", "anota", "pon"...) junto con el sustantivo correspondiente ("gasto"/"presupuesto"/"ingreso") en cualquier parte del mensaje — no una frase exacta. La comparación es **difusa** (`App\Services\Ai\FuzzyMatch`, por distancia de Levenshtein) para tolerar errores de tipeo ("agrga un gsto"), tildes/acentos omitidos, palabras repetidas, y pronombres pegados al verbo como en español ("Agrégame", "anótame", "regístrame" — no es un typo, es gramática normal, así que se les quita el sufijo antes de comparar). Deliberadamente **no** incluye verbos genéricos como "quiero" como gatillo — eso causaría falsos positivos en preguntas normales ("quiero saber cuánto gasto tengo"). Monto/categoría/tipo/frecuencia se extraen con la misma técnica difusa. Para ingresos pregunta además si es fijo o variable y, si es fijo, cada cuánto se repite (reutiliza `Income::nextOccurrenceAfter()` para calcular `next_occurrence_date`, igual que el formulario normal). Es gratis e instantáneo, y sigue funcionando aunque el estudiante no tenga ningún proveedor de IA configurado. El estado de la conversación en curso (`chat_states`, una fila por estudiante) guarda qué falta por preguntar.
 2. **Function calling real con la IA** (si el mensaje no calzó con ningún gatillo exacto): `ChatService` le declara al modelo tres herramientas — `add_expense`, `add_budget` y `add_income` — con sus parámetros en formato JSON Schema (la categoría restringida a un `enum` con los nombres reales del estudiante, para que la coincidencia sea exacta, no difusa). El modelo decide solo cuándo invocar una, con qué datos, a partir de **cualquier** forma de pedirlo ("me gasté 20 en...", "ponme un tope de...", "me depositaron mi beca...") — ya no depende de que yo anticipe la frase exacta. Si falta un dato obligatorio, el modelo simplemente pregunta en texto normal (usa el historial de `chat_messages` para recordar la respuesta en el siguiente turno) en vez de inventarlo. Cuando sí invoca una herramienta, `ChatService` la ejecuta llamando a `*ChatIntent::createFromToolCall()` correspondiente — que **vuelven a validar** cada dato antes de guardar nada, nunca confían ciegamente en lo que extrajo el modelo — y arma la confirmación él mismo (nunca le pide al modelo que "redacte la confirmación": costaría una llamada extra y podría desviarse del monto real guardado).
 
 Para todo lo que no sea una de esas dos acciones (saludos, preguntas, pedir un análisis o reporte), el modelo simplemente responde en texto libre, usando el mismo resumen de datos del estudiante como contexto (ahora incluye el desglose de gastos por categoría del mes). Sin ningún proveedor de IA activo, este camino libre cae al resumen de datos sin IA — eso es inevitable sin un modelo real detrás, no una limitación de la arquitectura.
