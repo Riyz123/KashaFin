@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AiProviderController as AdminAiProviderController
 use App\Http\Controllers\Admin\AiPromptController as AdminAiPromptController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\FacultyController as AdminFacultyController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
@@ -26,10 +27,14 @@ Route::get('/', function () {
         return redirect()->route('admin.dashboard');
     }
 
+    if (auth()->check() && auth()->user()->isDean()) {
+        return redirect()->route('admin.users.index');
+    }
+
     return redirect()->route('dashboard');
 });
 
-Route::middleware(['auth', 'active'])->group(function () {
+Route::middleware(['auth', 'active', 'verified', 'student-app'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('ingresos', IncomeController::class)
@@ -81,10 +86,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('asistente/mensaje', [ChatController::class, 'send'])->name('chat.send');
 });
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])->group(function () {
-    Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-
+// Accesible por admin master Y por decanos (acotado a su propia facultad
+// dentro de cada controller — ver User::canManage() y scopedStudents()).
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'verified', 'staff'])->group(function () {
     Route::get('usuarios', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('usuarios/exportar', [AdminUserController::class, 'export'])->name('users.export');
     Route::patch('usuarios/{user}/estado', [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::delete('usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
@@ -92,6 +98,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])-
     Route::post('categorias', [AdminCategoryController::class, 'store'])->name('categories.store');
     Route::patch('categorias/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
     Route::patch('categorias/{category}/estado', [AdminCategoryController::class, 'toggleActive'])->name('categories.toggle-active');
+});
+
+// Solo admin master: métricas globales, proveedores de IA, y gestión de
+// facultades/decanos.
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'verified', 'admin'])->group(function () {
+    Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('ia', [AdminAiProviderController::class, 'index'])->name('ai.index');
     Route::post('ia', [AdminAiProviderController::class, 'store'])->name('ai.store');
@@ -100,6 +112,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])-
     Route::delete('ia/{aiProvider}', [AdminAiProviderController::class, 'destroy'])->name('ai.destroy');
     Route::put('ia-prompt', [AdminAiPromptController::class, 'update'])->name('ai.prompt.update');
     Route::delete('ia-prompt', [AdminAiPromptController::class, 'reset'])->name('ai.prompt.reset');
+
+    Route::get('decanos', [AdminFacultyController::class, 'index'])->name('faculties.index');
+    Route::post('decanos', [AdminFacultyController::class, 'store'])->name('faculties.store');
+    Route::post('decanos/{faculty}/decano', [AdminFacultyController::class, 'storeDean'])->name('faculties.deans.store');
 });
 
 require __DIR__.'/auth.php';

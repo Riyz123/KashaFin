@@ -11,9 +11,22 @@
 
         <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            <x-input-label for="email" value="Correo institucional" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="nombre@upn.edu.pe" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Solo se aceptan correos de la UPN (@upn.edu.pe).</p>
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        <!-- Faculty -->
+        <div class="mt-4">
+            <x-input-label for="faculty_id" value="Facultad" />
+            <select id="faculty_id" name="faculty_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" required>
+                <option value="">Selecciona tu facultad</option>
+                @foreach ($faculties as $faculty)
+                    <option value="{{ $faculty->id }}" @selected(old('faculty_id') == $faculty->id)>{{ $faculty->name }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('faculty_id')" class="mt-2" />
         </div>
 
         <!-- Password -->

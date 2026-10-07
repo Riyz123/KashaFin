@@ -1,5 +1,9 @@
 <x-admin-layout title="Usuarios">
-    <x-page-header title="Cuentas de estudiantes" subtitle="Busca, activa, desactiva o elimina cuentas registradas." />
+    <x-page-header title="Cuentas de estudiantes" subtitle="Busca, activa, desactiva o elimina cuentas registradas.">
+        <a href="{{ route('admin.users.export', request()->query()) }}" class="inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+            Exportar CSV
+        </a>
+    </x-page-header>
 
     <x-card class="mb-6">
         <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap items-end gap-4">
@@ -57,6 +61,9 @@
                         <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
                             <th class="py-2 pr-4">Nombre</th>
                             <th class="py-2 pr-4">Correo</th>
+                            @if (auth()->user()->isAdmin())
+                                <th class="py-2 pr-4">Facultad</th>
+                            @endif
                             <th class="py-2 pr-4">Movimientos</th>
                             <th class="py-2 pr-4">Estado</th>
                             <th class="py-2 pr-4 text-right">Acciones</th>
@@ -67,6 +74,9 @@
                             <tr>
                                 <td class="py-3 pr-4 text-gray-800 dark:text-gray-100">{{ $user->name }}</td>
                                 <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $user->email }}</td>
+                                @if (auth()->user()->isAdmin())
+                                    <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $user->faculty?->name ?? '—' }}</td>
+                                @endif
                                 <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $user->incomes_count }} ingresos &middot; {{ $user->expenses_count }} gastos</td>
                                 <td class="py-3 pr-4">
                                     <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $user->is_active ? 'bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-200' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' }}">

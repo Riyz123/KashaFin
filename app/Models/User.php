@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -26,6 +27,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'faculty_id',
     ];
 
     /**
@@ -55,6 +57,39 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isDean(): bool
+    {
+        return $this->role === 'decano';
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->isAdmin() || $this->isDean();
+    }
+
+    /**
+     * Whether $this (acting as staff) is allowed to manage $target's account
+     * (toggle active / delete). A master admin can manage any non-admin
+     * account; a dean is limited to students within their own faculty.
+     */
+    public function canManage(User $target): bool
+    {
+        if ($target->isAdmin()) {
+            return false;
+        }
+
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return $this->isDean() && $target->role === 'estudiante' && $target->faculty_id === $this->faculty_id;
+    }
+
+    public function faculty(): BelongsTo
+    {
+        return $this->belongsTo(Faculty::class);
     }
 
     public function settings(): HasOne

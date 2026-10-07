@@ -1,9 +1,13 @@
 @php
+$isMasterAdmin = auth()->user()->isAdmin();
 $navItems = [
-    ['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'home'],
+    ...($isMasterAdmin ? [['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'home']] : []),
     ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'user'],
     ['route' => 'admin.categories.index', 'label' => 'Categorías globales', 'icon' => 'wallet'],
-    ['route' => 'admin.ai.index', 'label' => 'Asistente IA', 'icon' => 'chat'],
+    ...($isMasterAdmin ? [
+        ['route' => 'admin.ai.index', 'label' => 'Asistente IA', 'icon' => 'chat'],
+        ['route' => 'admin.faculties.index', 'label' => 'Facultades y decanos', 'icon' => 'user'],
+    ] : []),
 ];
 @endphp
 
@@ -36,10 +40,12 @@ $navItems = [
     </nav>
 
     <div class="px-3 py-4 border-t border-white/10 space-y-1">
-        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition">
-            <x-icon name="home" class="w-5 h-5" />
-            Ver app de estudiante
-        </a>
+        @if ($isMasterAdmin)
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition">
+                <x-icon name="home" class="w-5 h-5" />
+                Ver app de estudiante
+            </a>
+        @endif
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition">

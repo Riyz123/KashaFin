@@ -17,15 +17,26 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(CategorySeeder::class);
+        $this->call(FacultySeeder::class);
+
+        $faculty = \App\Models\Faculty::first();
 
         User::factory()->admin()->create([
             'name' => 'Administrador KashaFin',
             'email' => 'admin@kashafin.test',
         ]);
 
+        User::factory()->create([
+            'name' => 'Decano Demo',
+            'email' => 'decano@kashafin.test',
+            'role' => 'decano',
+            'faculty_id' => $faculty->id,
+        ]);
+
         $user = User::factory()->create([
             'name' => 'Estudiante Demo',
             'email' => 'demo@kashafin.test',
+            'faculty_id' => $faculty->id,
         ]);
 
         $user->settings->update([

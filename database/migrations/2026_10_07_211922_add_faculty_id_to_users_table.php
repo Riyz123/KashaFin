@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['estudiante', 'decano', 'admin'])->default('estudiante')->after('password');
-            $table->boolean('is_active')->default(true)->after('role');
+            $table->foreignId('faculty_id')->nullable()->after('role')->constrained()->nullOnDelete();
         });
     }
 
@@ -23,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['role', 'is_active']);
+            $table->dropConstrainedForeignId('faculty_id');
         });
     }
 };
