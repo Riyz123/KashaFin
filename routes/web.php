@@ -96,11 +96,13 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
 // dentro de cada controller — ver User::canManage() y scopedStudents()).
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-fresh', 'staff'])->group(function () {
     Route::get('usuarios', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('usuarios', [AdminUserController::class, 'store'])->name('users.store');
     Route::get('usuarios/exportar', [AdminUserController::class, 'export'])->name('users.export');
     Route::get('usuarios/importar', [AdminUserController::class, 'importForm'])->name('users.import-form');
     Route::post('usuarios/importar', [AdminUserController::class, 'import'])->name('users.import');
     Route::patch('usuarios/{user}/estado', [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::patch('usuarios/{user}/aprobar', [AdminUserController::class, 'approve'])->name('users.approve');
+    Route::patch('usuarios/{user}/facultad', [AdminUserController::class, 'updateFaculty'])->name('users.update-faculty');
     Route::delete('usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
     Route::get('categorias', [AdminCategoryController::class, 'index'])->name('categories.index');

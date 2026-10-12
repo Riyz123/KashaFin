@@ -8,6 +8,41 @@
         </a>
     </x-page-header>
 
+    <x-card class="mb-6" x-data="{ adding: false }">
+        <button @click="adding = !adding" class="text-sm font-semibold text-brand-600 hover:underline">
+            + Agregar estudiante manualmente
+        </button>
+
+        <form x-show="adding" x-cloak method="POST" action="{{ route('admin.users.store') }}" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3 border-t border-gray-100 dark:border-gray-700 pt-4">
+            @csrf
+            <div>
+                <x-input-label value="Nombre" />
+                <x-text-input name="name" type="text" class="mt-1 block w-full" required />
+            </div>
+            <div>
+                <x-input-label value="Correo institucional" />
+                <x-text-input name="email" type="email" class="mt-1 block w-full" placeholder="nombre@upn.edu.pe" required />
+            </div>
+            @if ($faculties)
+                <div>
+                    <x-input-label value="Facultad" />
+                    <select name="faculty_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" required>
+                        <option value="">Selecciona una facultad</option>
+                        @foreach ($faculties as $faculty)
+                            <option value="{{ $faculty->id }}">{{ $faculty->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+            <div class="sm:col-span-3">
+                <x-input-error :messages="$errors->get('name')" class="mt-1" />
+                <x-input-error :messages="$errors->get('email')" class="mt-1" />
+                <x-input-error :messages="$errors->get('faculty_id')" class="mt-1" />
+                <x-primary-button class="mt-2">Agregar y enviar contraseña</x-primary-button>
+            </div>
+        </form>
+    </x-card>
+
     <x-card class="mb-6">
         <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap items-end gap-4">
             <div class="flex-1 min-w-[200px]">
@@ -52,6 +87,9 @@
                             <div>
                                 <p class="font-medium text-gray-800 dark:text-gray-100">{{ $user->name }}</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ $user->email }}</p>
+                                @if (auth()->user()->isAdmin())
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Facultad: {{ $user->faculty?->name ?? 'sin facultad' }}</p>
+                                @endif
                                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ $user->incomes_count }} ingresos &middot; {{ $user->expenses_count }} gastos</p>
                             </div>
                             <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $classes }}">{{ $label }}</span>
@@ -102,7 +140,17 @@
                                 <td class="py-3 pr-4 text-gray-800 dark:text-gray-100">{{ $user->name }}</td>
                                 <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $user->email }}</td>
                                 @if (auth()->user()->isAdmin())
-                                    <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $user->faculty?->name ?? '—' }}</td>
+                                    <td class="py-3 pr-4">
+                                        <form method="POST" action="{{ route('admin.users.update-faculty', $user) }}">
+                                            @csrf @method('PATCH')
+                                            <select name="faculty_id" onchange="this.form.submit()" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-xs focus:border-brand-500 focus:ring-brand-500">
+                                                <option value="" @selected(! $user->faculty_id)>Sin facultad</option>
+                                                @foreach ($faculties as $faculty)
+                                                    <option value="{{ $faculty->id }}" @selected($user->faculty_id === $faculty->id)>{{ $faculty->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </form>
+                                    </td>
                                 @endif
                                 <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $user->incomes_count }} ingresos &middot; {{ $user->expenses_count }} gastos</td>
                                 <td class="py-3 pr-4">

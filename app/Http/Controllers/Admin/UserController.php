@@ -34,7 +34,56 @@ class UserController extends Controller
             'users' => $users,
             'search' => $request->string('search')->toString(),
             'status' => $request->string('status')->toString(),
+            'faculties' => $request->user()->isAdmin() ? Faculty::query()->orderBy('name')->get() : null,
         ]);
+    }
+
+    /**
+     * Manually create a student account (not self-registered, not from a
+     * CSV) — already approved, same temporary-password-by-email mechanism
+     * as the other two paths. A dean creates it in their own faculty; the
+     * admin master picks any faculty.
+     */
+    public function store(Request $request)
+    {
+        $actor = $request->user();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class, 'ends_with:@upn.edu.pe'],
+            'faculty_id' => [$actor->isAdmin() ? 'required' : 'nullable', 'exists:faculties,id'],
+        ], [
+            'email.ends_with' => 'Debe ser un correo institucional (@upn.edu.pe).',
+        ]);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make(Str::random(40)),
+            'faculty_id' => $actor->isAdmin() ? $data['faculty_id'] : $actor->faculty_id,
+        ]);
+
+        $this->grantAccess($user);
+
+        return back()->with('status', "Estudiante agregado. Se le envió su contraseña a {$user->email}.");
+    }
+
+    /**
+     * Reassigning which faculty a student belongs to (or removing it
+     * entirely) changes which dean manages them — admin-master-only, a
+     * dean has no reason to move a student out of their own reach.
+     */
+    public function updateFaculty(Request $request, User $user)
+    {
+        abort_unless($request->user()->isAdmin(), 403, 'Solo el administrador puede reasignar la facultad de un estudiante.');
+
+        $data = $request->validate([
+            'faculty_id' => ['nullable', 'exists:faculties,id'],
+        ]);
+
+        $user->update(['faculty_id' => $data['faculty_id'] ?? null]);
+
+        return back()->with('status', 'Facultad actualizada correctamente.');
     }
 
     public function toggleActive(Request $request, User $user)
