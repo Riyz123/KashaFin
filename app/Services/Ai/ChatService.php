@@ -14,6 +14,7 @@ use App\Services\Ai\Exceptions\QuotaExceededException;
 use App\Services\LiquidityProjectionService;
 use App\Services\ReportService;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class ChatService
 {
@@ -206,8 +207,10 @@ class ChatService
     private function systemPrompt(User $user): string
     {
         $language = $user->settings->languageName();
+        $firstName = Str::of($user->name)->before(' ')->toString();
 
         return AiSetting::current()->promptOrDefault()."\n\n".
+            "El estudiante se llama {$firstName}.\n\n".
             "Entiendes español, inglés y quechua. El estudiante configuró {$language} como su idioma preferido ".
             "en sus ajustes — responde siempre en {$language}, sin importar en qué idioma te escriba él.\n\n".
             "Tienes tres herramientas disponibles: add_expense, add_budget y add_income. Úsalas cuando el ".
