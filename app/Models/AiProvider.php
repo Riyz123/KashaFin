@@ -42,9 +42,17 @@ class AiProvider extends Model
         return $this->hasMany(AiUsageLog::class);
     }
 
+    /**
+     * Secondary sort by `id` as a tiebreaker: with the same priority (e.g.
+     * everyone left at the form's default of 0), ORDER BY priority alone
+     * has no guaranteed order between ties — MySQL can return them in a
+     * different order from one query to the next, which looks like the
+     * rotation is "using all 3 at once" instead of sticking to one until
+     * it's actually exhausted.
+     */
     public function scopeOrdered(Builder $query): Builder
     {
-        return $query->orderBy('priority');
+        return $query->orderBy('priority')->orderBy('id');
     }
 
     /**

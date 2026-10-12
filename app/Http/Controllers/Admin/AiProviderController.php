@@ -11,7 +11,12 @@ class AiProviderController extends Controller
 {
     public function index()
     {
-        $providers = AiProvider::query()->ordered()->get();
+        // isAvailable() lazily recovers an exhausted provider once its
+        // quota period has elapsed — calling it here (not just when a chat
+        // message happens to hit it) keeps what the admin sees in sync with
+        // reality, instead of showing a stale "se reinicia" date forever if
+        // nobody has sent a message since it actually became eligible.
+        $providers = AiProvider::query()->ordered()->get()->each(fn (AiProvider $provider) => $provider->isAvailable());
         $aiSetting = AiSetting::current();
 
         return view('admin.ai.index', ['providers' => $providers, 'aiSetting' => $aiSetting]);
