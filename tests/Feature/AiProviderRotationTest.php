@@ -62,4 +62,39 @@ class AiProviderRotationTest extends TestCase
         $this->assertSame(0, $provider->requests_used);
         $this->assertTrue($provider->period_reset_at->isFuture());
     }
+
+    public function test_the_daily_counter_rolls_over_even_if_the_provider_was_never_marked_exhausted(): void
+    {
+        // The actual bug reported: a provider well under quota_limit (or
+        // with no quota_limit at all) never triggered the old reset logic,
+        // since it only ran for providers already flagged exhausted/over
+        // quota. requests_used would just accumulate forever and
+        // period_reset_at would stay frozen at its very first value.
+        $provider = $this->makeProvider([
+            'is_exhausted' => false,
+            'requests_used' => 37,
+            'quota_limit' => 1000,
+            'period_reset_at' => Carbon::now()->subHour(),
+        ]);
+
+        $this->assertTrue($provider->isAvailable());
+
+        $provider->refresh();
+        $this->assertSame(0, $provider->requests_used);
+        $this->assertTrue($provider->period_reset_at->isFuture());
+    }
+
+    public function test_the_counter_does_not_reset_before_the_period_elapses(): void
+    {
+        $provider = $this->makeProvider([
+            'requests_used' => 5,
+            'quota_limit' => 1000,
+            'period_reset_at' => Carbon::now()->addHours(12),
+        ]);
+
+        $this->assertTrue($provider->isAvailable());
+
+        $provider->refresh();
+        $this->assertSame(5, $provider->requests_used);
+    }
 }

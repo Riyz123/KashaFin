@@ -56,9 +56,15 @@ class AiProvider extends Model
     }
 
     /**
-     * Whether this provider can be used right now. Lazily recovers the
-     * provider (resets its usage counter) if its quota period has elapsed —
-     * there is no separate scheduled job for this.
+     * Whether this provider can be used right now. Lazily rolls the usage
+     * counter over to a fresh period if it has elapsed — there is no
+     * separate scheduled job for this, so it must happen unconditionally
+     * here, not just when the provider happens to already be flagged
+     * exhausted/over-quota. A provider well under its daily limit would
+     * otherwise never roll over at all: `requests_used` would just keep
+     * accumulating forever and `period_reset_at` would stay frozen at
+     * whatever it was computed as on the very first call, since nothing
+     * would ever re-evaluate it.
      */
     public function isAvailable(): bool
     {
@@ -66,20 +72,34 @@ class AiProvider extends Model
             return false;
         }
 
-        if ($this->is_exhausted || ($this->quota_limit && $this->requests_used >= $this->quota_limit)) {
-            if ($this->period_reset_at && Carbon::now()->greaterThanOrEqualTo($this->period_reset_at)) {
-                $this->requests_used = 0;
-                $this->is_exhausted = false;
-                $this->period_reset_at = Carbon::now()->addDays($this->quota_period_days);
-                $this->save();
+        $this->rolloverPeriodIfElapsed();
 
-                return true;
-            }
+        if ($this->is_exhausted) {
+            return false;
+        }
 
+        if ($this->quota_limit && $this->requests_used >= $this->quota_limit) {
             return false;
         }
 
         return true;
+    }
+
+    private function rolloverPeriodIfElapsed(): void
+    {
+        if ($this->period_reset_at === null) {
+            $this->period_reset_at = Carbon::now()->addDays($this->quota_period_days);
+            $this->save();
+
+            return;
+        }
+
+        if (Carbon::now()->greaterThanOrEqualTo($this->period_reset_at)) {
+            $this->requests_used = 0;
+            $this->is_exhausted = false;
+            $this->period_reset_at = Carbon::now()->addDays($this->quota_period_days);
+            $this->save();
+        }
     }
 
     /**
