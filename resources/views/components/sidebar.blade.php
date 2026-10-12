@@ -19,7 +19,7 @@ $navItems = [
     class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-dark text-white transition-transform duration-200 ease-in-out md:static md:translate-x-0 md:shrink-0 flex flex-col"
 >
     <div class="flex items-center gap-2 px-5 py-5">
-        <x-application-logo class="w-9 h-9 text-brand-light" />
+        <x-application-logo variant="light" class="w-9 h-9 object-contain" />
         <div>
             <p class="text-lg font-bold leading-tight">KashaFin</p>
             <p class="text-[11px] text-brand-light/80 leading-tight">Planifica hoy, tu mañana cuenta</p>

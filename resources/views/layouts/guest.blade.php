@@ -16,7 +16,7 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center py-8 px-4 bg-brand-surface dark:bg-gray-900">
             <div class="flex flex-col items-center gap-2 text-center">
                 <a href="/" class="flex items-center gap-2 text-brand-dark dark:text-brand-light">
-                    <x-application-logo class="w-12 h-12" />
+                    <x-application-logo variant="dark" class="w-12 h-12 object-contain" />
                     <span class="text-2xl font-bold">KashaFin</span>
                 </a>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Planifica hoy, tu mañana cuenta.</p>
