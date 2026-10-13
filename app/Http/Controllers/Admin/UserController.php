@@ -68,9 +68,9 @@ class UserController extends Controller
             'faculty_id' => $actor->isAdmin() ? $data['faculty_id'] : $actor->faculty_id,
         ]);
 
-        $this->grantAccess($user);
+        $temporaryPassword = $this->grantAccess($user);
 
-        return back()->with('status', "Estudiante agregado. Se le envió su contraseña a {$user->email}.");
+        return back()->with('status', "Estudiante agregado. Se intentó enviar la contraseña a {$user->email} — por si el correo no llega, esta es su contraseña temporal (no vence, pero solo sirve para el primer ingreso): {$temporaryPassword}");
     }
 
     /**
@@ -112,9 +112,9 @@ class UserController extends Controller
         abort_unless($request->user()->canManage($user), 403, 'No tienes permisos para aprobar esta cuenta.');
         abort_unless($user->isPendingApproval(), 422, 'Esta solicitud ya fue procesada.');
 
-        $this->grantAccess($user);
+        $temporaryPassword = $this->grantAccess($user);
 
-        return back()->with('status', "Solicitud aprobada. Se le envió la contraseña a {$user->email}.");
+        return back()->with('status', "Solicitud aprobada. Se intentó enviar la contraseña a {$user->email} — por si el correo no llega, esta es su contraseña temporal (no vence, pero solo sirve para el primer ingreso): {$temporaryPassword}");
     }
 
     /**
@@ -129,9 +129,9 @@ class UserController extends Controller
         abort_if($user->isPendingApproval(), 422, 'Esta solicitud todavía no fue aprobada.');
         abort_unless($user->must_change_password, 422, 'Este estudiante ya inició sesión con su propia contraseña.');
 
-        $this->grantAccess($user);
+        $temporaryPassword = $this->grantAccess($user);
 
-        return back()->with('status', "Se reenvió una nueva contraseña a {$user->email}.");
+        return back()->with('status', "Se intentó enviar una nueva contraseña a {$user->email} — por si el correo no llega, esta es la contraseña temporal (no vence, pero solo sirve para el primer ingreso): {$temporaryPassword}");
     }
 
     public function destroy(Request $request, User $user)
@@ -211,6 +211,7 @@ class UserController extends Controller
 
         $created = 0;
         $skipped = [];
+        $passwords = [];
 
         while (($row = fgetcsv($handle)) !== false) {
             $name = trim($row[$nameIndex] ?? '');
@@ -239,27 +240,33 @@ class UserController extends Controller
                 'faculty_id' => $facultyId,
             ]);
 
-            $this->grantAccess($user);
+            $passwords[] = "{$email}: ".$this->grantAccess($user);
             $created++;
         }
 
         fclose($handle);
 
-        $status = "{$created} cuenta(s) creada(s) y notificada(s) por correo.";
+        $status = "{$created} cuenta(s) creada(s). Se intentó notificar por correo a cada una — por si no llega, ".
+            "estas son sus contraseñas temporales (no vencen, solo sirven para el primer ingreso): ".
+            implode(' · ', $passwords);
 
         if ($skipped) {
-            $status .= ' Omitidas: '.implode(', ', $skipped);
+            $status .= ' | Omitidas: '.implode(', ', $skipped);
         }
 
         return back()->with('status', $status);
     }
 
     /**
-     * Shared by approve() and import(): generates and persists a real
-     * password, marks the account approved/active, forces a password
-     * change on first login, and emails the temporary password.
+     * Shared by store()/approve()/import()/resendPassword(): generates and
+     * persists a real password, marks the account approved/active, forces a
+     * password change on first login, attempts to email it, and returns it
+     * in plain text so the caller can show it on screen too — email
+     * delivery to real institutional addresses isn't always reliable (spam
+     * filters, quarantine), so staff always has a fallback way to hand the
+     * student their password.
      */
-    private function grantAccess(User $user): void
+    private function grantAccess(User $user): string
     {
         $temporaryPassword = Str::password(10, symbols: false);
 
@@ -270,7 +277,17 @@ class UserController extends Controller
             'must_change_password' => true,
         ])->save();
 
-        Mail::to($user)->send(new TemporaryPasswordMail($user, $temporaryPassword));
+        // Best-effort: if the mailer throws (connection refused, rejected,
+        // whatever), the account is still fully usable — the caller always
+        // shows $temporaryPassword on screen as a fallback, so one broken
+        // delivery should never block staff from handing it over another way.
+        try {
+            Mail::to($user)->send(new TemporaryPasswordMail($user, $temporaryPassword));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $temporaryPassword;
     }
 
     private function scopedStudents(Request $request)
