@@ -67,7 +67,7 @@ class StudentOnboardingTest extends TestCase
         $faculty = Faculty::factory()->create();
         $dean = User::factory()->create(['role' => 'decano', 'faculty_id' => $faculty->id]);
 
-        $csv = "nombre,correo\nAna Torres,ana.torres@upn.edu.pe\nLuis Paz,luis.paz@upn.edu.pe\n";
+        $csv = "nombre,correo\nAna Torres,ana.torres@upn.pe\nLuis Paz,luis.paz@upn.pe\n";
         $file = UploadedFile::fake()->createWithContent('alumnos.csv', $csv);
 
         $response = $this->actingAs($dean)->post(route('admin.users.import'), ['file' => $file]);
@@ -75,10 +75,10 @@ class StudentOnboardingTest extends TestCase
         $response->assertRedirect();
         Mail::assertSent(TemporaryPasswordMail::class, 2);
 
-        $this->assertDatabaseHas('users', ['email' => 'ana.torres@upn.edu.pe', 'faculty_id' => $faculty->id, 'role' => 'estudiante']);
-        $this->assertDatabaseHas('users', ['email' => 'luis.paz@upn.edu.pe', 'faculty_id' => $faculty->id]);
+        $this->assertDatabaseHas('users', ['email' => 'ana.torres@upn.pe', 'faculty_id' => $faculty->id, 'role' => 'estudiante']);
+        $this->assertDatabaseHas('users', ['email' => 'luis.paz@upn.pe', 'faculty_id' => $faculty->id]);
 
-        $imported = User::where('email', 'ana.torres@upn.edu.pe')->first();
+        $imported = User::where('email', 'ana.torres@upn.pe')->first();
         $this->assertTrue($imported->isPendingApproval() === false);
         $this->assertTrue($imported->must_change_password);
     }
@@ -91,13 +91,13 @@ class StudentOnboardingTest extends TestCase
         $dean = User::factory()->create(['role' => 'decano', 'faculty_id' => $faculty->id]);
         $existing = User::factory()->create(['faculty_id' => $faculty->id]);
 
-        $csv = "nombre,correo\nMalo,malo@gmail.com\nDuplicado,{$existing->email}\nBien,bien@upn.edu.pe\n";
+        $csv = "nombre,correo\nMalo,malo@gmail.com\nDuplicado,{$existing->email}\nBien,bien@upn.pe\n";
         $file = UploadedFile::fake()->createWithContent('alumnos.csv', $csv);
 
         $this->actingAs($dean)->post(route('admin.users.import'), ['file' => $file]);
 
         Mail::assertSent(TemporaryPasswordMail::class, 1);
         $this->assertDatabaseMissing('users', ['email' => 'malo@gmail.com']);
-        $this->assertDatabaseHas('users', ['email' => 'bien@upn.edu.pe']);
+        $this->assertDatabaseHas('users', ['email' => 'bien@upn.pe']);
     }
 }

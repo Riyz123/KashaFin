@@ -17,8 +17,8 @@
         <!-- Email Address -->
         <div class="mt-4">
             <x-input-label for="email" value="Correo institucional" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="nombre@upn.edu.pe" />
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Solo se aceptan correos de la UPN (@upn.edu.pe).</p>
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="nombre@upn.pe" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Solo se aceptan correos de la UPN (@upn.pe).</p>
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 

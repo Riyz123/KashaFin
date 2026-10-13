@@ -21,7 +21,7 @@
             </div>
             <div>
                 <x-input-label value="Correo institucional" />
-                <x-text-input name="email" type="email" class="mt-1 block w-full" placeholder="nombre@upn.edu.pe" required />
+                <x-text-input name="email" type="email" class="mt-1 block w-full" placeholder="nombre@upn.pe" required />
             </div>
             @if ($faculties)
                 <div>

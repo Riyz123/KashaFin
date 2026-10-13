@@ -27,7 +27,7 @@ class RegistrationTest extends TestCase
 
         $response = $this->post('/register', [
             'name' => 'Test User',
-            'email' => 'test@upn.edu.pe',
+            'email' => 'test@upn.pe',
             'faculty_id' => $faculty->id,
         ]);
 
@@ -35,9 +35,9 @@ class RegistrationTest extends TestCase
         // RegistrationEmailVerificationTest) — the account doesn't exist yet.
         $this->assertGuest();
         $response->assertRedirect(route('register.verify'));
-        $this->assertDatabaseMissing('users', ['email' => 'test@upn.edu.pe']);
+        $this->assertDatabaseMissing('users', ['email' => 'test@upn.pe']);
 
-        $code = Cache::get('registration_code:test@upn.edu.pe')['code'];
+        $code = Cache::get('registration_code:test@upn.pe')['code'];
         $response = $this->post(route('register.verify.submit'), ['code' => $code]);
 
         // No password field at all — the account isn't usable until a dean
@@ -45,7 +45,7 @@ class RegistrationTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect(route('login'));
 
-        $user = User::where('email', 'test@upn.edu.pe')->first();
+        $user = User::where('email', 'test@upn.pe')->first();
         $this->assertNotNull($user);
         $this->assertTrue($user->isPendingApproval());
     }

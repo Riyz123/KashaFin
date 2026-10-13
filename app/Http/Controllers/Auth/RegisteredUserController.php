@@ -40,11 +40,11 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class,
-                'ends_with:@upn.edu.pe',
+                'ends_with:@upn.pe',
             ],
             'faculty_id' => ['required', 'exists:faculties,id'],
         ], [
-            'email.ends_with' => 'Debes registrarte con tu correo institucional (@upn.edu.pe).',
+            'email.ends_with' => 'Debes registrarte con tu correo institucional (@upn.pe).',
         ]);
 
         $code = (string) random_int(100000, 999999);

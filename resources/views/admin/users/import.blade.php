@@ -28,7 +28,7 @@
                 <input id="file" name="file" type="file" accept=".csv,text/csv" required class="mt-1 block w-full text-sm text-gray-600 dark:text-gray-300">
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     Debe tener las columnas <code>nombre</code> y <code>correo</code> (en ese orden o cualquier otro, se detectan por encabezado).
-                    Solo se aceptan correos @upn.edu.pe; si tienes un Excel, guárdalo primero como CSV.
+                    Solo se aceptan correos @upn.pe; si tienes un Excel, guárdalo primero como CSV.
                 </p>
             </div>
 

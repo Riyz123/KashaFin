@@ -50,10 +50,10 @@ class UserController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class, 'ends_with:@upn.edu.pe'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class, 'ends_with:@upn.pe'],
             'faculty_id' => [$actor->isAdmin() ? 'required' : 'nullable', 'exists:faculties,id'],
         ], [
-            'email.ends_with' => 'Debe ser un correo institucional (@upn.edu.pe).',
+            'email.ends_with' => 'Debe ser un correo institucional (@upn.pe).',
         ]);
 
         $user = User::create([
@@ -198,8 +198,8 @@ class UserController extends Controller
                 continue;
             }
 
-            if (! str_ends_with($email, '@upn.edu.pe')) {
-                $skipped[] = "{$email} (no es @upn.edu.pe)";
+            if (! str_ends_with($email, '@upn.pe')) {
+                $skipped[] = "{$email} (no es @upn.pe)";
 
                 continue;
             }

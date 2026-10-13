@@ -21,13 +21,13 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $response = $this->post(route('register'), [
             'name' => 'Ana Torres',
-            'email' => 'ana.torres@upn.edu.pe',
+            'email' => 'ana.torres@upn.pe',
             'faculty_id' => $faculty->id,
         ]);
 
         $response->assertRedirect(route('register.verify'));
-        Mail::assertSent(RegistrationCodeMail::class, fn ($mail) => $mail->hasTo('ana.torres@upn.edu.pe'));
-        $this->assertDatabaseMissing('users', ['email' => 'ana.torres@upn.edu.pe']);
+        Mail::assertSent(RegistrationCodeMail::class, fn ($mail) => $mail->hasTo('ana.torres@upn.pe'));
+        $this->assertDatabaseMissing('users', ['email' => 'ana.torres@upn.pe']);
     }
 
     public function test_entering_the_correct_code_creates_the_pending_account(): void
@@ -37,21 +37,21 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $this->post(route('register'), [
             'name' => 'Ana Torres',
-            'email' => 'ana.torres@upn.edu.pe',
+            'email' => 'ana.torres@upn.pe',
             'faculty_id' => $faculty->id,
         ]);
 
-        $code = Cache::get('registration_code:ana.torres@upn.edu.pe')['code'];
+        $code = Cache::get('registration_code:ana.torres@upn.pe')['code'];
 
         $response = $this->post(route('register.verify.submit'), ['code' => $code]);
 
         $response->assertRedirect(route('login'));
 
-        $user = User::where('email', 'ana.torres@upn.edu.pe')->first();
+        $user = User::where('email', 'ana.torres@upn.pe')->first();
         $this->assertNotNull($user);
         $this->assertTrue($user->isPendingApproval());
         $this->assertSame($faculty->id, $user->faculty_id);
-        $this->assertNull(Cache::get('registration_code:ana.torres@upn.edu.pe'));
+        $this->assertNull(Cache::get('registration_code:ana.torres@upn.pe'));
     }
 
     public function test_entering_the_wrong_code_does_not_create_an_account(): void
@@ -61,14 +61,14 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $this->post(route('register'), [
             'name' => 'Ana Torres',
-            'email' => 'ana.torres@upn.edu.pe',
+            'email' => 'ana.torres@upn.pe',
             'faculty_id' => $faculty->id,
         ]);
 
         $response = $this->post(route('register.verify.submit'), ['code' => '000000']);
 
         $response->assertSessionHasErrors('code');
-        $this->assertDatabaseMissing('users', ['email' => 'ana.torres@upn.edu.pe']);
+        $this->assertDatabaseMissing('users', ['email' => 'ana.torres@upn.pe']);
     }
 
     public function test_too_many_wrong_attempts_forces_restarting_the_registration(): void
@@ -78,7 +78,7 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $this->post(route('register'), [
             'name' => 'Ana Torres',
-            'email' => 'ana.torres@upn.edu.pe',
+            'email' => 'ana.torres@upn.pe',
             'faculty_id' => $faculty->id,
         ]);
 
@@ -87,7 +87,7 @@ class RegistrationEmailVerificationTest extends TestCase
         }
 
         $response->assertRedirect(route('register'));
-        $this->assertNull(Cache::get('registration_code:ana.torres@upn.edu.pe'));
+        $this->assertNull(Cache::get('registration_code:ana.torres@upn.pe'));
     }
 
     public function test_resending_sends_a_new_code(): void
@@ -97,15 +97,15 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $this->post(route('register'), [
             'name' => 'Ana Torres',
-            'email' => 'ana.torres@upn.edu.pe',
+            'email' => 'ana.torres@upn.pe',
             'faculty_id' => $faculty->id,
         ]);
 
-        $firstCode = Cache::get('registration_code:ana.torres@upn.edu.pe')['code'];
+        $firstCode = Cache::get('registration_code:ana.torres@upn.pe')['code'];
 
         $this->post(route('register.verify.resend'));
 
-        $secondCode = Cache::get('registration_code:ana.torres@upn.edu.pe')['code'];
+        $secondCode = Cache::get('registration_code:ana.torres@upn.pe')['code'];
 
         Mail::assertSent(RegistrationCodeMail::class, 2);
         // Astronomically unlikely to collide, but assert distinctness rather

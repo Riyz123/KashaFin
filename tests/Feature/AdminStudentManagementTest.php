@@ -22,14 +22,14 @@ class AdminStudentManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->post(route('admin.users.store'), [
             'name' => 'Carlos Nuevo',
-            'email' => 'carlos.nuevo@upn.edu.pe',
+            'email' => 'carlos.nuevo@upn.pe',
             'faculty_id' => $faculty->id,
         ]);
 
         $response->assertRedirect();
         Mail::assertSent(TemporaryPasswordMail::class, 1);
 
-        $student = User::where('email', 'carlos.nuevo@upn.edu.pe')->first();
+        $student = User::where('email', 'carlos.nuevo@upn.pe')->first();
         $this->assertNotNull($student);
         $this->assertFalse($student->isPendingApproval());
         $this->assertTrue($student->must_change_password);
@@ -46,13 +46,13 @@ class AdminStudentManagementTest extends TestCase
 
         $this->actingAs($dean)->post(route('admin.users.store'), [
             'name' => 'Ana Dean Add',
-            'email' => 'ana.dean@upn.edu.pe',
+            'email' => 'ana.dean@upn.pe',
             // Even if a dean somehow submitted a different faculty_id, it's
             // ignored — the controller always uses the dean's own.
             'faculty_id' => $facultyB->id,
         ])->assertRedirect();
 
-        $student = User::where('email', 'ana.dean@upn.edu.pe')->first();
+        $student = User::where('email', 'ana.dean@upn.pe')->first();
         $this->assertSame($facultyA->id, $student->faculty_id);
     }
 
