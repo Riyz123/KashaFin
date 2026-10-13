@@ -319,18 +319,22 @@ Web Speech API del navegador (sin backend ni costo): `SpeechRecognition` dicta c
 
 ### 6.1 Correo y alta de estudiantes
 
-KashaFin envía correos reales (contraseñas temporales) vía **Resend** (`resend/resend-php`, mailer nativo de Laravel 12 — `MAIL_MAILER=resend`). No hay ninguna integración con Outlook/Microsoft Graph: se eligió Resend porque se configura con una sola API key, sin que el hosting necesite credenciales de tu cuenta de correo ni registrar una app en Azure AD.
+KashaFin envía correos reales (código de verificación, contraseñas temporales) vía el mailer nativo de Laravel 12, configurable por `.env` sin tocar código — soporta tanto **Resend** (`resend/resend-php`, HTTP API, `MAIL_MAILER=resend`) como **SMTP genérico** (`MAIL_MAILER=smtp`, por ejemplo Gmail con una "contraseña de aplicación"). No hay ninguna integración con Outlook/Microsoft Graph ni OAuth: se buscó algo que se configure con credenciales simples en `.env`, sin que el hosting necesite registrar una app en Azure AD.
 
-**Para que funcione en producción**, el usuario del proyecto debe:
-1. Crear una cuenta gratis en [resend.com](https://resend.com).
-2. Verificar un dominio propio en Resend (agregar los registros DNS que te da) **o**, para probar rápido sin dominio propio, usar el remitente de pruebas `onboarding@resend.dev` — pero ese remitente de pruebas de Resend solo entrega al correo de la cuenta de Resend, no a correos `@upn.edu.pe` reales. Para que los estudiantes reciban su contraseña de verdad, hace falta verificar un dominio propio.
-3. Copiar la API key generada a `RESEND_API_KEY` en `.env` (ojo: es `RESEND_API_KEY`, no `RESEND_KEY` — así la lee `config/services.php`), y poner `MAIL_MAILER=resend` (en local se deja en `log`: el correo se escribe en `storage/logs/laravel.log` en vez de enviarse, para no gastar cuota probando).
+**Dos formas de configurarlo en producción**, según qué tan fácil sea verificar un dominio propio:
 
-`App\Mail\TemporaryPasswordMail` es el único correo transaccional del sistema — lo dispara `AdminUserController::grantAccess()`, compartido por dos caminos:
-- **Aprobación individual**: un estudiante se autoregistra (`/register`, solo correo `@upn.edu.pe` + facultad, sin contraseña — queda con `approved_at = NULL`), su decano lo ve como "Pendiente" en `/admin/usuarios` y lo aprueba con un clic.
-- **Importación CSV** (`/admin/usuarios/importar`): el decano sube un roster con columnas `nombre,correo` y cada fila válida se da de alta ya aprobada, sin pasar por el paso de solicitud pendiente.
+- **Resend** (preferido si tienes un dominio con DNS controlable): crea una cuenta gratis en [resend.com](https://resend.com), verifica un dominio propio (agregando sus registros DNS — ver nota abajo sobre hostings que no dan ese control), copia la API key a `RESEND_API_KEY` en `.env` (ojo: es `RESEND_API_KEY`, no `RESEND_KEY`), y pon `MAIL_MAILER=resend`. El remitente de pruebas `onboarding@resend.dev` **no sirve en producción** — solo entrega al correo de tu propia cuenta de Resend, nunca a `@upn.edu.pe` reales.
+- **SMTP genérico** (alternativa si no puedes verificar un dominio — por ejemplo, un hosting gratuito como InfinityFree que no da control de DNS sobre su subdominio): usa cualquier proveedor SMTP, incluido Gmail con una ["contraseña de aplicación"](https://myaccount.google.com/apppasswords) (requiere verificación en 2 pasos activada). En `.env`: `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_USERNAME`/`MAIL_FROM_ADDRESS` el correo de Gmail, `MAIL_PASSWORD` la contraseña de aplicación (sin espacios), `MAIL_SCHEME` vacío (Laravel 12 ya no usa `MAIL_ENCRYPTION`; con el puerto 587 negocia TLS solo). **Riesgo**: algunos hostings gratuitos bloquean conexiones salientes por puertos SMTP — si el correo nunca llega y no hay error visible, es la señal de que el puerto está bloqueado, y toca volver al camino de Resend con un dominio propio.
 
-En ambos casos se genera una contraseña real al azar (nunca elegida por nadie), se envía por correo, y la cuenta queda con `must_change_password = true` — el middleware `password-fresh` obliga a cambiarla en el primer login (`/cambiar-contrasena`) antes de dejar pasar a cualquier otra ruta. Esto **reemplazó** la verificación de correo por clic de Breeze (que se quitó del proyecto: controladores, rutas y test de `EmailVerificationTest` eliminados) — recibir esa contraseña ya es la prueba de que el correo es real y de que el decano aprobó a esa persona, así que un segundo paso de verificación habría sido redundante.
+En local se deja `MAIL_MAILER=log`: el correo se escribe en `storage/logs/laravel.log` en vez de enviarse, para no gastar cuota probando.
+
+**Verificación de correo al autoregistrarse** (`App\Http\Controllers\Auth\RegisteredUserController` + `RegistrationVerificationController`): un estudiante llena el formulario de `/register` (nombre, correo `@upn.edu.pe`, facultad), pero la cuenta **todavía no se crea** — se genera un código de 6 dígitos, se guarda en caché (`Cache::put`, TTL de 15 minutos, nunca en una tabla — es un dato efímero) junto con los datos del formulario, y se le envía por correo (`App\Mail\RegistrationCodeMail`). El estudiante lo ingresa en `/register/verificar`; si coincide, recién ahí se crea el `User` (pendiente de aprobación, igual que antes). Máximo 5 intentos fallidos antes de forzar un nuevo registro, con opción de reenviar el código. Esto prueba que el correo es real **antes** de que la solicitud llegue a la bandeja del decano — evita que un typo o un correo inventado ensucien la cola de aprobación, y de paso es la forma más rápida de confirmar que el mailer configurado (Resend o SMTP) realmente está entregando correos.
+
+`App\Mail\TemporaryPasswordMail` sigue siendo el correo que de verdad le da acceso al estudiante — lo dispara `AdminUserController::grantAccess()`, compartido por dos caminos:
+- **Aprobación individual**: una vez verificado el correo (arriba), el decano ve la solicitud como "Pendiente" en `/admin/usuarios` y la aprueba con un clic.
+- **Importación CSV** (`/admin/usuarios/importar`): el decano sube un roster con columnas `nombre,correo` y cada fila válida se da de alta ya aprobada, sin pasar por el registro/verificación de arriba (es alta masiva hecha por el decano mismo, no autoregistro).
+
+En ambos casos se genera una contraseña real al azar (nunca elegida por nadie), se envía por correo, y la cuenta queda con `must_change_password = true` — el middleware `password-fresh` obliga a cambiarla en el primer login (`/cambiar-contrasena`) antes de dejar pasar a cualquier otra ruta. Esto reemplazó la verificación de correo por clic que traía Breeze por defecto (controladores, rutas y test de `EmailVerificationTest` originales, eliminados del proyecto).
 
 ### 6.2 Hablar con un asesor y reporte de incidencias
 
@@ -420,7 +424,7 @@ El proyecto partió de un Laravel 12 recién creado (solo `laravel/framework` y 
 
 ## 10. Rutas principales
 
-Todas bajo `middleware(['auth', 'active'])`, más las rutas de invitado que trae Breeze (`login`, `register`, `forgot-password`, etc.):
+Todas bajo `middleware(['auth', 'active'])`, más las rutas de invitado que trae Breeze (`login`, `register`, `forgot-password`, etc.) y las del registro con código de verificación: `GET /register/verificar`, `POST /register/verificar` (`register.verify.submit`), `POST /register/verificar/reenviar` (`register.verify.resend`, ver [6.1](#61-correo-y-alta-de-estudiantes)):
 
 | Ruta | Descripción |
 |---|---|

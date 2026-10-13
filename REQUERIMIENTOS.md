@@ -7,7 +7,7 @@ resumen de gestión — para el detalle técnico de cómo funciona cada cosa, ve
 ## 1. Resumen
 
 - **64 de 64 RF implementados (100%)**, de punta a punta (modelo + validación + UI + pruebas).
-- **84 tests automatizados pasando** (`php artisan test`).
+- **90 tests automatizados pasando** (`php artisan test`).
 - Ya no quedan funcionalidades completas fuera de alcance (ver sección 3 de todas formas, como
   referencia histórica de cómo se priorizó el desarrollo).
 
@@ -38,8 +38,12 @@ resumen de gestión — para el detalle técnico de cómo funciona cada cosa, ve
 
 - **Multi-tenencia por facultad**: cada facultad tiene su propio decano, que solo ve/administra a
   sus propios estudiantes; el admin master ve y controla todo (incluidas las cuentas de decano).
+- **Verificación de correo por código al autoregistrarse**: antes de que la solicitud llegue al
+  decano, el estudiante confirma su correo con un código de 6 dígitos enviado por correo — la
+  cuenta no se crea hasta que lo ingresa bien.
 - **Alta de estudiantes por aprobación o CSV masivo**, con correo real de contraseña temporal
-  (Resend) y cambio de contraseña obligatorio en el primer login.
+  (Resend o SMTP genérico, configurable por `.env`) y cambio de contraseña obligatorio en el
+  primer login.
 - **Alta manual de estudiantes desde el panel admin**, con reasignación de facultad.
 - **Chatbot con rotación entre hasta 3 proveedores de IA gratuitos**, *function calling* real, y
   un flujo de **"hablar con un asesor"**: el estudiante pide ayuda humana desde el chat, describe
@@ -73,10 +77,14 @@ usuario — en orden de impacto:
    `public/build/` a `htdocs/build/` en el hosting — si no, los estilos nuevos no se aplican
    aunque el PHP esté actualizado (bug real encontrado y corregido durante esta sesión: el tour
    de bienvenida se veía roto hasta reconstruir el CSS).
-2. **Verificación de dominio en Resend (pendiente de confirmar)**: sin un dominio propio
-   verificado en resend.com, el remitente de pruebas `onboarding@resend.dev` no entrega a
-   correos `@upn.edu.pe` reales.
-3. **Rotar la API key de Resend expuesta en el chat** (si aún no se hizo).
+2. **Envío de correo**: InfinityFree no da control de DNS sobre sus subdominios gratis
+   (`*.infinityfree.me`, confirmado probándolo), así que no se pudo verificar un dominio en
+   Resend — por ahora se usa **SMTP con Gmail** (`.env` ya configurado, ver `ARQUITECTURA.md`
+   sección 6.1) como alternativa sin costo. Si más adelante se consigue un dominio propio con DNS
+   controlable (ej. gratis en eu.org + Cloudflare), conviene volver a Resend, que es más robusto
+   para volumen que una cuenta de Gmail personal.
+3. **Rotar la API key de Resend expuesta en el chat** (ya no se usa con SMTP, pero sigue siendo
+   buena práctica invalidarla en resend.com).
 4. **Logo en PNG**: el componente soporta variante clara/oscura; confirmar que los archivos en
    `public/images/logo-dark.png`/`logo-light.png` sean el arte final y no el placeholder.
 5. **Importación de estudiantes solo en CSV, no `.xls`/`.xlsx` directo** (decisión de seguridad,
@@ -101,4 +109,4 @@ usuario — en orden de impacto:
 - `GUIA_IAS_GRATUITAS.md` — cómo obtener y configurar cada proveedor de IA gratuito.
 - `actualizacion_incremental.sql` / `actualizacion_incremental_2.sql` — scripts para actualizar
   una base de datos de producción ya poblada, sin perder datos.
-- `php artisan test` — suite de pruebas automatizadas (84 tests a la fecha de este documento).
+- `php artisan test` — suite de pruebas automatizadas (90 tests a la fecha de este documento).

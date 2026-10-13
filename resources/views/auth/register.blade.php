@@ -1,7 +1,7 @@
 <x-guest-layout>
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        Tu solicitud quedará pendiente hasta que tu decano la apruebe. Cuando sea aprobada, te enviaremos tu
-        contraseña por correo para que ingreses por primera vez.
+        Te enviaremos un código a tu correo para confirmarlo. Después, tu solicitud quedará pendiente hasta que tu
+        decano la apruebe y te enviemos tu contraseña.
     </p>
 
     <form method="POST" action="{{ route('register') }}">

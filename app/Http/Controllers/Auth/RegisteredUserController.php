@@ -3,17 +3,20 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RegistrationCodeMail;
 use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    public const CODE_TTL_MINUTES = 15;
+
     /**
      * Display the registration view.
      */
@@ -23,21 +26,17 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle an incoming registration request. Self-registration is only
-     * for students — admin and dean accounts are created from the admin
-     * panel — and only for @upn.edu.pe addresses. The account is created as
-     * a *pending request*: no usable password yet (a random one nobody
-     * knows), approved_at left null. It stays unusable until the student's
-     * dean approves it (UserController::approve), which generates and
-     * emails a real temporary password — that's the actual proof the
-     * student controls that inbox, so there's no separate email-verification
-     * step on top of it.
+     * First step of self-registration: validates the data and emails a
+     * 6-digit code to confirm the student actually controls that inbox —
+     * the account itself isn't created yet (see
+     * RegistrationVerificationController::verify()), so a typo'd or fake
+     * email never reaches the dean's pending queue.
      *
      * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class,
@@ -48,15 +47,24 @@ class RegisteredUserController extends Controller
             'email.ends_with' => 'Debes registrarte con tu correo institucional (@upn.edu.pe).',
         ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make(Str::random(40)),
-            'faculty_id' => $request->faculty_id,
-        ]);
+        $code = (string) random_int(100000, 999999);
 
-        return redirect()->route('login')->with('status',
-            'Tu solicitud fue enviada. Tu decano la revisará y te enviaremos tu contraseña por correo cuando sea aprobada.'
-        );
+        Cache::put(self::cacheKey($data['email']), [
+            'name' => $data['name'],
+            'faculty_id' => $data['faculty_id'],
+            'code' => $code,
+            'attempts' => 0,
+        ], now()->addMinutes(self::CODE_TTL_MINUTES));
+
+        Mail::to($data['email'])->send(new RegistrationCodeMail($data['name'], $code));
+
+        $request->session()->put('registration_email', $data['email']);
+
+        return redirect()->route('register.verify');
+    }
+
+    public static function cacheKey(string $email): string
+    {
+        return 'registration_code:'.$email;
     }
 }
