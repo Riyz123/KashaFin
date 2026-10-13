@@ -17,14 +17,8 @@
         </div>
 
         <p style="color: #374151; font-size: 14px; line-height: 1.5;">
-            Inicia sesión con tu correo (<strong>{{ $user->email }}</strong>) y esta contraseña. Te pediremos que la
-            cambies por una propia antes de poder usar el resto de la app.
-        </p>
-
-        <p style="margin: 24px 0;">
-            <a href="{{ route('login') }}" style="background: #4f46e5; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px;">
-                Iniciar sesión
-            </a>
+            Inicia sesión con tu correo (<strong>{{ $user->email }}</strong>) y esta contraseña desde la página de
+            KashaFin. Te pediremos que la cambies por una propia antes de poder usar el resto de la app.
         </p>
 
         <p style="color: #9ca3af; font-size: 12px;">
