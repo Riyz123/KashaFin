@@ -33,4 +33,11 @@ class SettingsController extends Controller
 
         return response()->noContent();
     }
+
+    public function completeOnboarding(Request $request)
+    {
+        $request->user()->settings->update(['onboarding_completed_at' => now()]);
+
+        return response()->noContent();
+    }
 }

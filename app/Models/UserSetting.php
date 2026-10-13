@@ -19,6 +19,7 @@ class UserSetting extends Model
         'notify_income_confirmation_by_email',
         'notify_weekly_summary_by_email',
         'starting_balance',
+        'onboarding_completed_at',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class UserSetting extends Model
             'notify_inactivity_by_email' => 'boolean',
             'notify_income_confirmation_by_email' => 'boolean',
             'notify_weekly_summary_by_email' => 'boolean',
+            'onboarding_completed_at' => 'datetime',
         ];
     }
 

@@ -42,7 +42,7 @@ class LiquidityAlertService
         ]);
 
         if ($user->settings->notify_low_liquidity_by_email) {
-            Mail::to($user)->queue(new LowLiquidityAlertMail($user, (float) $lowest['balance'], $threshold));
+            Mail::to($user)->send(new LowLiquidityAlertMail($user, (float) $lowest['balance'], $threshold));
 
             $user->liquidityAlerts()->create([
                 'projected_balance' => $lowest['balance'],

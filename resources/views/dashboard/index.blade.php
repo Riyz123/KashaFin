@@ -1,4 +1,8 @@
 <x-app-layout title="Inicio">
+    @if ($showOnboarding)
+        <x-onboarding-tour />
+    @endif
+
     <div class="mb-6">
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">¡Hola, {{ auth()->user()->name }}!</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">Tu disciplina hoy, construye tu mañana.</p>

@@ -105,6 +105,7 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     Route::get('configuracion', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::patch('configuracion', [SettingsController::class, 'update'])->name('settings.update');
     Route::patch('configuracion/tema', [SettingsController::class, 'updateTheme'])->name('settings.theme');
+    Route::patch('configuracion/onboarding', [SettingsController::class, 'completeOnboarding'])->name('settings.onboarding');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

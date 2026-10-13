@@ -41,6 +41,7 @@ class DashboardController extends Controller
             'lowest' => $lowest,
             'isBelowThreshold' => $projection->isBelowThreshold($user),
             'goals' => $goals,
+            'showOnboarding' => $user->settings->onboarding_completed_at === null,
         ]);
     }
 }
