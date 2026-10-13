@@ -166,6 +166,23 @@ class AiProvider extends Model
         ]);
     }
 
+    /**
+     * "Probar conexión" deliberately never calls recordUsage() — it must
+     * not touch rotation state (requests_used/is_exhausted) for a provider
+     * the router isn't currently using. But without logging anything at
+     * all, the admin panel's "Último uso" stays frozen on whatever the
+     * last real chat failure was — e.g. a stale timeout from before the
+     * admin fixed the config — even after a manual test now succeeds.
+     */
+    public function logTestResult(bool $success, ?string $errorMessage = null): void
+    {
+        $this->usageLogs()->create([
+            'user_id' => auth()->id(),
+            'status' => $success ? 'success' : 'error',
+            'error_message' => $errorMessage,
+        ]);
+    }
+
     public function getUsagePercentAttribute(): ?float
     {
         if (! $this->quota_limit) {

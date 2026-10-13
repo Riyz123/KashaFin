@@ -75,6 +75,11 @@ class AiProviderController extends Controller
      * router wouldn't currently pick. Lets the admin see the exact error
      * (key inválida, URL mal escrita, modelo inexistente, etc.) instead of
      * only the generic "no hay ninguna IA disponible" the chat shows.
+     *
+     * It does log the outcome (success or error) so "Último uso" in the
+     * panel reflects this test — otherwise a provider the router rarely
+     * picks (e.g. a deprioritized backup model) would keep showing a stale
+     * old chat failure forever, even after the admin confirms it works.
      */
     public function testConnection(AiProvider $aiProvider)
     {
@@ -85,8 +90,12 @@ class AiProviderController extends Controller
                 ['role' => 'user', 'content' => 'Responde solo con la palabra: ok'],
             ]);
 
+            $aiProvider->logTestResult(success: true);
+
             return back()->with('status', 'Conexión exitosa. Respuesta del proveedor: "'.$reply->content.'"');
         } catch (\Throwable $e) {
+            $aiProvider->logTestResult(success: false, errorMessage: $e->getMessage());
+
             return back()->with('status', 'Falló la prueba de conexión: '.$e->getMessage());
         }
     }

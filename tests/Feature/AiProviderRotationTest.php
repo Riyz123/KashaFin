@@ -150,4 +150,24 @@ class AiProviderRotationTest extends TestCase
         $this->assertFalse($provider->is_exhausted);
         $this->assertSame(0, $provider->requests_used);
     }
+
+    public function test_a_successful_test_connection_clears_a_stale_error_from_the_panel(): void
+    {
+        // The real scenario this guards against: a provider's config gets
+        // fixed, "Probar conexión" now succeeds, but "Último uso" kept
+        // showing the old chat failure forever because the test endpoint
+        // never logged anything — only real chat traffic through
+        // AiProviderRouter did, and a deprioritized backup model might not
+        // see real traffic again for a long time.
+        $admin = User::factory()->admin()->create();
+        $provider = $this->makeProvider();
+        $provider->usageLogs()->create(['status' => 'error', 'error_message' => 'cURL error 28: Operation timed out']);
+
+        Http::fake(['fake-ai.test/*' => Http::response(['choices' => [['message' => ['content' => 'ok']]]])]);
+
+        $this->actingAs($admin)->post(route('admin.ai.test', $provider));
+
+        $latest = $provider->latestUsageLog()->first();
+        $this->assertSame('success', $latest->status);
+    }
 }
