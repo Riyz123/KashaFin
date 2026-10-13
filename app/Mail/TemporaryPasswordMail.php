@@ -37,6 +37,7 @@ class TemporaryPasswordMail extends Mailable
     {
         return new Content(
             view: 'emails.temporary-password',
+            text: 'emails.temporary-password-text',
         );
     }
 }
