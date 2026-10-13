@@ -25,6 +25,16 @@
             </div>
 
             <div>
+                <x-input-label for="font_size" value="Tamaño de texto" />
+                <select id="font_size" name="font_size" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                    <option value="normal" @selected($settings->font_size === 'normal')>Normal</option>
+                    <option value="large" @selected($settings->font_size === 'large')>Grande</option>
+                    <option value="xlarge" @selected($settings->font_size === 'xlarge')>Muy grande</option>
+                </select>
+                <x-input-error :messages="$errors->get('font_size')" class="mt-2" />
+            </div>
+
+            <div>
                 <x-input-label for="language" value="Idioma del asistente" />
                 <select id="language" name="language" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
                     <option value="es" @selected($settings->language === 'es')>Español</option>

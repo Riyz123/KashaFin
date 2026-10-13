@@ -5,7 +5,8 @@
     <button
         @click="open = !open"
         class="flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg hover:bg-brand-700 transition"
-        aria-label="Abrir asistente"
+        :aria-label="open ? 'Cerrar asistente' : 'Abrir asistente'"
+        :aria-expanded="open.toString()"
     >
         <x-icon name="chat" class="w-7 h-7" x-show="!open" />
         <x-icon name="close" class="w-7 h-7" x-show="open" x-cloak />
@@ -22,7 +23,7 @@
                 <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Asistente KashaFin</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Pregúntame, di &quot;agrega un gasto&quot;, o &quot;hablar con un asesor&quot; si necesitas ayuda humana</p>
             </div>
-            <button @click="speechEnabled = !speechEnabled" title="Leer respuestas en voz alta" class="text-gray-400 hover:text-brand-600">
+            <button @click="speechEnabled = !speechEnabled" title="Leer respuestas en voz alta" :aria-label="speechEnabled ? 'Desactivar lectura en voz alta' : 'Activar lectura en voz alta'" class="text-gray-400 hover:text-brand-600">
                 <x-icon name="speaker" class="w-5 h-5" x-show="speechEnabled" />
                 <x-icon name="speaker-off" class="w-5 h-5" x-show="!speechEnabled" x-cloak />
             </button>
@@ -49,17 +50,20 @@
                 type="button"
                 @click="toggleListening()"
                 title="Hablar"
+                :aria-label="listening ? 'Detener dictado por voz' : 'Dictar mensaje por voz'"
                 :class="listening ? 'text-red-600' : 'text-gray-400 hover:text-brand-600'"
             >
                 <x-icon name="microphone" class="w-5 h-5" />
             </button>
+            <label for="chat-message-input" class="sr-only">Mensaje para el asistente</label>
             <input
+                id="chat-message-input"
                 type="text"
                 x-model="draft"
                 placeholder="Escribe o habla..."
                 class="flex-1 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
             >
-            <button type="submit" class="text-brand-600 hover:text-brand-700">
+            <button type="submit" aria-label="Enviar mensaje" class="text-brand-600 hover:text-brand-700">
                 <x-icon name="send" class="w-5 h-5" />
             </button>
         </form>

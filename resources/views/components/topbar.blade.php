@@ -2,7 +2,7 @@
 
 <header class="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
     <div class="flex items-center gap-3 min-w-0">
-        <button @click="open = true" class="rounded-md p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 md:hidden">
+        <button @click="open = true" aria-label="Abrir menú de navegación" class="rounded-md p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 md:hidden">
             <x-icon name="menu" class="w-6 h-6" />
         </button>
         <h1 class="truncate text-lg font-semibold text-gray-800 dark:text-gray-100">{{ $title ?? 'KashaFin' }}</h1>
@@ -23,6 +23,7 @@
             "
             class="rounded-md p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
             title="Cambiar tema"
+            aria-label="Cambiar entre tema claro y oscuro"
         >
             <x-icon x-show="!dark" name="sun" class="w-5 h-5" />
             <x-icon x-show="dark" name="moon" class="w-5 h-5" x-cloak />

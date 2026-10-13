@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ ($userSettings->theme ?? 'light') === 'dark' ? 'dark' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ ($userSettings->theme ?? 'light') === 'dark' ? 'dark' : '' }} {{ $userSettings && $userSettings->font_size !== 'normal' ? 'text-scale-'.$userSettings->font_size : '' }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,6 +13,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased bg-brand-surface dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <a href="#main-content" class="sr-only-focusable fixed left-2 top-2 z-[100] rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white">Saltar al contenido</a>
+
         <div x-data="{ open: false }" class="flex min-h-screen">
             <x-sidebar />
 
@@ -25,7 +27,7 @@
                     </div>
                 @endif
 
-                <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                <main id="main-content" tabindex="-1" class="flex-1 px-4 py-6 sm:px-6 lg:px-8 focus:outline-none">
                     {{ $slot }}
                 </main>
             </div>

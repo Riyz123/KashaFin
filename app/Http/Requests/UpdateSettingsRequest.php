@@ -16,6 +16,7 @@ class UpdateSettingsRequest extends FormRequest
         return [
             'currency' => ['required', 'in:PEN,USD'],
             'theme' => ['required', 'in:light,dark'],
+            'font_size' => ['required', 'in:normal,large,xlarge'],
             'language' => ['required', 'in:es,en,qu'],
             'week_start_day' => ['required', 'integer', 'between:0,6'],
             'liquidity_threshold' => ['required', 'numeric', 'min:0'],

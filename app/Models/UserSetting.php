@@ -11,6 +11,7 @@ class UserSetting extends Model
         'user_id',
         'currency',
         'theme',
+        'font_size',
         'language',
         'week_start_day',
         'liquidity_threshold',
