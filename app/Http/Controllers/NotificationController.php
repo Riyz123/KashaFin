@@ -11,9 +11,13 @@ class NotificationController extends Controller
     {
         $alerts = $request->user()->liquidityAlerts()
             ->orderByDesc('sent_at')
-            ->paginate(10);
+            ->paginate(10, ['*'], 'alertas');
 
-        return view('notifications.index', ['alerts' => $alerts]);
+        $reminders = $request->user()->notifications()
+            ->latest()
+            ->paginate(10, ['*'], 'recordatorios');
+
+        return view('notifications.index', ['alerts' => $alerts, 'reminders' => $reminders]);
     }
 
     public function sendNow(Request $request, LiquidityAlertService $service)

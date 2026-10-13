@@ -15,6 +15,8 @@ class UserSetting extends Model
         'week_start_day',
         'liquidity_threshold',
         'notify_low_liquidity_by_email',
+        'notify_inactivity_by_email',
+        'notify_income_confirmation_by_email',
         'starting_balance',
     ];
 
@@ -25,6 +27,8 @@ class UserSetting extends Model
             'liquidity_threshold' => 'decimal:2',
             'starting_balance' => 'decimal:2',
             'notify_low_liquidity_by_email' => 'boolean',
+            'notify_inactivity_by_email' => 'boolean',
+            'notify_income_confirmation_by_email' => 'boolean',
         ];
     }
 

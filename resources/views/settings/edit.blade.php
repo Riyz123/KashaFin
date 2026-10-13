@@ -55,10 +55,21 @@
                 <x-input-error :messages="$errors->get('starting_balance')" class="mt-2" />
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                <input type="checkbox" name="notify_low_liquidity_by_email" value="1" @checked($settings->notify_low_liquidity_by_email) class="rounded text-brand-600 focus:ring-brand-500">
-                Enviarme alertas de liquidez por correo
-            </label>
+            <div class="space-y-2">
+                <x-input-label value="Notificaciones por correo" />
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" name="notify_low_liquidity_by_email" value="1" @checked($settings->notify_low_liquidity_by_email) class="rounded text-brand-600 focus:ring-brand-500">
+                    Alertas de riesgo de iliquidez
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" name="notify_inactivity_by_email" value="1" @checked($settings->notify_inactivity_by_email) class="rounded text-brand-600 focus:ring-brand-500">
+                    Recordatorio si llevo 3+ días sin registrar un gasto
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" name="notify_income_confirmation_by_email" value="1" @checked($settings->notify_income_confirmation_by_email) class="rounded text-brand-600 focus:ring-brand-500">
+                    Confirmación de un ingreso fijo esperado
+                </label>
+            </div>
 
             <x-primary-button>Guardar configuración</x-primary-button>
         </form>

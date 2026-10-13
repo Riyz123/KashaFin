@@ -16,6 +16,8 @@ class SettingsController extends Controller
     {
         $data = $request->validated();
         $data['notify_low_liquidity_by_email'] = $request->boolean('notify_low_liquidity_by_email');
+        $data['notify_inactivity_by_email'] = $request->boolean('notify_inactivity_by_email');
+        $data['notify_income_confirmation_by_email'] = $request->boolean('notify_income_confirmation_by_email');
 
         $request->user()->settings->update($data);
 

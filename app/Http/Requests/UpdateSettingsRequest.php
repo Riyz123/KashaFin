@@ -20,6 +20,8 @@ class UpdateSettingsRequest extends FormRequest
             'week_start_day' => ['required', 'integer', 'between:0,6'],
             'liquidity_threshold' => ['required', 'numeric', 'min:0'],
             'notify_low_liquidity_by_email' => ['nullable', 'boolean'],
+            'notify_inactivity_by_email' => ['nullable', 'boolean'],
+            'notify_income_confirmation_by_email' => ['nullable', 'boolean'],
             'starting_balance' => ['required', 'numeric'],
         ];
     }
