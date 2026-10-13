@@ -48,8 +48,10 @@ class FacultyController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class, 'ends_with:@upn.pe'],
             'password' => ['required', Rules\Password::defaults()],
+        ], [
+            'email.ends_with' => 'La cuenta del decano también debe ser un correo institucional (@upn.pe).',
         ]);
 
         User::create([
