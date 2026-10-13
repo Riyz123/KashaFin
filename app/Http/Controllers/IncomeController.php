@@ -12,9 +12,25 @@ class IncomeController extends Controller
 {
     public function index(Request $request)
     {
+        $sort = in_array($request->query('sort'), ['date', 'type', 'amount'], true) ? $request->query('sort') : 'date';
+        $dir = $request->filled('sort') && $request->query('dir') !== 'desc' ? 'asc' : 'desc';
+
         $incomes = $request->user()->incomes()
-            ->orderByDesc('date')
-            ->paginate(10);
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->where('description', 'like', '%'.$request->string('search').'%');
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->string('type'));
+            })
+            ->when($request->filled('from'), function ($query) use ($request) {
+                $query->whereDate('date', '>=', $request->date('from'));
+            })
+            ->when($request->filled('to'), function ($query) use ($request) {
+                $query->whereDate('date', '<=', $request->date('to'));
+            })
+            ->orderBy($sort, $dir)
+            ->paginate(10)
+            ->withQueryString();
 
         $totalMonth = $request->user()->incomes()
             ->whereMonth('date', now()->month)
@@ -38,6 +54,10 @@ class IncomeController extends Controller
             'totalMonth' => (float) $totalMonth,
             'fixedMonth' => (float) $fixedMonth,
             'variableMonth' => (float) $variableMonth,
+            'search' => $request->string('search')->toString(),
+            'type' => $request->string('type')->toString(),
+            'from' => $request->string('from')->toString(),
+            'to' => $request->string('to')->toString(),
         ]);
     }
 

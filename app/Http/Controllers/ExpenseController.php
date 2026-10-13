@@ -14,6 +14,7 @@ class ExpenseController extends Controller
     {
         $user = $request->user();
         $sort = $request->string('sort')->toString();
+        $dir = $request->string('dir')->toString() === 'desc' ? 'desc' : 'asc';
 
         $expenses = $user->expenses()
             ->with('category')
@@ -29,9 +30,14 @@ class ExpenseController extends Controller
             ->when($request->filled('to'), function ($query) use ($request) {
                 $query->whereDate('date', '<=', $request->date('to'));
             })
-            ->when($sort === 'amount_desc', fn ($query) => $query->orderByDesc('amount'))
-            ->when($sort === 'amount_asc', fn ($query) => $query->orderBy('amount'))
-            ->when(! in_array($sort, ['amount_desc', 'amount_asc'], true), fn ($query) => $query->orderByDesc('date'))
+            ->when($sort === 'category', function ($query) use ($dir) {
+                $query->leftJoin('categories', 'categories.id', '=', 'expenses.category_id')
+                    ->orderBy('categories.name', $dir)
+                    ->select('expenses.*');
+            })
+            ->when($sort === 'amount', fn ($query) => $query->orderBy('amount', $dir))
+            ->when($sort === 'date', fn ($query) => $query->orderBy('date', $dir))
+            ->when(! in_array($sort, ['category', 'amount', 'date'], true), fn ($query) => $query->orderByDesc('date'))
             ->paginate(10)
             ->withQueryString();
 
@@ -50,7 +56,6 @@ class ExpenseController extends Controller
             'categoryId' => $request->string('category_id')->toString(),
             'from' => $request->string('from')->toString(),
             'to' => $request->string('to')->toString(),
-            'sort' => $sort,
         ]);
     }
 

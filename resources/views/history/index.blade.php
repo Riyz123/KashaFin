@@ -1,6 +1,6 @@
 <x-app-layout title="Historial">
     <x-page-header title="Historial de movimientos" subtitle="Todos tus ingresos y gastos en un solo lugar.">
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('history.export') }}" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
                 <x-icon name="download" class="w-4 h-4" /> Exportar todo (CSV)
             </a>
@@ -73,11 +73,11 @@
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                            <th class="py-2 pr-4">Fecha</th>
+                            <x-sortable-th field="date" label="Fecha" />
                             <th class="py-2 pr-4">Tipo</th>
-                            <th class="py-2 pr-4">Categoría</th>
+                            <x-sortable-th field="category" label="Categoría" />
                             <th class="py-2 pr-4">Descripción</th>
-                            <th class="py-2 pr-4">Monto</th>
+                            <x-sortable-th field="amount" label="Monto" />
                             <th class="py-2 pr-4 text-right">Acciones</th>
                         </tr>
                     </thead>

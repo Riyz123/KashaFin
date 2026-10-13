@@ -34,14 +34,6 @@
                 <x-input-label for="to" value="Hasta" />
                 <x-text-input id="to" name="to" type="date" class="mt-1 block w-full" :value="$to" />
             </div>
-            <div>
-                <x-input-label for="sort" value="Ordenar por" />
-                <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
-                    <option value="" @selected($sort === '')>Fecha: más recientes</option>
-                    <option value="amount_desc" @selected($sort === 'amount_desc')>Monto: mayor a menor</option>
-                    <option value="amount_asc" @selected($sort === 'amount_asc')>Monto: menor a mayor</option>
-                </select>
-            </div>
             <div class="lg:col-span-5">
                 <x-primary-button>Filtrar</x-primary-button>
                 <a href="{{ route('expenses.index') }}" class="ml-2 text-sm text-gray-500 hover:underline dark:text-gray-400">Limpiar filtros</a>
@@ -78,10 +70,10 @@
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                            <th class="py-2 pr-4">Fecha</th>
+                            <x-sortable-th field="date" label="Fecha" />
                             <th class="py-2 pr-4">Descripción</th>
-                            <th class="py-2 pr-4">Categoría</th>
-                            <th class="py-2 pr-4">Monto</th>
+                            <x-sortable-th field="category" label="Categoría" />
+                            <x-sortable-th field="amount" label="Monto" />
                             <th class="py-2 pr-4 text-right">Acciones</th>
                         </tr>
                     </thead>

@@ -18,6 +18,9 @@ class HistoryController extends Controller
         $from = $request->filled('from') ? Carbon::parse($request->query('from')) : null;
         $to = $request->filled('to') ? Carbon::parse($request->query('to')) : null;
 
+        $sort = in_array($request->query('sort'), ['date', 'category', 'amount'], true) ? $request->query('sort') : 'date';
+        $dir = $request->filled('sort') && $request->query('dir') !== 'desc' ? 'asc' : 'desc';
+
         $incomes = $user->incomes()->get()->map(fn (Income $income) => [
             'id' => $income->id,
             'type' => 'ingreso',
@@ -45,7 +48,8 @@ class HistoryController extends Controller
             ))
             ->when($from, fn ($items) => $items->filter(fn ($item) => $item['date']->gte($from)))
             ->when($to, fn ($items) => $items->filter(fn ($item) => $item['date']->lte($to)))
-            ->sortByDesc(fn ($item) => $item['date']->toDateString())
+            ->when($dir === 'desc', fn ($items) => $items->sortByDesc(fn ($item) => $sort === 'date' ? $item['date']->toDateString() : $item[$sort]))
+            ->when($dir !== 'desc', fn ($items) => $items->sortBy(fn ($item) => $sort === 'date' ? $item['date']->toDateString() : $item[$sort]))
             ->values();
 
         $categories = Category::query()->forUser($user)->orderBy('name')->get();

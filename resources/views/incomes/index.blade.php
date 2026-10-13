@@ -13,6 +13,35 @@
         <x-stat-card label="Ingresos variables" :value="'S/ ' . number_format($variableMonth, 2)" />
     </div>
 
+    <x-card class="mb-6">
+        <form method="GET" action="{{ route('incomes.index') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end">
+            <div class="lg:col-span-2">
+                <x-input-label for="search" value="Descripción" />
+                <x-text-input id="search" name="search" type="text" class="mt-1 block w-full" placeholder="Buscar por descripción..." :value="$search" />
+            </div>
+            <div>
+                <x-input-label for="type" value="Tipo" />
+                <select id="type" name="type" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                    <option value="">Todos</option>
+                    <option value="fijo" @selected($type === 'fijo')>Fijo</option>
+                    <option value="variable" @selected($type === 'variable')>Variable</option>
+                </select>
+            </div>
+            <div>
+                <x-input-label for="from" value="Desde" />
+                <x-text-input id="from" name="from" type="date" class="mt-1 block w-full" :value="$from" />
+            </div>
+            <div>
+                <x-input-label for="to" value="Hasta" />
+                <x-text-input id="to" name="to" type="date" class="mt-1 block w-full" :value="$to" />
+            </div>
+            <div class="lg:col-span-5">
+                <x-primary-button>Filtrar</x-primary-button>
+                <a href="{{ route('incomes.index') }}" class="ml-2 text-sm text-gray-500 hover:underline dark:text-gray-400">Limpiar filtros</a>
+            </div>
+        </form>
+    </x-card>
+
     <x-card>
         @if ($incomes->isEmpty())
             <x-empty-state message="Todavía no registraste ningún ingreso." />
@@ -42,10 +71,10 @@
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                            <th class="py-2 pr-4">Fecha</th>
+                            <x-sortable-th field="date" label="Fecha" />
                             <th class="py-2 pr-4">Descripción</th>
-                            <th class="py-2 pr-4">Tipo</th>
-                            <th class="py-2 pr-4">Monto</th>
+                            <x-sortable-th field="type" label="Tipo" />
+                            <x-sortable-th field="amount" label="Monto" />
                             <th class="py-2 pr-4 text-right">Acciones</th>
                         </tr>
                     </thead>
