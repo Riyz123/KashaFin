@@ -63,7 +63,7 @@ class ChatService
                     ? $this->executeTool($user, $aiReply)
                     : $aiReply->content;
             } catch (QuotaExceededException $e) {
-                $provider->recordUsage(success: false, exhausted: true, errorMessage: $e->getMessage());
+                $provider->recordUsage(success: false, exhausted: true, errorMessage: $e->getMessage(), retryAfterSeconds: $e->retryAfterSeconds);
             } catch (\Throwable $e) {
                 $provider->recordUsage(success: false, exhausted: false, errorMessage: $e->getMessage());
             }

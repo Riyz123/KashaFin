@@ -5,6 +5,7 @@ namespace App\Services\Ai\Drivers;
 use App\Models\AiProvider;
 use App\Services\Ai\AiReply;
 use App\Services\Ai\Exceptions\QuotaExceededException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -51,10 +52,20 @@ class GeminiDriver implements AiDriverInterface
             ]];
         }
 
-        $response = Http::timeout(20)->post("{$url}?key={$provider->api_key}", $payload);
+        try {
+            $response = Http::timeout(20)->post("{$url}?key={$provider->api_key}", $payload);
+        } catch (\Illuminate\Http\Client\ConnectionException) {
+            // The API key travels in the query string here (Gemini's own
+            // auth scheme), so a connection-level failure — no HTTP response
+            // at all — makes Laravel's exception message echo back the
+            // full request URL, key included, straight into the admin
+            // panel's error log. Never let that happen.
+            throw new \RuntimeException('No se pudo conectar con el proveedor de IA (tiempo de espera agotado).');
+        }
 
         if ($response->status() === 429) {
-            throw new QuotaExceededException('Límite de solicitudes alcanzado.');
+            throw (new QuotaExceededException('Límite de solicitudes alcanzado.'))
+                ->withRetryAfter($this->retryAfterSeconds($response));
         }
 
         if ($response->failed()) {
@@ -62,7 +73,8 @@ class GeminiDriver implements AiDriverInterface
             $status = $response->json('error.status');
 
             if ($status === 'RESOURCE_EXHAUSTED') {
-                throw new QuotaExceededException($errorBody);
+                throw (new QuotaExceededException($errorBody))
+                    ->withRetryAfter($this->retryAfterSeconds($response));
             }
 
             throw new \RuntimeException("Error del proveedor de IA: {$errorBody}");
@@ -85,5 +97,27 @@ class GeminiDriver implements AiDriverInterface
         }
 
         return new AiReply(content: trim($content));
+    }
+
+    /**
+     * Gemini returns RESOURCE_EXHAUSTED for both per-minute (RPM) and
+     * per-day (RPD) free-tier limits — same status, very different recovery
+     * time. It tells us which via a RetryInfo detail (`retryDelay`, e.g.
+     * "42s"); without it we fall back to the admin-configured
+     * quota_period_days, same as before this existed.
+     */
+    private function retryAfterSeconds(Response $response): ?int
+    {
+        $details = $response->json('error.details') ?? [];
+
+        foreach ($details as $detail) {
+            if (isset($detail['retryDelay']) && preg_match('/^(\d+)/', (string) $detail['retryDelay'], $m)) {
+                return max(1, (int) $m[1]);
+            }
+        }
+
+        $header = $response->header('Retry-After');
+
+        return is_numeric($header) ? max(1, (int) $header) : null;
     }
 }

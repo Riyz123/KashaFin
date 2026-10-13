@@ -5,6 +5,7 @@ namespace App\Services\Ai\Drivers;
 use App\Models\AiProvider;
 use App\Services\Ai\AiReply;
 use App\Services\Ai\Exceptions\QuotaExceededException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -34,14 +35,16 @@ class OpenAiCompatibleDriver implements AiDriverInterface
             ->post($url, $payload);
 
         if ($response->status() === 429) {
-            throw new QuotaExceededException('Límite de solicitudes alcanzado.');
+            throw (new QuotaExceededException('Límite de solicitudes alcanzado.'))
+                ->withRetryAfter($this->retryAfterSeconds($response));
         }
 
         if ($response->failed()) {
             $errorBody = $response->json('error.message') ?? $response->body();
 
             if ($this->looksLikeQuotaError($errorBody)) {
-                throw new QuotaExceededException($errorBody);
+                throw (new QuotaExceededException($errorBody))
+                    ->withRetryAfter($this->retryAfterSeconds($response));
             }
 
             throw new \RuntimeException("Error del proveedor de IA: {$errorBody}");
@@ -67,6 +70,19 @@ class OpenAiCompatibleDriver implements AiDriverInterface
         }
 
         return new AiReply(content: trim($content));
+    }
+
+    /**
+     * A 429 can mean "out of quota until the billing period resets" or just
+     * "too many requests this minute" — Groq/OpenRouter tell us which via a
+     * standard Retry-After header (seconds). Without it we fall back to the
+     * admin-configured quota_period_days, same as before this existed.
+     */
+    private function retryAfterSeconds(Response $response): ?int
+    {
+        $header = $response->header('Retry-After');
+
+        return is_numeric($header) ? max(1, (int) $header) : null;
     }
 
     private function looksLikeQuotaError(?string $message): bool

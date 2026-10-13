@@ -133,8 +133,15 @@ class AiProvider extends Model
      * $exhausted should only be true for genuine quota/rate-limit errors —
      * a transient network or parsing error shouldn't permanently sideline a
      * provider that still has quota left.
+     *
+     * $retryAfterSeconds, when the provider itself told us how long to
+     * wait (a 429's Retry-After header, or Gemini's RetryInfo detail),
+     * overrides the admin-configured quota_period_days for THIS reset.
+     * Without it, a 429 that was actually just a per-minute throttle would
+     * otherwise sideline the provider for the full period (often a whole
+     * day) instead of the handful of seconds it really needed.
      */
-    public function recordUsage(bool $success, bool $exhausted = false, ?string $errorMessage = null): void
+    public function recordUsage(bool $success, bool $exhausted = false, ?string $errorMessage = null, ?int $retryAfterSeconds = null): void
     {
         if ($this->period_reset_at === null) {
             $this->period_reset_at = Carbon::now()->addDays($this->quota_period_days);
@@ -144,6 +151,10 @@ class AiProvider extends Model
 
         if ($exhausted) {
             $this->is_exhausted = true;
+
+            if ($retryAfterSeconds !== null) {
+                $this->period_reset_at = Carbon::now()->addSeconds($retryAfterSeconds);
+            }
         }
 
         $this->save();
