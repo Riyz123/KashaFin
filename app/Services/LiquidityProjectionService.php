@@ -89,8 +89,19 @@ class LiquidityProjectionService
         return $series->sortBy('balance')->first();
     }
 
+    /**
+     * A brand new account with no incomes/expenses yet projects a flat S/ 0
+     * balance, which trivially falls below any positive threshold — that's
+     * not a real liquidity risk, just an empty account, so there's nothing
+     * meaningful to warn about until the student has actually logged
+     * something.
+     */
     public function isBelowThreshold(User $user): bool
     {
+        if (! $user->incomes()->exists() && ! $user->expenses()->exists()) {
+            return false;
+        }
+
         $threshold = (float) $user->settings->liquidity_threshold;
 
         return $this->sevenDayProjection($user)->min('balance') < $threshold;
