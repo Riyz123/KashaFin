@@ -18,6 +18,7 @@ use App\Http\Controllers\GoalController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\LoanController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectionController;
@@ -70,6 +71,12 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
         ->except(['show']);
     Route::get('metas-historial', [GoalController::class, 'history'])->name('goals.history');
     Route::post('metas/{goal}/aportes', [GoalContributionController::class, 'store'])->name('goals.contributions.store');
+
+    Route::resource('prestamos', LoanController::class)
+        ->parameters(['prestamos' => 'loan'])
+        ->names('loans')
+        ->except(['show']);
+    Route::patch('prestamos/{loan}/pagado', [LoanController::class, 'markPaid'])->name('loans.mark-paid');
 
     Route::get('reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reportes/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
