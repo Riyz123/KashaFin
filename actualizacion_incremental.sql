@@ -1,14 +1,12 @@
 -- Actualización incremental de la base de datos en InfinityFree.
--- Cubre: 1) el rediseño de gastos compartidos (participantes como cuentas
--- reales de KashaFin, con invitación/aceptación y pagos por cuotas con
--- trazabilidad de deuda), y 2) préstamos con persona institucional opcional
--- (buscada) o externa (nombre libre). NO borra nada existente.
+-- Cubre: préstamos con persona institucional opcional (buscada) o externa
+-- (nombre libre). NO borra nada existente.
 --
--- Este es el ÚNICO script incremental vigente — los anteriores quedaron
--- incorporados al `kashafin.sql` completo (que ya se volvió a subir con
--- todo, incluido esto). Solo hace falta correr este si tu base de datos
--- ya tenía todo lo anterior (facultades, decanos, soporte, recordatorios,
--- etc.) y únicamente le faltan estos dos cambios.
+-- El rediseño de gastos compartidos (participantes como cuentas reales,
+-- invitación/aceptación, pagos por cuotas) ya quedó aplicado en producción
+-- — este script ya NO lo incluye, para no repetir un ALTER TABLE sobre
+-- columnas que ya existen (eso da el error "#1091 - No puedo eliminar
+-- COLUMN is_paid"). Este es el ÚNICO script incremental vigente.
 --
 -- CÓMO USARLO:
 -- 1. En phpMyAdmin: pestaña "Exportar" de tu base de datos completa y
@@ -16,44 +14,9 @@
 -- 2. Pestaña "SQL" de phpMyAdmin (NO "Importar") y pega todo este archivo.
 -- 3. Ejecútalo UNA SOLA VEZ.
 
--- 1) shared_expense_participants: ahora el participante es una cuenta real
---    (user_id), con estado de invitación y cuota diaria opcional.
-ALTER TABLE `shared_expense_participants`
-  ADD COLUMN `user_id` bigint(20) unsigned DEFAULT NULL AFTER `shared_expense_id`,
-  ADD COLUMN `status` ENUM('pendiente','aceptado','rechazado') NOT NULL DEFAULT 'pendiente' AFTER `amount_owed`,
-  ADD COLUMN `daily_commitment` decimal(10,2) DEFAULT NULL AFTER `status`,
-  ADD COLUMN `committed_at` timestamp NULL DEFAULT NULL AFTER `daily_commitment`,
-  DROP COLUMN `is_paid`;
-
-ALTER TABLE `shared_expense_participants`
-  ADD KEY `shared_expense_participants_user_id_foreign` (`user_id`),
-  ADD CONSTRAINT `shared_expense_participants_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
--- 2) Nueva tabla: el historial de pagos que cada participante va
---    registrando hacia su parte (reemplaza el toggle "pagado/no pagado").
-CREATE TABLE `shared_expense_contributions` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `participant_id` bigint(20) unsigned NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
-  `date` date NOT NULL,
-  `note` text DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `shared_expense_contributions_participant_id_foreign` (`participant_id`),
-  CONSTRAINT `shared_expense_contributions_participant_id_foreign` FOREIGN KEY (`participant_id`) REFERENCES `shared_expense_participants` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Nota: si ya tenías gastos compartidos creados con el formato viejo
--- (participantes por nombre libre, sin cuenta), esas filas se quedan
--- intactas — su `user_id` queda en NULL y la app sigue mostrando el
--- `name` guardado como respaldo. Simplemente no podrán aceptar/rechazar
--- ni registrar pagos nuevos hasta que se vuelvan a crear como gastos
--- compartidos con una cuenta real.
-
--- 3) Préstamos: la otra persona puede ser una cuenta real de KashaFin
---    (buscada) o alguien externo sin cuenta (queda NULL, se sigue usando
---    el nombre libre que ya existía en `person_name`).
+-- Préstamos: la otra persona puede ser una cuenta real de KashaFin
+-- (buscada) o alguien externo sin cuenta (queda NULL, se sigue usando el
+-- nombre libre que ya existía en `person_name`).
 ALTER TABLE `loans`
   ADD COLUMN `person_user_id` bigint(20) unsigned DEFAULT NULL AFTER `person_name`,
   ADD KEY `loans_person_user_id_foreign` (`person_user_id`),
