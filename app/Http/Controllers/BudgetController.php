@@ -12,16 +12,25 @@ class BudgetController extends Controller
 {
     public function index(Request $request)
     {
-        $periodMonth = Carbon::now()->startOfMonth();
+        $periodMonth = $request->filled('month')
+            ? Carbon::parse($request->string('month').'-01')->startOfMonth()
+            : Carbon::now()->startOfMonth();
 
         $budgets = $request->user()->budgets()
             ->with('category')
             ->whereDate('period_month', $periodMonth->toDateString())
-            ->get();
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->string('search');
+                $query->whereHas('category', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+            })
+            ->get()
+            ->sortBy(fn ($budget) => $budget->category->name)
+            ->values();
 
         return view('budgets.index', [
             'budgets' => $budgets,
             'periodMonth' => $periodMonth,
+            'search' => $request->string('search')->toString(),
         ]);
     }
 

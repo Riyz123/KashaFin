@@ -16,10 +16,21 @@ class SharedExpenseController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $sort = in_array($request->query('sort'), ['date', 'total_amount'], true) ? $request->query('sort') : 'date';
+        $dir = $request->filled('sort') && $request->query('dir') !== 'desc' ? 'asc' : 'desc';
 
         $sharedExpenses = $user->sharedExpenses()
             ->with(['participants.user', 'participants.contributions', 'category'])
-            ->latest('date')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->where('description', 'like', '%'.$request->string('search').'%');
+            })
+            ->when($request->filled('from'), function ($query) use ($request) {
+                $query->whereDate('date', '>=', $request->date('from'));
+            })
+            ->when($request->filled('to'), function ($query) use ($request) {
+                $query->whereDate('date', '<=', $request->date('to'));
+            })
+            ->orderBy($sort, $dir)
             ->get();
 
         $totalOwedToMe = $sharedExpenses->sum(fn (SharedExpense $shared) => $shared->totalOwedPending());
@@ -34,6 +45,9 @@ class SharedExpenseController extends Controller
             'totalOwedToMe' => $totalOwedToMe,
             'pendingInvitations' => $participations->where('status', 'pendiente')->values(),
             'myCommitments' => $participations->where('status', 'aceptado')->values(),
+            'search' => $request->string('search')->toString(),
+            'from' => $request->string('from')->toString(),
+            'to' => $request->string('to')->toString(),
         ]);
     }
 

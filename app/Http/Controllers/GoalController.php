@@ -12,10 +12,13 @@ class GoalController extends Controller
     {
         $goals = $request->user()->savingsGoals()
             ->where('status', 'active')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->where('name', 'like', '%'.$request->string('search').'%');
+            })
             ->latest()
             ->get();
 
-        return view('goals.index', ['goals' => $goals]);
+        return view('goals.index', ['goals' => $goals, 'search' => $request->string('search')->toString()]);
     }
 
     public function create()

@@ -128,8 +128,35 @@
     </x-card>
 
     <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Gastos que creaste</h3>
+
+    <x-card class="mb-4">
+        <form method="GET" action="{{ route('shared-expenses.index') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 items-end">
+            <div class="lg:col-span-2">
+                <x-input-label for="search" value="Descripción" />
+                <x-text-input id="search" name="search" type="text" class="mt-1 block w-full" placeholder="Buscar por descripción..." :value="$search" />
+            </div>
+            <div>
+                <x-input-label for="from" value="Desde" />
+                <x-text-input id="from" name="from" type="date" class="mt-1 block w-full" :value="$from" />
+            </div>
+            <div>
+                <x-input-label for="to" value="Hasta" />
+                <x-text-input id="to" name="to" type="date" class="mt-1 block w-full" :value="$to" />
+            </div>
+            <div class="lg:col-span-4 flex items-center gap-4">
+                <x-primary-button>Filtrar</x-primary-button>
+                <a href="{{ route('shared-expenses.index') }}" class="text-sm text-gray-500 hover:underline dark:text-gray-400">Limpiar filtros</a>
+                <span class="text-xs text-gray-400">Ordenar:
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'date', 'dir' => request('sort') === 'date' && request('dir') !== 'desc' ? 'desc' : 'asc']) }}" class="text-brand-600 hover:underline">Fecha</a>
+                    &middot;
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'total_amount', 'dir' => request('sort') === 'total_amount' && request('dir') !== 'desc' ? 'desc' : 'asc']) }}" class="text-brand-600 hover:underline">Monto total</a>
+                </span>
+            </div>
+        </form>
+    </x-card>
+
     @if ($sharedExpenses->isEmpty())
-        <x-empty-state message="No has creado ningún gasto compartido todavía." />
+        <x-empty-state message="No se encontraron gastos compartidos con esos filtros." />
     @else
         <div class="space-y-4">
             @foreach ($sharedExpenses as $shared)

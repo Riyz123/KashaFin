@@ -8,8 +8,21 @@
         </a>
     </x-page-header>
 
+    <x-card class="mb-6">
+        <form method="GET" action="{{ route('goals.index') }}" class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <x-input-label for="search" value="Nombre de la meta" />
+                <x-text-input id="search" name="search" type="text" class="mt-1 block w-full" placeholder="Buscar meta..." :value="$search" />
+            </div>
+            <div>
+                <x-primary-button>Filtrar</x-primary-button>
+                <a href="{{ route('goals.index') }}" class="ml-2 text-sm text-gray-500 hover:underline dark:text-gray-400">Limpiar filtros</a>
+            </div>
+        </form>
+    </x-card>
+
     @if ($goals->isEmpty())
-        <x-empty-state message="Todavía no tienes metas activas." />
+        <x-empty-state message="No se encontraron metas con esos filtros." />
     @else
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             @php $warning = session('goalWarning'); @endphp

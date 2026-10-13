@@ -7,9 +7,26 @@
         </a>
     </x-page-header>
 
+    <x-card class="mb-6">
+        <form method="GET" action="{{ route('budgets.index') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-3 items-end">
+            <div>
+                <x-input-label for="search" value="Categoría" />
+                <x-text-input id="search" name="search" type="text" class="mt-1 block w-full" placeholder="Buscar por categoría..." :value="$search" />
+            </div>
+            <div>
+                <x-input-label for="month" value="Mes" />
+                <input id="month" name="month" type="month" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" value="{{ $periodMonth->format('Y-m') }}">
+            </div>
+            <div>
+                <x-primary-button>Filtrar</x-primary-button>
+                <a href="{{ route('budgets.index') }}" class="ml-2 text-sm text-gray-500 hover:underline dark:text-gray-400">Limpiar filtros</a>
+            </div>
+        </form>
+    </x-card>
+
     <x-card>
         @if ($budgets->isEmpty())
-            <x-empty-state message="Todavía no configuraste presupuestos para este mes." />
+            <x-empty-state message="No se encontraron presupuestos con esos filtros." />
         @else
             <div class="space-y-5">
                 @foreach ($budgets as $budget)
