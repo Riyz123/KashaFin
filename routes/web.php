@@ -15,6 +15,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\GoalContributionController;
 use App\Http\Controllers\GoalController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\NotificationController;
@@ -81,6 +82,9 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
 
     Route::get('notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('notificaciones/enviar', [NotificationController::class, 'sendNow'])->name('notifications.send');
+
+    Route::get('ayuda', [HelpController::class, 'index'])->name('help.index');
+    Route::post('ayuda', [HelpController::class, 'store'])->name('help.store');
 
     Route::get('configuracion', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::patch('configuracion', [SettingsController::class, 'update'])->name('settings.update');

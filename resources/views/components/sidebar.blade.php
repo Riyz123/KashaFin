@@ -9,6 +9,7 @@ $navItems = [
     ['route' => 'reports.index', 'label' => 'Reportes', 'icon' => 'document'],
     ['route' => 'history.index', 'label' => 'Historial', 'icon' => 'search'],
     ['route' => 'notifications.index', 'label' => 'Notificaciones', 'icon' => 'bell'],
+    ['route' => 'help.index', 'label' => 'Ayuda y soporte', 'icon' => 'help'],
     ['route' => 'settings.edit', 'label' => 'Configuración', 'icon' => 'cog'],
 ];
 @endphp
