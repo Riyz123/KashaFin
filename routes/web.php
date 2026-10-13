@@ -78,6 +78,10 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
         ->names('loans')
         ->except(['show']);
     Route::patch('prestamos/{loan}/pagado', [LoanController::class, 'markPaid'])->name('loans.mark-paid');
+    Route::patch('prestamos/{loan}/aprobar', [LoanController::class, 'approve'])->name('loans.approve');
+    Route::patch('prestamos/{loan}/rechazar', [LoanController::class, 'reject'])->name('loans.reject');
+    Route::patch('prestamos/{loan}/confirmar-pago', [LoanController::class, 'confirmPayment'])->name('loans.confirm-payment');
+    Route::patch('prestamos/{loan}/rechazar-pago', [LoanController::class, 'rejectPaymentConfirmation'])->name('loans.reject-payment');
 
     Route::get('gastos-compartidos', [SharedExpenseController::class, 'index'])->name('shared-expenses.index');
     Route::get('gastos-compartidos/nuevo', [SharedExpenseController::class, 'create'])->name('shared-expenses.create');
