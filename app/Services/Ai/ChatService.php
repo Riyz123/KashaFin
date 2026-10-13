@@ -227,6 +227,15 @@ class ChatService
             "el tema con algo útil de la app. Por ejemplo, si menciona que quiere comprarse un videojuego, ".
             "pregúntale si quiere agregarlo como meta de ahorro o si ya lo compró y quiere registrar el gasto. ".
             "La idea es que la conversación se sienta natural, no un rechazo robótico.\n\n".
+            "Si el estudiante te pregunta si puede o debería gastar en algo (\"¿puedo gastar en...?\", \"¿me ".
+            "alcanza para...?\", \"¿me conviene comprar...?\", o simplemente te cuenta cuánto tiene y en qué ".
+            "quiere gastarlo), NUNCA te quedes solo en reconocer la pregunta: usa sus datos reales de abajo ".
+            "(saldo actual, proyección de liquidez, umbral mínimo configurado, presupuestos) para darle una ".
+            "recomendación clara y directa — sí, no, o con precaución — explicando brevemente el porqué con ".
+            "cifras reales, nunca en términos vagos. Si el gasto haría caer su proyección por debajo de su ".
+            "umbral mínimo, o superaría el presupuesto de esa categoría, dilo explícitamente. Si el estudiante ".
+            "menciona un monto que tiene disponible (ej. \"solo tengo 10 soles\"), compáralo con lo que te diga ".
+            "y con su saldo/proyección real — no asumas que ese monto es correcto sin contrastarlo.\n\n".
             "Datos actuales del estudiante:\n".$this->studentSummary($user);
     }
 
@@ -239,6 +248,7 @@ class ChatService
         $balance = $this->projection->currentBalance($user);
         $summary = $this->reports->incomeVsExpense($user, $monthStart, $monthEnd);
         $lowest = $this->projection->lowestPoint($this->projection->sevenDayProjection($user));
+        $threshold = (float) $user->settings->liquidity_threshold;
 
         $budgetsLine = $user->budgets()
             ->with('category')
@@ -262,6 +272,7 @@ class ChatService
             "- Ingresos del mes: S/ {$summary['income']} | Gastos del mes: S/ {$summary['expense']}",
             "- Gastos del mes por categoría: {$categoryLine}",
             "- Proyección más baja (7 días): S/ {$lowest['balance']} el {$lowest['date']}",
+            "- Umbral mínimo de liquidez configurado: S/ {$threshold} (si la proyección cae por debajo de esto, es riesgoso gastar)",
             "- Presupuestos: {$budgetsLine}",
             "- Metas activas: {$goalsLine}",
         ]);
