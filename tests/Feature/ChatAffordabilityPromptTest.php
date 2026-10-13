@@ -9,22 +9,21 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * Verifies the system prompt actually instructs the model to analyze a
- * "can I afford this?" question with real numbers (balance, 7-day
+ * Verifies the system prompt actually instructs the model to analyze ANY
+ * sporadic finance-related question with real numbers (balance, 7-day
  * projection, liquidity threshold, budgets) instead of just acknowledging
- * the question — this can't be verified against a real model in CI, so this
- * only confirms the instruction and the real figures are present in what
- * gets sent, which is as far as an automated test can go.
+ * it — not just the "can I afford this?" phrasing used as an example, but
+ * any ad-hoc question about the student's situation. This can't be verified
+ * against a real model in CI, so this only confirms the instruction and the
+ * real figures are present in what gets sent, which is as far as an
+ * automated test can go.
  */
 class ChatAffordabilityPromptTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_the_system_prompt_instructs_the_model_to_give_a_real_affordability_recommendation(): void
+    private function captureSystemPrompt(User $user, string $message): string
     {
-        $user = User::factory()->create();
-        $user->settings->update(['liquidity_threshold' => 150]);
-
         AiProvider::create([
             'name' => 'Fake provider', 'driver' => 'openai_compatible',
             'base_url' => 'https://fake-ai.test/v1', 'model' => 'fake-model', 'api_key' => 'fake-key',
@@ -38,18 +37,39 @@ class ChatAffordabilityPromptTest extends TestCase
             $capturedBody = $request->data();
 
             return Http::response([
-                'choices' => [['message' => ['role' => 'assistant', 'content' => 'No te recomiendo gastar en eso ahora mismo.']]],
+                'choices' => [['message' => ['role' => 'assistant', 'content' => 'Respuesta de prueba.']]],
             ], 200);
         });
 
-        $this->actingAs($user)->postJson(route('chat.send'), [
-            'message' => 'puedo gastar en una cerveza, pero solo tengo 10 soles',
-        ])->assertOk();
+        $this->actingAs($user)->postJson(route('chat.send'), ['message' => $message])->assertOk();
 
         $this->assertNotNull($capturedBody);
-        $systemMessage = collect($capturedBody['messages'])->firstWhere('role', 'system')['content'];
 
-        $this->assertStringContainsString('recomendación clara y directa', $systemMessage);
+        return collect($capturedBody['messages'])->firstWhere('role', 'system')['content'];
+    }
+
+    public function test_the_system_prompt_instructs_the_model_to_give_a_real_affordability_recommendation(): void
+    {
+        $user = User::factory()->create();
+        $user->settings->update(['liquidity_threshold' => 150]);
+
+        $systemMessage = $this->captureSystemPrompt($user, 'puedo gastar en una cerveza, pero solo tengo 10 soles');
+
+        $this->assertStringContainsString('respuesta clara y directa', $systemMessage);
         $this->assertStringContainsString('Umbral mínimo de liquidez configurado: S/ 150', $systemMessage);
+    }
+
+    public function test_the_instruction_covers_any_sporadic_finance_question_not_just_affordability(): void
+    {
+        $user = User::factory()->create();
+
+        // Unrelated to "can I afford X" — a different one-off question the
+        // prompt shouldn't need a specific example for to still demand a
+        // data-grounded answer.
+        $systemMessage = $this->captureSystemPrompt($user, '¿cómo voy este mes con mis finanzas?');
+
+        $this->assertStringContainsString('preguntas esporádicas', $systemMessage);
+        $this->assertStringContainsString('no solo las que anticipaste', $systemMessage);
+        $this->assertStringContainsString('Datos actuales del estudiante', $systemMessage);
     }
 }
