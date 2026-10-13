@@ -7,6 +7,7 @@ $navItems = [
     ['route' => 'projections.index', 'label' => 'Proyecciones', 'icon' => 'chart'],
     ['route' => 'goals.index', 'label' => 'Metas', 'icon' => 'flag'],
     ['route' => 'loans.index', 'label' => 'Préstamos', 'icon' => 'swap'],
+    ['route' => 'shared-expenses.index', 'label' => 'Gastos compartidos', 'icon' => 'users'],
     ['route' => 'reports.index', 'label' => 'Reportes', 'icon' => 'document'],
     ['route' => 'history.index', 'label' => 'Historial', 'icon' => 'search'],
     ['route' => 'notifications.index', 'label' => 'Notificaciones', 'icon' => 'bell'],

@@ -159,4 +159,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Loan::class);
     }
+
+    public function sharedExpenses(): HasMany
+    {
+        return $this->hasMany(SharedExpense::class);
+    }
 }

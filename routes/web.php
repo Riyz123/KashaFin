@@ -24,6 +24,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SharedExpenseController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -77,6 +78,12 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
         ->names('loans')
         ->except(['show']);
     Route::patch('prestamos/{loan}/pagado', [LoanController::class, 'markPaid'])->name('loans.mark-paid');
+
+    Route::get('gastos-compartidos', [SharedExpenseController::class, 'index'])->name('shared-expenses.index');
+    Route::get('gastos-compartidos/nuevo', [SharedExpenseController::class, 'create'])->name('shared-expenses.create');
+    Route::post('gastos-compartidos', [SharedExpenseController::class, 'store'])->name('shared-expenses.store');
+    Route::delete('gastos-compartidos/{sharedExpense}', [SharedExpenseController::class, 'destroy'])->name('shared-expenses.destroy');
+    Route::patch('gastos-compartidos-participantes/{participant}/pagado', [SharedExpenseController::class, 'togglePaid'])->name('shared-expenses.toggle-paid');
 
     Route::get('reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reportes/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
