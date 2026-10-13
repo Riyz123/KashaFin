@@ -48,9 +48,14 @@ class UserController extends Controller
     {
         $actor = $request->user();
 
+        // Real UPN emails use the student's code as the local part (e.g.
+        // N00321428@upn.pe), which isn't lowercase — normalize instead of
+        // rejecting it.
+        $request->merge(['email' => Str::lower((string) $request->input('email'))]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class, 'ends_with:@upn.pe'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class, 'ends_with:@upn.pe'],
             'faculty_id' => [$actor->isAdmin() ? 'required' : 'nullable', 'exists:faculties,id'],
         ], [
             'email.ends_with' => 'Debe ser un correo institucional (@upn.pe).',

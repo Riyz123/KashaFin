@@ -7,6 +7,7 @@ use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 
 /**
@@ -43,9 +44,11 @@ class FacultyController extends Controller
     {
         abort_if($faculty->dean(), 422, 'Esta facultad ya tiene un decano asignado.');
 
+        $request->merge(['email' => Str::lower((string) $request->input('email'))]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', Rules\Password::defaults()],
         ]);
 

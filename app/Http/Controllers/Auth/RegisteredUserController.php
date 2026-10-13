@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -36,10 +37,15 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Real UPN emails use the student's code as the local part (e.g.
+        // N00321428@upn.pe), which isn't lowercase — normalize instead of
+        // rejecting it, same as every other email address in practice.
+        $request->merge(['email' => Str::lower((string) $request->input('email'))]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
-                'required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class,
+                'required', 'string', 'email', 'max:255', 'unique:'.User::class,
                 'ends_with:@upn.pe',
             ],
             'faculty_id' => ['required', 'exists:faculties,id'],
