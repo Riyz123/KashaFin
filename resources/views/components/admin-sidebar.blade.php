@@ -1,8 +1,10 @@
 @php
 $isMasterAdmin = auth()->user()->isAdmin();
+$pendingSupportCount = \App\Models\SupportRequest::query()->visibleTo(auth()->user())->where('status', 'pendiente')->count();
 $navItems = [
     ...($isMasterAdmin ? [['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'home']] : []),
     ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'user'],
+    ['route' => 'admin.support.index', 'label' => 'Soporte', 'icon' => 'bell', 'badge' => $pendingSupportCount],
     ['route' => 'admin.categories.index', 'label' => 'Categorías globales', 'icon' => 'wallet'],
     ...($isMasterAdmin ? [
         ['route' => 'admin.ai.index', 'label' => 'Asistente IA', 'icon' => 'chat'],
@@ -34,7 +36,10 @@ $navItems = [
                     : 'text-gray-300 hover:bg-white/10 hover:text-white' }}"
             >
                 <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
-                {{ $item['label'] }}
+                <span class="flex-1">{{ $item['label'] }}</span>
+                @if (! empty($item['badge']))
+                    <span class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">{{ $item['badge'] }}</span>
+                @endif
             </a>
         @endforeach
     </nav>

@@ -20,7 +20,7 @@
         <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
             <div>
                 <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Asistente KashaFin</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Pregúntame, o di &quot;agrega un gasto&quot;, &quot;un ingreso&quot; o &quot;un presupuesto&quot;</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Pregúntame, di &quot;agrega un gasto&quot;, o &quot;hablar con un asesor&quot; si necesitas ayuda humana</p>
             </div>
             <button @click="speechEnabled = !speechEnabled" title="Leer respuestas en voz alta" class="text-gray-400 hover:text-brand-600">
                 <x-icon name="speaker" class="w-5 h-5" x-show="speechEnabled" />

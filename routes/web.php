@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AiPromptController as AdminAiPromptController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FacultyController as AdminFacultyController;
+use App\Http\Controllers\Admin\SupportRequestController as AdminSupportRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
@@ -104,6 +105,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::patch('usuarios/{user}/aprobar', [AdminUserController::class, 'approve'])->name('users.approve');
     Route::patch('usuarios/{user}/facultad', [AdminUserController::class, 'updateFaculty'])->name('users.update-faculty');
     Route::delete('usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+
+    Route::get('soporte', [AdminSupportRequestController::class, 'index'])->name('support.index');
+    Route::patch('soporte/{supportRequest}/atender', [AdminSupportRequestController::class, 'attend'])->name('support.attend');
 
     Route::get('categorias', [AdminCategoryController::class, 'index'])->name('categories.index');
     Route::post('categorias', [AdminCategoryController::class, 'store'])->name('categories.store');

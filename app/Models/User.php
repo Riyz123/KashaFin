@@ -149,4 +149,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(ChatState::class);
     }
+
+    public function supportRequests(): HasMany
+    {
+        return $this->hasMany(SupportRequest::class);
+    }
 }

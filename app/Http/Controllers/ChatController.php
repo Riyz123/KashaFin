@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
+use App\Services\Ai\AdvisorChatIntent;
 use App\Services\Ai\BudgetChatIntent;
 use App\Services\Ai\ChatService;
 use App\Services\Ai\ExpenseChatIntent;
@@ -13,6 +14,7 @@ class ChatController extends Controller
 {
     public function send(
         Request $request,
+        AdvisorChatIntent $advisorIntent,
         ExpenseChatIntent $expenseIntent,
         BudgetChatIntent $budgetIntent,
         IncomeChatIntent $incomeIntent,
@@ -25,7 +27,10 @@ class ChatController extends Controller
         $user = $request->user();
         $message = trim($data['message']);
 
-        $intentReply = $expenseIntent->handle($user, $message)
+        // Checked first: if a "talk to an advisor" request is in progress,
+        // this message is its answer (or a cancellation), not a new intent.
+        $intentReply = $advisorIntent->handle($user, $message)
+            ?? $expenseIntent->handle($user, $message)
             ?? $budgetIntent->handle($user, $message)
             ?? $incomeIntent->handle($user, $message);
 
