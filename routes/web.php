@@ -81,9 +81,12 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
 
     Route::get('gastos-compartidos', [SharedExpenseController::class, 'index'])->name('shared-expenses.index');
     Route::get('gastos-compartidos/nuevo', [SharedExpenseController::class, 'create'])->name('shared-expenses.create');
+    Route::get('gastos-compartidos/buscar-usuarios', [SharedExpenseController::class, 'searchUsers'])->name('shared-expenses.search-users');
     Route::post('gastos-compartidos', [SharedExpenseController::class, 'store'])->name('shared-expenses.store');
     Route::delete('gastos-compartidos/{sharedExpense}', [SharedExpenseController::class, 'destroy'])->name('shared-expenses.destroy');
-    Route::patch('gastos-compartidos-participantes/{participant}/pagado', [SharedExpenseController::class, 'togglePaid'])->name('shared-expenses.toggle-paid');
+    Route::patch('gastos-compartidos-participantes/{participant}/aceptar', [SharedExpenseController::class, 'accept'])->name('shared-expenses.accept');
+    Route::patch('gastos-compartidos-participantes/{participant}/rechazar', [SharedExpenseController::class, 'reject'])->name('shared-expenses.reject');
+    Route::post('gastos-compartidos-participantes/{participant}/aportes', [SharedExpenseController::class, 'storeContribution'])->name('shared-expenses.contributions.store');
 
     Route::get('reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reportes/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');

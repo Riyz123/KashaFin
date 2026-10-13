@@ -380,7 +380,8 @@ Se implementaron los **64 de 64 RF (100%)**, agrupados por funcionalidad complet
 - **Proyección (RF16)**: los ingresos fijos se proyectan por fecha exacta desde la plantilla; los ingresos variables y los gastos se suavizan como tasa diaria promedio de las últimas 4 semanas.
 - **Alertas (RF19-21)**: umbral configurable por usuario, verificación automática al cargar el dashboard (con límite de una alerta por día) y botón manual "Revisar ahora" en Notificaciones que ignora ese límite.
 - **Aportes a metas (RF24)**: si un aporte haría caer la proyección de liquidez por debajo del umbral, se muestra una advertencia en vez de bloquear la acción; el usuario puede confirmar igual.
-- **Préstamos y gastos compartidos (RF49-55)**: tablas propias (`loans`, `shared_expenses`/`shared_expense_participants`), separadas de `incomes`/`expenses`, para no mezclar "dinero entre personas" con el flujo financiero real. Un gasto compartido solo crea un `Expense` real por la parte que le corresponde al estudiante (`my_share`); el resto queda como deuda pendiente por participante, nunca contado dos veces.
+- **Préstamos (RF49-52)**: tabla propia `loans`, separada de `incomes`/`expenses`, para no mezclar "dinero entre personas" con el flujo financiero real.
+- **Gastos compartidos (RF53-55)**: los participantes son siempre cuentas reales de KashaFin (buscadas por nombre/correo vía `GET /gastos-compartidos/buscar-usuarios`, nunca un nombre libre) y deben **aceptar** la invitación (`SharedExpenseParticipant.status`: pendiente/aceptado/rechazado) antes de que su parte cuente — se les notifica (`SharedExpenseInviteNotification`, canal `database`). Solo `my_share` del creador se registra como `Expense` real; el resto es deuda rastreada por participante vía `SharedExpenseContribution` (una fila por pago que el propio participante reporta), nunca contado dos veces. Cada participante puede pagar su parte de una vez o comprometerse a una cuota diaria (`daily_commitment`); con cuota diaria, `SharedExpenseParticipant::debtTimeline()` recorre día por día desde que aceptó (`committed_at`) comparando lo esperado acumulado contra lo pagado, y expone cuánto debe, desde qué día lo debe (se reinicia si se pone al día), y el detalle de qué días específicos quedaron cortos — deliberadamente separado de `SavingsGoal` (metas), que es para ahorrar hacia algo futuro, no para pagar una deuda de algo que ya pasó.
 
 ### 7.1 Recordatorios y notificaciones
 
@@ -439,7 +440,8 @@ Todas bajo `middleware(['auth', 'active'])`, más las rutas de invitado que trae
 | `GET /historial/exportar` | Exportar TODO el historial a CSV (RF41, sin filtros) |
 | `DELETE /historial` | Vaciar todo el historial de ingresos/gastos, sin afectar metas (RF42) |
 | `GET/POST/PATCH/DELETE /prestamos` | CRUD de préstamos entre personas (F014) |
-| `GET/POST /gastos-compartidos`, `DELETE .../{id}`, `PATCH .../pagado` | Gastos compartidos y sus participantes (F015) |
+| `GET/POST /gastos-compartidos`, `GET .../buscar-usuarios`, `DELETE .../{id}` | Gastos compartidos — crear, buscar participantes, eliminar (F015) |
+| `PATCH .../participantes/{id}/aceptar`, `.../rechazar`, `POST .../aportes` | Aceptar/rechazar una invitación y registrar un pago parcial |
 | `GET/POST /notificaciones` | Alertas de liquidez + recordatorios (inactividad, confirmación de ingreso) |
 | `GET/POST /ayuda` | FAQ y reporte de incidencias (F017) |
 | `GET/PATCH /configuracion`, `PATCH .../onboarding` | Preferencias del usuario + marcar visto el tour de bienvenida |

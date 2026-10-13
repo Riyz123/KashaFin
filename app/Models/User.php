@@ -164,4 +164,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(SharedExpense::class);
     }
+
+    public function sharedExpenseParticipations(): HasMany
+    {
+        return $this->hasMany(SharedExpenseParticipant::class);
+    }
 }

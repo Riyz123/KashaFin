@@ -1,14 +1,30 @@
 <x-app-layout title="Nuevo gasto compartido">
-    <x-page-header title="Nuevo gasto compartido" subtitle="Solo tu parte se registra como gasto tuyo; el resto queda como dinero que te deben." />
+    <x-page-header title="Nuevo gasto compartido" subtitle="Solo tu parte se registra como gasto tuyo; cada participante debe aceptar antes de que cuente." />
 
     <x-card class="max-w-2xl">
         <form
             method="POST"
             action="{{ route('shared-expenses.store') }}"
             x-data="{
-                participants: @js(old('participants') ?: [['name' => '', 'amount_owed' => '']]),
-                addParticipant() { this.participants.push({ name: '', amount_owed: '' }); },
+                participants: [{ user_id: null, label: '', amount_owed: '', daily_commitment: '' }],
+                search: '', results: [], activeIndex: null, searching: false,
+                addParticipant() { this.participants.push({ user_id: null, label: '', amount_owed: '', daily_commitment: '' }); },
                 removeParticipant(index) { this.participants.splice(index, 1); },
+                async runSearch(index) {
+                    this.activeIndex = index;
+                    const q = this.participants[index].label;
+                    if (q.length < 2) { this.results = []; return; }
+                    this.searching = true;
+                    const res = await fetch(`{{ route('shared-expenses.search-users') }}?q=${encodeURIComponent(q)}`);
+                    this.results = await res.json();
+                    this.searching = false;
+                },
+                pick(index, user) {
+                    this.participants[index].user_id = user.id;
+                    this.participants[index].label = `${user.name} (${user.email})`;
+                    this.results = [];
+                    this.activeIndex = null;
+                },
             }"
         >
             @csrf
@@ -30,6 +46,7 @@
                 </div>
             </div>
             <x-input-error :messages="$errors->get('total_amount')" class="mt-2" />
+            <x-input-error :messages="$errors->get('participants')" class="mt-2" />
 
             <div class="mt-4">
                 <x-input-label for="date" value="Fecha" />
@@ -48,20 +65,61 @@
 
             <div class="mt-6">
                 <div class="flex items-center justify-between">
-                    <x-input-label value="¿Quién más debe pagar?" />
+                    <x-input-label value="¿Con quién lo divides?" />
                     <button type="button" @click="addParticipant()" class="text-xs font-semibold text-brand-600 hover:underline">+ Agregar persona</button>
                 </div>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Busca por nombre o correo institucional — solo cuentas reales de KashaFin, cada una recibirá una invitación que debe aceptar.
+                </p>
 
                 <template x-for="(participant, index) in participants" :key="index">
-                    <div class="mt-2 flex items-center gap-2">
-                        <input type="text" :name="`participants[${index}][name]`" x-model="participant.name" placeholder="Nombre" class="flex-1 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300" required>
-                        <input type="number" step="0.01" min="0.01" :name="`participants[${index}][amount_owed]`" x-model="participant.amount_owed" placeholder="Monto" class="w-28 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300" required>
-                        <button type="button" @click="removeParticipant(index)" x-show="participants.length > 1" class="text-red-500 hover:text-red-700">
-                            <x-icon name="trash" class="w-4 h-4" />
+                    <div class="mt-3 rounded-lg border border-gray-100 p-3 dark:border-gray-700">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                x-model="participant.label"
+                                @input="runSearch(index)"
+                                @focus="activeIndex = index"
+                                placeholder="Nombre o correo..."
+                                class="w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                autocomplete="off"
+                            >
+                            <input type="hidden" :name="`participants[${index}][user_id]`" :value="participant.user_id">
+
+                            <div
+                                x-show="activeIndex === index && results.length > 0"
+                                x-cloak
+                                class="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                            >
+                                <template x-for="user in results" :key="user.id">
+                                    <button
+                                        type="button"
+                                        @click="pick(index, user)"
+                                        class="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    >
+                                        <span x-text="user.name"></span>
+                                        <span class="text-gray-400" x-text="`(${user.email})`"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-gray-500 dark:text-gray-400">Le toca pagar</label>
+                                <input type="number" step="0.01" min="0.01" :name="`participants[${index}][amount_owed]`" x-model="participant.amount_owed" placeholder="Monto total" class="mt-0.5 w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300" required>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 dark:text-gray-400">Cuota diaria sugerida (opcional)</label>
+                                <input type="number" step="0.01" min="0.01" :name="`participants[${index}][daily_commitment]`" x-model="participant.daily_commitment" placeholder="Ej. 5 soles/día" class="mt-0.5 w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                            </div>
+                        </div>
+
+                        <button type="button" @click="removeParticipant(index)" x-show="participants.length > 1" class="mt-2 text-xs text-red-500 hover:text-red-700">
+                            Quitar
                         </button>
                     </div>
                 </template>
-                <x-input-error :messages="$errors->get('participants')" class="mt-2" />
             </div>
 
             <div class="mt-6">

@@ -7,20 +7,34 @@ use App\Models\Category;
 use App\Models\Expense;
 use App\Models\SharedExpense;
 use App\Models\SharedExpenseParticipant;
+use App\Models\User;
+use App\Notifications\SharedExpenseInviteNotification;
 use Illuminate\Http\Request;
 
 class SharedExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $sharedExpenses = $request->user()->sharedExpenses()
-            ->with('participants', 'category')
+        $user = $request->user();
+
+        $sharedExpenses = $user->sharedExpenses()
+            ->with(['participants.user', 'participants.contributions', 'category'])
             ->latest('date')
             ->get();
 
         $totalOwedToMe = $sharedExpenses->sum(fn (SharedExpense $shared) => $shared->totalOwedPending());
 
-        return view('shared-expenses.index', ['sharedExpenses' => $sharedExpenses, 'totalOwedToMe' => $totalOwedToMe]);
+        $participations = $user->sharedExpenseParticipations()
+            ->with(['sharedExpense.user', 'contributions'])
+            ->latest()
+            ->get();
+
+        return view('shared-expenses.index', [
+            'sharedExpenses' => $sharedExpenses,
+            'totalOwedToMe' => $totalOwedToMe,
+            'pendingInvitations' => $participations->where('status', 'pendiente')->values(),
+            'myCommitments' => $participations->where('status', 'aceptado')->values(),
+        ]);
     }
 
     public function create(Request $request)
@@ -31,9 +45,35 @@ class SharedExpenseController extends Controller
     }
 
     /**
+     * Small JSON search used by the participant picker in the create form
+     * — only real KashaFin accounts can be added, never a free-text name,
+     * since this is meant for UPN students (and staff, once they're a
+     * role) splitting a real expense with each other.
+     */
+    public function searchUsers(Request $request)
+    {
+        $query = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $matches = User::query()
+            ->where('id', '!=', $request->user()->id)
+            ->where('role', '!=', 'admin')
+            ->where(fn ($q) => $q->where('name', 'like', "%{$query}%")->orWhere('email', 'like', "%{$query}%"))
+            ->orderBy('name')
+            ->limit(8)
+            ->get(['id', 'name', 'email']);
+
+        return response()->json($matches);
+    }
+
+    /**
      * Only `my_share` becomes a real Expense (the student's own spending);
-     * the rest is tracked as money owed back by each participant, never
-     * counted twice.
+     * the rest is tracked as money owed back by each invited participant,
+     * never counted twice. Participants start as "pendiente" — they only
+     * count toward anything once they accept.
      */
     public function store(StoreSharedExpenseRequest $request)
     {
@@ -63,14 +103,21 @@ class SharedExpenseController extends Controller
             'date' => $data['date'],
         ]);
 
-        foreach ($data['participants'] as $participant) {
-            $sharedExpense->participants()->create([
-                'name' => $participant['name'],
-                'amount_owed' => $participant['amount_owed'],
+        foreach ($data['participants'] as $participantData) {
+            $invitedUser = User::find($participantData['user_id']);
+
+            $participant = $sharedExpense->participants()->create([
+                'user_id' => $invitedUser->id,
+                'name' => $invitedUser->name,
+                'amount_owed' => $participantData['amount_owed'],
+                'daily_commitment' => $participantData['daily_commitment'] ?? null,
+                'status' => 'pendiente',
             ]);
+
+            $invitedUser->notify(new SharedExpenseInviteNotification($participant));
         }
 
-        return redirect()->route('shared-expenses.index')->with('status', 'Gasto compartido registrado correctamente.');
+        return redirect()->route('shared-expenses.index')->with('status', 'Gasto compartido registrado. Se notificó a cada participante.');
     }
 
     public function destroy(SharedExpense $sharedExpense)
@@ -83,13 +130,53 @@ class SharedExpenseController extends Controller
         return redirect()->route('shared-expenses.index')->with('status', 'Gasto compartido eliminado.');
     }
 
-    public function togglePaid(SharedExpenseParticipant $participant)
+    /**
+     * The invited user accepts — only now does their share count toward
+     * the shared expense. They can optionally commit to a daily rate here;
+     * leaving it blank just means "I'll pay whenever, in any amounts".
+     */
+    public function accept(Request $request, SharedExpenseParticipant $participant)
     {
-        $this->authorizeOwnership($participant->sharedExpense);
+        abort_unless($participant->user_id === $request->user()->id, 403);
+        abort_unless($participant->isPending(), 422, 'Esta invitación ya fue respondida.');
 
-        $participant->update(['is_paid' => ! $participant->is_paid]);
+        $data = $request->validate([
+            'daily_commitment' => ['nullable', 'numeric', 'gt:0'],
+        ]);
 
-        return back()->with('status', $participant->is_paid ? 'Marcado como pagado.' : 'Marcado como pendiente.');
+        $participant->accept($data['daily_commitment'] ?? null);
+
+        return back()->with('status', 'Invitación aceptada.');
+    }
+
+    public function reject(Request $request, SharedExpenseParticipant $participant)
+    {
+        abort_unless($participant->user_id === $request->user()->id, 403);
+        abort_unless($participant->isPending(), 422, 'Esta invitación ya fue respondida.');
+
+        $participant->reject();
+
+        return back()->with('status', 'Invitación rechazada.');
+    }
+
+    /**
+     * The participant logs their own payment toward their share — same
+     * self-reported pattern as the rest of the app's money entry.
+     */
+    public function storeContribution(Request $request, SharedExpenseParticipant $participant)
+    {
+        abort_unless($participant->user_id === $request->user()->id, 403);
+        abort_unless($participant->isAccepted(), 422, 'Primero debes aceptar esta invitación.');
+
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'date' => ['required', 'date'],
+            'note' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $participant->contributions()->create($data);
+
+        return back()->with('status', 'Pago registrado.');
     }
 
     private function authorizeOwnership(SharedExpense $sharedExpense): void

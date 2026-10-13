@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * F015: an expense paid by the student but split with other people
- * (tracked by name only, not necessarily KashaFin accounts). Only
- * `my_share` becomes a real Expense row — the rest is money owed back to
- * the student, tracked separately via participants so it's never double
- * counted as the student's own spending.
+ * F015: an expense paid by the student but split with other KashaFin
+ * accounts (institutional users, searched and invited — never a free-text
+ * name). Only `my_share` becomes a real Expense row — the rest is money
+ * owed back to the student by each participant, tracked separately so it's
+ * never double counted as the student's own spending.
  */
 class SharedExpense extends Model
 {
@@ -46,8 +46,14 @@ class SharedExpense extends Model
         return $this->hasMany(SharedExpenseParticipant::class);
     }
 
+    /**
+     * How much is still owed by accepted participants — pending/rejected
+     * invitations don't count toward anything yet.
+     */
     public function totalOwedPending(): float
     {
-        return (float) $this->participants()->where('is_paid', false)->sum('amount_owed');
+        return $this->participants
+            ->where('status', 'aceptado')
+            ->sum(fn (SharedExpenseParticipant $p) => $p->remaining());
     }
 }

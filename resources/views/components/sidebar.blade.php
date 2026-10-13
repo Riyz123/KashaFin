@@ -1,4 +1,5 @@
 @php
+$pendingSharedExpenseInvites = auth()->user()->sharedExpenseParticipations()->where('status', 'pendiente')->count();
 $navItems = [
     ['route' => 'dashboard', 'label' => 'Inicio', 'icon' => 'home'],
     ['route' => 'incomes.index', 'label' => 'Ingresos', 'icon' => 'income'],
@@ -7,7 +8,7 @@ $navItems = [
     ['route' => 'projections.index', 'label' => 'Proyecciones', 'icon' => 'chart'],
     ['route' => 'goals.index', 'label' => 'Metas', 'icon' => 'flag'],
     ['route' => 'loans.index', 'label' => 'Préstamos', 'icon' => 'swap'],
-    ['route' => 'shared-expenses.index', 'label' => 'Gastos compartidos', 'icon' => 'users'],
+    ['route' => 'shared-expenses.index', 'label' => 'Gastos compartidos', 'icon' => 'users', 'badge' => $pendingSharedExpenseInvites],
     ['route' => 'reports.index', 'label' => 'Reportes', 'icon' => 'document'],
     ['route' => 'history.index', 'label' => 'Historial', 'icon' => 'search'],
     ['route' => 'notifications.index', 'label' => 'Notificaciones', 'icon' => 'bell'],
@@ -39,7 +40,10 @@ $navItems = [
                     : 'text-brand-light/90 hover:bg-white/10 hover:text-white' }}"
             >
                 <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
-                {{ $item['label'] }}
+                <span class="flex-1">{{ $item['label'] }}</span>
+                @if (! empty($item['badge']))
+                    <span class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">{{ $item['badge'] }}</span>
+                @endif
             </a>
         @endforeach
     </nav>
