@@ -43,5 +43,10 @@
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
+
+        <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+            ¿Eres estudiante de la UPN y no tienes cuenta?
+            <a href="{{ route('register') }}" class="font-semibold text-brand-600 underline hover:text-brand-700">Regístrate aquí</a>
+        </p>
     </form>
 </x-guest-layout>
