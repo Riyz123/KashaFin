@@ -17,7 +17,13 @@ class GeminiDriver implements AiDriverInterface
 {
     public function send(AiProvider $provider, array $messages, array $tools = []): AiReply
     {
-        $url = rtrim($provider->base_url, '/')."/models/{$provider->model}:generateContent";
+        // Google's own error messages suggest the replacement slug WITH the
+        // "models/" prefix (e.g. "models/gemini-3.8-flash"), which an admin
+        // naturally pastes as-is into the `model` field — so this tolerates
+        // either form instead of producing a broken "models/models/..." URL.
+        $model = preg_replace('#^models/#', '', trim($provider->model));
+
+        $url = rtrim($provider->base_url, '/')."/models/{$model}:generateContent";
 
         $systemMessages = array_filter($messages, fn ($m) => $m['role'] === 'system');
         $conversation = array_values(array_filter($messages, fn ($m) => $m['role'] !== 'system'));

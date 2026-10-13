@@ -18,7 +18,7 @@ class OpenAiCompatibleDriver implements AiDriverInterface
         $url = rtrim($provider->base_url, '/').'/chat/completions';
 
         $payload = [
-            'model' => $provider->model,
+            'model' => trim($provider->model),
             'messages' => $messages,
             'temperature' => 0.4,
             'max_tokens' => 500,
