@@ -124,6 +124,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::post('usuarios/importar', [AdminUserController::class, 'import'])->name('users.import');
     Route::patch('usuarios/{user}/estado', [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::patch('usuarios/{user}/aprobar', [AdminUserController::class, 'approve'])->name('users.approve');
+    Route::patch('usuarios/{user}/reenviar-contrasena', [AdminUserController::class, 'resendPassword'])->name('users.resend-password');
     Route::patch('usuarios/{user}/facultad', [AdminUserController::class, 'updateFaculty'])->name('users.update-faculty');
     Route::delete('usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 

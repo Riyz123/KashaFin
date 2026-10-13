@@ -105,6 +105,12 @@
                                     <button type="submit" class="text-red-600 hover:underline">Rechazar</button>
                                 </form>
                             @else
+                                @if ($user->must_change_password)
+                                    <form method="POST" action="{{ route('admin.users.resend-password', $user) }}" onsubmit="return confirm('¿Generar y enviar una nueva contraseña temporal?');">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="text-brand-600 hover:underline">Reenviar contraseña</button>
+                                    </form>
+                                @endif
                                 <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="text-brand-600 hover:underline">{{ $user->is_active ? 'Desactivar' : 'Activar' }}</button>
@@ -167,6 +173,12 @@
                                             <button type="submit" class="text-red-600 hover:underline">Rechazar</button>
                                         </form>
                                     @else
+                                        @if ($user->must_change_password)
+                                            <form method="POST" action="{{ route('admin.users.resend-password', $user) }}" class="inline" onsubmit="return confirm('¿Generar y enviar una nueva contraseña temporal?');">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" class="text-brand-600 hover:underline">Reenviar contraseña</button>
+                                            </form>
+                                        @endif
                                         <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}" class="inline">
                                             @csrf @method('PATCH')
                                             <button type="submit" class="text-brand-600 hover:underline">{{ $user->is_active ? 'Desactivar' : 'Activar' }}</button>

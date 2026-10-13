@@ -117,6 +117,23 @@ class UserController extends Controller
         return back()->with('status', "Solicitud aprobada. Se le envió la contraseña a {$user->email}.");
     }
 
+    /**
+     * For when the first temporary-password email never arrives (lost,
+     * filtered as spam/quarantined, etc.) — generates and sends a brand new
+     * one instead of leaving the account stuck. Only makes sense while the
+     * student still hasn't logged in with a real password of their own.
+     */
+    public function resendPassword(Request $request, User $user)
+    {
+        abort_unless($request->user()->canManage($user), 403, 'No tienes permisos sobre esta cuenta.');
+        abort_if($user->isPendingApproval(), 422, 'Esta solicitud todavía no fue aprobada.');
+        abort_unless($user->must_change_password, 422, 'Este estudiante ya inició sesión con su propia contraseña.');
+
+        $this->grantAccess($user);
+
+        return back()->with('status', "Se reenvió una nueva contraseña a {$user->email}.");
+    }
+
     public function destroy(Request $request, User $user)
     {
         abort_unless($request->user()->canManage($user), 403, 'No tienes permisos para eliminar esta cuenta.');
