@@ -7,7 +7,7 @@ resumen de gestión — para el detalle técnico de cómo funciona cada cosa, ve
 ## 1. Resumen
 
 - **64 de 64 RF implementados (100%)**, de punta a punta (modelo + validación + UI + pruebas).
-- **82 tests automatizados pasando** (`php artisan test`).
+- **84 tests automatizados pasando** (`php artisan test`).
 - Ya no quedan funcionalidades completas fuera de alcance (ver sección 3 de todas formas, como
   referencia histórica de cómo se priorizó el desarrollo).
 
@@ -44,6 +44,10 @@ resumen de gestión — para el detalle técnico de cómo funciona cada cosa, ve
 - **Chatbot con rotación entre hasta 3 proveedores de IA gratuitos**, *function calling* real, y
   un flujo de **"hablar con un asesor"**: el estudiante pide ayuda humana desde el chat, describe
   su problema, y el decano/admin recibe una notificación inmediata en `/admin/soporte`.
+- **El chat responde con datos reales a cualquier pregunta esporádica sobre sus finanzas** (no
+  solo "¿puedo gastar en X?" — cualquier duda ad-hoc, en cualquier forma en que la haga), dando
+  una recomendación clara (sí/no/con precaución) contrastada contra su saldo, proyección, umbral
+  de liquidez y presupuestos reales, en vez de una respuesta genérica.
 - **Prompt del asistente editable**, idioma configurable (español/inglés/quechua), dictado por voz.
 - **Activar/desactivar/eliminar cuentas de estudiante**, con cierre de sesión inmediato al
   desactivar.
@@ -80,8 +84,11 @@ usuario — en orden de impacto:
 6. **Voz requiere HTTPS en producción** (limitación del navegador, no de la app).
 7. **Correo síncrono, no en cola**: correcto para InfinityFree (sin worker de colas); si el
    proyecto migra de hosting, conviene reactivar colas para no bloquear la respuesta HTTP.
-8. **Fluidez conversacional y "hablar con un asesor" dependen del modelo real**: las instrucciones
-   del prompt no son verificables por tests automatizados, solo probándolas a mano.
+8. **Fluidez conversacional, recomendaciones de gasto y "hablar con un asesor" dependen del
+   modelo real**: las instrucciones del prompt (incluida la de responder preguntas esporádicas
+   con datos reales) están probadas en cuanto a que llegan correctamente al modelo, pero qué tan
+   bien las sigue un proveedor de IA concreto solo se verifica probándolo a mano, no con tests
+   automatizados.
 9. **Préstamos y gastos compartidos no entran en la proyección de liquidez**: es una decisión de
    diseño deliberada (son deudas entre personas, no ingreso/gasto propio), documentada en
    `ARQUITECTURA.md` sección 7.
@@ -94,4 +101,4 @@ usuario — en orden de impacto:
 - `GUIA_IAS_GRATUITAS.md` — cómo obtener y configurar cada proveedor de IA gratuito.
 - `actualizacion_incremental.sql` / `actualizacion_incremental_2.sql` — scripts para actualizar
   una base de datos de producción ya poblada, sin perder datos.
-- `php artisan test` — suite de pruebas automatizadas (82 tests a la fecha de este documento).
+- `php artisan test` — suite de pruebas automatizadas (84 tests a la fecha de este documento).
