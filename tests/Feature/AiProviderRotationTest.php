@@ -6,6 +6,7 @@ use App\Models\AiProvider;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class AiProviderRotationTest extends TestCase
@@ -96,5 +97,57 @@ class AiProviderRotationTest extends TestCase
 
         $provider->refresh();
         $this->assertSame(5, $provider->requests_used);
+    }
+
+    public function test_admin_can_manually_reactivate_an_exhausted_provider(): void
+    {
+        // Covers the case where is_exhausted got set by a misclassified
+        // error rather than a genuine quota hit — the admin shouldn't have
+        // to wait for period_reset_at to try the provider again.
+        $admin = User::factory()->admin()->create();
+
+        $provider = $this->makeProvider([
+            'is_exhausted' => true,
+            'requests_used' => 42,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.ai.reactivate', $provider))
+            ->assertRedirect();
+
+        $provider->refresh();
+        $this->assertFalse($provider->is_exhausted);
+        $this->assertSame(0, $provider->requests_used);
+    }
+
+    public function test_admin_test_connection_reports_the_exact_provider_error(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $provider = $this->makeProvider();
+
+        Http::fake([
+            'fake-ai.test/*' => Http::response(['error' => ['message' => 'Invalid API key provided.']], 401),
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.ai.test', $provider));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('status', fn ($status) => str_contains($status, 'Invalid API key provided.'));
+    }
+
+    public function test_admin_test_connection_does_not_affect_rotation_state(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $provider = $this->makeProvider();
+
+        Http::fake([
+            'fake-ai.test/*' => Http::response(['error' => ['message' => 'rate limit exceeded']], 429),
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.ai.test', $provider));
+
+        $provider->refresh();
+        $this->assertFalse($provider->is_exhausted);
+        $this->assertSame(0, $provider->requests_used);
     }
 }

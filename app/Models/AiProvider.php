@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 class AiProvider extends Model
@@ -40,6 +41,16 @@ class AiProvider extends Model
     public function usageLogs(): HasMany
     {
         return $this->hasMany(AiUsageLog::class);
+    }
+
+    /**
+     * Surfaced in the admin panel so there's a visible reason *why* a
+     * provider isn't being used, instead of the admin only finding out via
+     * the generic "no hay ninguna IA disponible" chat fallback.
+     */
+    public function latestUsageLog(): HasOne
+    {
+        return $this->hasOne(AiUsageLog::class)->latestOfMany();
     }
 
     /**
@@ -100,6 +111,22 @@ class AiProvider extends Model
             $this->period_reset_at = Carbon::now()->addDays($this->quota_period_days);
             $this->save();
         }
+    }
+
+    /**
+     * Manual recovery for the admin panel: if a provider got stuck
+     * `is_exhausted` from a misclassified error (not a real quota/rate-limit
+     * response), there's otherwise no way to use it again before
+     * `period_reset_at` — waiting on that isn't acceptable when the key
+     * actually works.
+     */
+    public function reactivate(): void
+    {
+        $this->update([
+            'is_exhausted' => false,
+            'requests_used' => 0,
+            'period_reset_at' => Carbon::now()->addDays($this->quota_period_days),
+        ]);
     }
 
     /**

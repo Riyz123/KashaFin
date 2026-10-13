@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AiProvider;
 use App\Models\AiSetting;
+use App\Services\Ai\Drivers\GeminiDriver;
+use App\Services\Ai\Drivers\OpenAiCompatibleDriver;
 use Illuminate\Http\Request;
 
 class AiProviderController extends Controller
@@ -16,7 +18,7 @@ class AiProviderController extends Controller
         // message happens to hit it) keeps what the admin sees in sync with
         // reality, instead of showing a stale "se reinicia" date forever if
         // nobody has sent a message since it actually became eligible.
-        $providers = AiProvider::query()->ordered()->get()->each(fn (AiProvider $provider) => $provider->isAvailable());
+        $providers = AiProvider::query()->ordered()->with('latestUsageLog')->get()->each(fn (AiProvider $provider) => $provider->isAvailable());
         $aiSetting = AiSetting::current();
 
         return view('admin.ai.index', ['providers' => $providers, 'aiSetting' => $aiSetting]);
@@ -57,6 +59,36 @@ class AiProviderController extends Controller
         $aiProvider->delete();
 
         return back()->with('status', 'Proveedor eliminado correctamente.');
+    }
+
+    public function reactivate(AiProvider $aiProvider)
+    {
+        $aiProvider->reactivate();
+
+        return back()->with('status', 'Proveedor reactivado: se quitó el estado "agotado" y se reinició su contador de uso.');
+    }
+
+    /**
+     * Sends one real, minimal request straight through the driver —
+     * bypassing AiProviderRouter entirely, so this never touches rotation
+     * state (is_exhausted/requests_used) and works even for a provider the
+     * router wouldn't currently pick. Lets the admin see the exact error
+     * (key inválida, URL mal escrita, modelo inexistente, etc.) instead of
+     * only the generic "no hay ninguna IA disponible" the chat shows.
+     */
+    public function testConnection(AiProvider $aiProvider)
+    {
+        $driver = $aiProvider->driver === 'gemini' ? new GeminiDriver : new OpenAiCompatibleDriver;
+
+        try {
+            $reply = $driver->send($aiProvider, [
+                ['role' => 'user', 'content' => 'Responde solo con la palabra: ok'],
+            ]);
+
+            return back()->with('status', 'Conexión exitosa. Respuesta del proveedor: "'.$reply->content.'"');
+        } catch (\Throwable $e) {
+            return back()->with('status', 'Falló la prueba de conexión: '.$e->getMessage());
+        }
     }
 
     private function validateData(Request $request, bool $requireKey): array

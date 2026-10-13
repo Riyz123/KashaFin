@@ -90,10 +90,35 @@
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Modelo: {{ $provider->model }} &middot; Prioridad: {{ $provider->priority }} &middot; Key: {{ $provider->masked_api_key }}
                             </p>
+                            @if ($provider->latestUsageLog)
+                                <p class="mt-1 text-xs {{ $provider->latestUsageLog->status === 'success' ? 'text-gray-500 dark:text-gray-400' : 'text-red-600 dark:text-red-400' }}">
+                                    Último uso ({{ $provider->latestUsageLog->created_at->format('d/m/Y H:i') }}):
+                                    {{ match ($provider->latestUsageLog->status) {
+                                        'success' => 'exitoso',
+                                        'quota_exceeded' => 'cuota agotada',
+                                        default => 'error',
+                                    } }}
+                                    @if ($provider->latestUsageLog->error_message)
+                                        &middot; {{ $provider->latestUsageLog->error_message }}
+                                    @endif
+                                </p>
+                            @else
+                                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Todavía no se ha usado.</p>
+                            @endif
                         </div>
 
-                        <div class="flex gap-3 text-sm">
+                        <div class="flex flex-wrap gap-3 text-sm">
                             <button @click="editing = !editing" class="text-brand-600 hover:underline">Editar</button>
+                            <form method="POST" action="{{ route('admin.ai.test', $provider) }}">
+                                @csrf
+                                <button type="submit" class="text-brand-600 hover:underline">Probar conexión</button>
+                            </form>
+                            @if ($provider->is_exhausted)
+                                <form method="POST" action="{{ route('admin.ai.reactivate', $provider) }}" onsubmit="return confirm('¿Quitar el estado \'agotado\' y reiniciar su contador de uso?');">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="text-brand-600 hover:underline">Reactivar</button>
+                                </form>
+                            @endif
                             <form method="POST" action="{{ route('admin.ai.toggle-active', $provider) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="text-brand-600 hover:underline">{{ $provider->is_active ? 'Desactivar' : 'Activar' }}</button>

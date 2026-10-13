@@ -77,9 +77,14 @@ class OpenAiCompatibleDriver implements AiDriverInterface
 
         $message = mb_strtolower($message);
 
+        // Deliberately specific: a bare "insufficient" also matches errors
+        // like "insufficient permissions" on a misconfigured key, which is
+        // a real, fixable config problem — not exhausted quota — and
+        // shouldn't permanently sideline the provider until period reset.
         return str_contains($message, 'quota')
             || str_contains($message, 'rate limit')
             || str_contains($message, 'rate_limit')
-            || str_contains($message, 'insufficient');
+            || str_contains($message, 'insufficient_quota')
+            || str_contains($message, 'insufficient quota');
     }
 }

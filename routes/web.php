@@ -149,6 +149,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::post('ia', [AdminAiProviderController::class, 'store'])->name('ai.store');
     Route::put('ia/{aiProvider}', [AdminAiProviderController::class, 'update'])->name('ai.update');
     Route::patch('ia/{aiProvider}/estado', [AdminAiProviderController::class, 'toggleActive'])->name('ai.toggle-active');
+    Route::patch('ia/{aiProvider}/reactivar', [AdminAiProviderController::class, 'reactivate'])->name('ai.reactivate');
+    Route::post('ia/{aiProvider}/probar', [AdminAiProviderController::class, 'testConnection'])->name('ai.test');
     Route::delete('ia/{aiProvider}', [AdminAiProviderController::class, 'destroy'])->name('ai.destroy');
     Route::put('ia-prompt', [AdminAiPromptController::class, 'update'])->name('ai.prompt.update');
     Route::delete('ia-prompt', [AdminAiPromptController::class, 'reset'])->name('ai.prompt.reset');
