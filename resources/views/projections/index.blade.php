@@ -20,4 +20,34 @@
         </x-stat-card>
         <x-stat-card label="Horizonte" :value="$horizon . ' días'" />
     </div>
+
+    <x-card class="mt-6">
+        <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">¿Cómo se calculó esto?</h3>
+        <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+            Los ingresos variables y gastos se promedian por día usando tus últimos
+            {{ $breakdown['window_days'] }} día(s) de historial
+            @if ($breakdown['window_days'] < 28)
+                (todavía menos de 28 porque tu cuenta es reciente, para no diluir el promedio con días sin datos)
+            @endif
+            . Los ingresos fijos se proyectan en su fecha exacta, no en este promedio.
+        </p>
+        <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            <div>
+                <p class="text-gray-500 dark:text-gray-400">Ingreso variable promedio/día</p>
+                <p class="font-semibold text-brand-600">S/ {{ number_format($breakdown['variable_daily_rate'], 2) }}</p>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400">Gasto promedio/día</p>
+                <p class="font-semibold text-red-600">S/ {{ number_format($breakdown['expense_daily_rate'], 2) }}</p>
+            </div>
+        </div>
+        @if ($breakdown['upcoming_fixed']->isNotEmpty())
+            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">Próximos ingresos fijos dentro de este horizonte:</p>
+            <ul class="mt-1 space-y-0.5 text-xs text-gray-600 dark:text-gray-300">
+                @foreach ($breakdown['upcoming_fixed'] as $date => $amount)
+                    <li>{{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}: S/ {{ number_format($amount, 2) }}</li>
+                @endforeach
+            </ul>
+        @endif
+    </x-card>
 </x-app-layout>

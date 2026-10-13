@@ -15,12 +15,14 @@ class ProjectionController extends Controller
 
         $series = $projection->dailySeries($user, $horizon);
         $lowest = $projection->lowestPoint($series);
+        $breakdown = $projection->smoothingBreakdown($user, $horizon);
 
         return view('projections.index', [
             'series' => $series,
             'lowest' => $lowest,
             'horizon' => $horizon,
             'currentBalance' => $projection->currentBalance($user),
+            'breakdown' => $breakdown,
         ]);
     }
 }

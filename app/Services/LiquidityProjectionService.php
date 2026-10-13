@@ -13,8 +13,15 @@ use Illuminate\Support\Collection;
  * Fixed ("fijo") incomes are projected on their exact scheduled dates by
  * walking each template's frequency forward from next_occurrence_date.
  * Variable incomes and all expenses (which have no recurring flag in this
- * build) are smoothed into a daily rate from the last 4 weeks of history —
- * documented here so the formula is easy to revisit without a schema change.
+ * build) are smoothed into a daily rate from up to the last 4 weeks of
+ * history — documented here so the formula is easy to revisit without a
+ * schema change.
+ *
+ * The smoothing window shrinks for a brand-new account: dividing by a flat
+ * 28 days when the account only has, say, 5 days of real activity would
+ * dilute the daily rate far below what actually happened those 5 days,
+ * making the projection look artificially safe (or risky) until the
+ * account "ages into" the full window.
  */
 class LiquidityProjectionService
 {
@@ -39,16 +46,17 @@ class LiquidityProjectionService
     public function dailySeries(User $user, int $days = 15): Collection
     {
         $today = Carbon::today();
-        $windowStart = $today->copy()->subDays(self::SMOOTHING_WINDOW_DAYS);
+        $windowStart = $this->smoothingWindowStart($user, $today);
+        $smoothingDays = $this->smoothingDays($windowStart, $today);
 
         $variableDailyRate = (float) Income::query()->forUser($user)
             ->variable()
             ->between($windowStart, $today)
-            ->sum('amount') / self::SMOOTHING_WINDOW_DAYS;
+            ->sum('amount') / $smoothingDays;
 
         $expenseDailyRate = (float) $user->expenses()
             ->between($windowStart, $today)
-            ->sum('amount') / self::SMOOTHING_WINDOW_DAYS;
+            ->sum('amount') / $smoothingDays;
 
         $fixedOccurrences = $this->projectFixedOccurrences($user, $today, $days);
 
@@ -78,6 +86,69 @@ class LiquidityProjectionService
     public function fifteenDayProjection(User $user): Collection
     {
         return $this->dailySeries($user, 15);
+    }
+
+    /**
+     * Exposes the exact rates and window used to smooth the projection, so
+     * the student (or the student debugging with support) can see why a
+     * number looks the way it does instead of just trusting the final
+     * balance.
+     *
+     * @return array{window_days: int, variable_daily_rate: float, expense_daily_rate: float, upcoming_fixed: Collection}
+     */
+    public function smoothingBreakdown(User $user, int $days = 15): array
+    {
+        $today = Carbon::today();
+        $windowStart = $this->smoothingWindowStart($user, $today);
+        $smoothingDays = $this->smoothingDays($windowStart, $today);
+
+        $variableDailyRate = (float) Income::query()->forUser($user)
+            ->variable()
+            ->between($windowStart, $today)
+            ->sum('amount') / $smoothingDays;
+
+        $expenseDailyRate = (float) $user->expenses()
+            ->between($windowStart, $today)
+            ->sum('amount') / $smoothingDays;
+
+        return [
+            'window_days' => $smoothingDays,
+            'variable_daily_rate' => round($variableDailyRate, 2),
+            'expense_daily_rate' => round($expenseDailyRate, 2),
+            'upcoming_fixed' => $this->projectFixedOccurrences($user, $today, $days),
+        ];
+    }
+
+    /**
+     * Caps the smoothing window to the account's real history: a new
+     * account only has data since its earliest income/expense, so the
+     * window shrinks to that instead of always spanning the full 28 days.
+     */
+    private function smoothingWindowStart(User $user, Carbon $today): Carbon
+    {
+        $capped = $today->copy()->subDays(self::SMOOTHING_WINDOW_DAYS);
+
+        $earliest = collect([
+            Income::query()->forUser($user)->min('date'),
+            $user->expenses()->min('date'),
+        ])->filter()->map(fn ($date) => Carbon::parse($date)->startOfDay())->min();
+
+        if ($earliest === null || $earliest->lessThanOrEqualTo($capped)) {
+            return $capped;
+        }
+
+        return $earliest;
+    }
+
+    /**
+     * Carbon 3's diffInDays() returns a precise (fractional) float by
+     * default when the two instants aren't both exactly midnight — floor
+     * and cast to int so the divisor (and the "window_days" shown to the
+     * student) is always a whole number of days.
+     */
+    private function smoothingDays(Carbon $windowStart, Carbon $today): int
+    {
+        return max(1, (int) floor($windowStart->diffInDays($today)));
     }
 
     public function lowestPoint(Collection $series): array
