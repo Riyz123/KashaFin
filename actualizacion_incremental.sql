@@ -1,14 +1,14 @@
 -- Actualización incremental de la base de datos en InfinityFree.
--- Cubre el rediseño de gastos compartidos: participantes como cuentas reales
--- de KashaFin (con invitación/aceptación) y pagos por cuotas con
--- trazabilidad de deuda. NO borra nada existente.
+-- Cubre: 1) el rediseño de gastos compartidos (participantes como cuentas
+-- reales de KashaFin, con invitación/aceptación y pagos por cuotas con
+-- trazabilidad de deuda), y 2) préstamos con persona institucional opcional
+-- (buscada) o externa (nombre libre). NO borra nada existente.
 --
 -- Este es el ÚNICO script incremental vigente — los anteriores quedaron
 -- incorporados al `kashafin.sql` completo (que ya se volvió a subir con
 -- todo, incluido esto). Solo hace falta correr este si tu base de datos
--- ya tenía todo lo anterior (facultades, decanos, soporte, préstamos,
--- recordatorios, etc.) y únicamente le falta el rediseño de gastos
--- compartidos.
+-- ya tenía todo lo anterior (facultades, decanos, soporte, recordatorios,
+-- etc.) y únicamente le faltan estos dos cambios.
 --
 -- CÓMO USARLO:
 -- 1. En phpMyAdmin: pestaña "Exportar" de tu base de datos completa y
@@ -50,3 +50,11 @@ CREATE TABLE `shared_expense_contributions` (
 -- `name` guardado como respaldo. Simplemente no podrán aceptar/rechazar
 -- ni registrar pagos nuevos hasta que se vuelvan a crear como gastos
 -- compartidos con una cuenta real.
+
+-- 3) Préstamos: la otra persona puede ser una cuenta real de KashaFin
+--    (buscada) o alguien externo sin cuenta (queda NULL, se sigue usando
+--    el nombre libre que ya existía en `person_name`).
+ALTER TABLE `loans`
+  ADD COLUMN `person_user_id` bigint(20) unsigned DEFAULT NULL AFTER `person_name`,
+  ADD KEY `loans_person_user_id_foreign` (`person_user_id`),
+  ADD CONSTRAINT `loans_person_user_id_foreign` FOREIGN KEY (`person_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;

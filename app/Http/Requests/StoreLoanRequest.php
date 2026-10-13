@@ -15,6 +15,7 @@ class StoreLoanRequest extends FormRequest
     {
         return [
             'person_name' => ['required', 'string', 'max:255'],
+            'person_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'direction' => ['required', 'in:prestado,recibido'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'date' => ['required', 'date'],

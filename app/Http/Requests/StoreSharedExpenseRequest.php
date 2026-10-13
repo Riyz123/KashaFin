@@ -28,6 +28,15 @@ class StoreSharedExpenseRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'participants.*.user_id.required' => 'Elige a la persona de la lista de resultados antes de guardar — no se puede dejar una fila sin nadie seleccionado.',
+            'participants.*.user_id.exists' => 'Esa persona ya no existe.',
+            'participants.*.amount_owed.required' => 'Falta el monto que le corresponde a esta persona.',
+        ];
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {

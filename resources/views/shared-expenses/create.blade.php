@@ -7,11 +7,12 @@
             action="{{ route('shared-expenses.store') }}"
             x-data="{
                 participants: [{ user_id: null, label: '', amount_owed: '', daily_commitment: '' }],
-                search: '', results: [], activeIndex: null, searching: false,
+                search: '', results: [], activeIndex: null, searching: false, missingError: false,
                 addParticipant() { this.participants.push({ user_id: null, label: '', amount_owed: '', daily_commitment: '' }); },
                 removeParticipant(index) { this.participants.splice(index, 1); },
                 async runSearch(index) {
                     this.activeIndex = index;
+                    this.participants[index].user_id = null; // typing again invalidates a previous pick
                     const q = this.participants[index].label;
                     if (q.length < 2) { this.results = []; return; }
                     this.searching = true;
@@ -25,9 +26,22 @@
                     this.results = [];
                     this.activeIndex = null;
                 },
+                submitGuard(event) {
+                    const anyMissing = this.participants.some(p => !p.user_id);
+                    this.missingError = anyMissing;
+                    if (anyMissing) {
+                        event.preventDefault();
+                        this.$nextTick(() => this.$refs.missingAlert?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+                    }
+                },
             }"
+            @submit="submitGuard($event)"
         >
             @csrf
+
+            <div x-show="missingError" x-cloak x-ref="missingAlert" class="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                Falta elegir a la persona de la lista de resultados en alguna fila — no puedes guardar sin seleccionar a nadie.
+            </div>
 
             <div>
                 <x-input-label for="description" value="Descripción" />
@@ -47,6 +61,7 @@
             </div>
             <x-input-error :messages="$errors->get('total_amount')" class="mt-2" />
             <x-input-error :messages="$errors->get('participants')" class="mt-2" />
+            <x-input-error :messages="$errors->get('participants.*.user_id')" class="mt-2" />
 
             <div class="mt-4">
                 <x-input-label for="date" value="Fecha" />
@@ -81,9 +96,13 @@
                                 @input="runSearch(index)"
                                 @focus="activeIndex = index"
                                 placeholder="Nombre o correo..."
-                                class="w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                class="w-full rounded-md text-sm focus:ring-brand-500 dark:bg-gray-900 dark:text-gray-300"
+                                :class="participant.label && !participant.user_id ? 'border-red-400 focus:border-red-400' : 'border-gray-300 focus:border-brand-500 dark:border-gray-700'"
                                 autocomplete="off"
                             >
+                            <p x-show="participant.label && !participant.user_id" x-cloak class="mt-1 text-xs text-red-600">
+                                Elige a la persona de la lista de abajo — no quedó seleccionada todavía.
+                            </p>
                             <input type="hidden" :name="`participants[${index}][user_id]`" :value="participant.user_id">
 
                             <div

@@ -28,6 +28,9 @@
                         <div>
                             <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                 {{ $loan->person_name }}
+                                @if ($loan->person_user_id)
+                                    <span title="Cuenta de KashaFin" class="text-brand-600">✓</span>
+                                @endif
                                 <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-semibold {{ $loan->direction === 'prestado' ? 'bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-200' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' }}">
                                     {{ $loan->direction === 'prestado' ? 'Me debe' : 'Le debo' }}
                                 </span>

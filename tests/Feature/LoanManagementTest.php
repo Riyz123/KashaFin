@@ -66,4 +66,37 @@ class LoanManagementTest extends TestCase
         $this->assertSame(50.0, $response->viewData('totals')['owed_to_me']);
         $this->assertSame(30.0, $response->viewData('totals')['i_owe']);
     }
+
+    public function test_a_loan_can_be_linked_to_a_real_institutional_account(): void
+    {
+        $student = User::factory()->create();
+        $ana = User::factory()->create(['name' => 'Ana Torres']);
+
+        $this->actingAs($student)->post(route('loans.store'), [
+            'person_name' => 'Ana Torres',
+            'person_user_id' => $ana->id,
+            'direction' => 'prestado',
+            'amount' => 50,
+            'date' => now()->toDateString(),
+        ])->assertRedirect();
+
+        $loan = Loan::first();
+        $this->assertSame($ana->id, $loan->person_user_id);
+    }
+
+    public function test_a_loan_can_also_be_registered_for_an_external_person_without_an_account(): void
+    {
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(route('loans.store'), [
+            'person_name' => 'Tienda de la esquina',
+            'direction' => 'recibido',
+            'amount' => 15,
+            'date' => now()->toDateString(),
+        ])->assertRedirect();
+
+        $loan = Loan::first();
+        $this->assertSame('Tienda de la esquina', $loan->person_name);
+        $this->assertNull($loan->person_user_id);
+    }
 }
