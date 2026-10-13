@@ -330,9 +330,18 @@ KashaFin envía correos reales (contraseñas temporales) vía **Resend** (`resen
 
 En ambos casos se genera una contraseña real al azar (nunca elegida por nadie), se envía por correo, y la cuenta queda con `must_change_password = true` — el middleware `password-fresh` obliga a cambiarla en el primer login (`/cambiar-contrasena`) antes de dejar pasar a cualquier otra ruta. Esto **reemplazó** la verificación de correo por clic de Breeze (que se quitó del proyecto: controladores, rutas y test de `EmailVerificationTest` eliminados) — recibir esa contraseña ya es la prueba de que el correo es real y de que el decano aprobó a esa persona, así que un segundo paso de verificación habría sido redundante.
 
+### 6.2 Hablar con un asesor y reporte de incidencias
+
+Un estudiante con un problema que el asistente no puede resolver (un bug, una duda sobre su cuenta, lo que sea) puede pedir ayuda humana de dos formas, ambas terminando en la misma tabla `support_requests`:
+
+1. **Desde el chat**: si el mensaje suena a "quiero hablar con un asesor" / "necesito contactar a alguien" (`App\Services\Ai\AdvisorChatIntent`, mismo patrón determinístico de slot-filling que `ExpenseChatIntent` — nunca pasa por la IA, para que pedir ayuda humana nunca dependa de que un modelo externo esté disponible), el asistente responde pidiendo que describa brevemente el problema. El siguiente mensaje se guarda como la solicitud (o se cancela si el estudiante escribe "cancelar"), y responde: *"Un asesor se comunicará contigo en unos minutos"*.
+2. **Desde `/ayuda`** (ver [sección 7](#7-requerimientos-implementados), F017): un formulario directo para reportar una incidencia, sin pasar por el chat.
+
+En ambos casos, `App\Services\SupportRequestService` crea el registro y notifica — vía el sistema de notificaciones de Laravel (tabla `notifications`, canal `database`, nunca por correo: tiene que verse de inmediato en el panel, no esperar una entrega de correo) — al **admin master** y al **decano de la facultad del estudiante** (si tiene uno asignado). Ambos ven y marcan como atendidas estas solicitudes en `/admin/soporte`, con un contador de pendientes en el sidebar (`SupportRequest::scopeVisibleTo`, mismo criterio de alcance que `User::canManage()`: el admin ve todo, el decano solo su facultad).
+
 ## 7. Requerimientos implementados
 
-Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad completa de extremo a extremo (modelo + validación + UI), no como una cobertura superficial.
+Se implementaron los **64 de 64 RF (100%)**, agrupados por funcionalidad completa de extremo a extremo (modelo + validación + UI + pruebas), no como una cobertura superficial.
 
 | Código funcionalidad | Funcionalidad | RF cubiertos |
 |---|---|---|
@@ -342,36 +351,41 @@ Se implementaron **43 de los 64 RF (~67%)**, agrupados por funcionalidad complet
 | F004 | Proyección de liquidez | RF15, RF16, RF17, RF18 |
 | F005 | Alertas de riesgo de iliquidez | RF19, RF20, RF21 |
 | F006 | Metas de ahorro | RF22, RF23, RF24, RF45 |
-| F007 | Reportes y visualización financiera | RF25, RF26, RF27 |
+| F007 | Reportes y visualización financiera | RF25, RF26, RF27, RF44 (comparación contra periodo anterior) |
 | F008 | Gestión de perfil de usuario | RF28, RF29, RF30 |
-| F009 | Historial y búsqueda de movimientos | RF31, RF32, RF33, RF34 |
-| F010 | Administración del sistema | RF35, RF36 (ver [sección 5](#5-roles-y-panel-de-administración)) |
+| F009 | Historial y búsqueda de movimientos | RF31, RF32, RF33, RF34, RF41 (exportación completa), RF42 (vaciar historial conservando metas) |
+| F010 | Administración del sistema | RF35, RF36, RF37 (ver [sección 5](#5-roles-y-panel-de-administración) y [6.2](#62-hablar-con-un-asesor-y-reporte-de-incidencias)) |
+| F011 | Notificaciones y recordatorios | RF38 (inactividad), RF39 (confirmar ingreso fijo), RF40 (toggles por tipo), RF43 (resumen semanal) |
 | F013 | Presupuestos por categoría | RF46, RF47, RF48 |
+| F014 | Préstamos entre personas | RF49-RF52 — `/prestamos` |
+| F015 | Gastos compartidos | RF53-RF55 — `/gastos-compartidos` |
 | F016 | Configuración general y preferencias | RF56, RF57, RF58 |
+| F017 | Ayuda y soporte | RF59-RF60 (FAQ y reporte de incidencias) — `/ayuda` |
+| F018 | Onboarding guiado | RF61-RF62 (tour de bienvenida en el primer ingreso) |
+| F019 | Accesibilidad dedicada | RF63-RF64 (saltar al contenido, tamaño de texto, `prefers-reduced-motion`, foco visible, `aria-label`) |
 
-> F010 se amplió más allá de lo original: además de las métricas agregadas (RF36) y la gestión de categorías globales (RF35), el admin master puede **activar/desactivar y eliminar cuentas de estudiante**, y ahora existe un segundo nivel de administración — **decanos acotados por facultad** (ver [sección 5](#5-roles-y-panel-de-administración)) — ninguno de los dos estaba en la tabla de requerimientos original, se pidieron explícitamente.
+> F010 se amplió más allá de lo original: además de las métricas agregadas (RF36), la gestión de categorías globales (RF35) y el reporte de incidencias (RF37), el admin master puede **activar/desactivar y eliminar cuentas de estudiante**, y existe un segundo nivel de administración — **decanos acotados por facultad** (ver [sección 5](#5-roles-y-panel-de-administración)) — ninguno de los dos estaba en la tabla de requerimientos original, se pidieron explícitamente.
 
 > F003 también se amplió: además del CRUD de gastos (RF10-14), la lista en `/gastos` tiene filtros independientes por descripción, categoría y rango de fechas, más orden por monto (mayor a menor / menor a mayor) o por fecha — se combinan todos entre sí (AND) y se conservan al paginar (`ExpenseController::index`, con `withQueryString()`).
 
 ### Decisiones de diseño relevantes
 
-- **Ingresos fijos**: la fila `fijo` actúa como plantilla con `next_occurrence_date`; un comando programado diario (`incomes:generate-recurring`) clona la ocurrencia real y avanza la plantilla (RF08).
+- **Ingresos fijos**: la fila `fijo` actúa como plantilla con `next_occurrence_date`; un comando programado diario (`incomes:generate-recurring`) clona la ocurrencia real y avanza la plantilla (RF08), y notifica al estudiante para que confirme que el ingreso llegó de verdad (RF39, ver [7.1](#71-recordatorios-y-notificaciones)).
 - **Proyección (RF16)**: los ingresos fijos se proyectan por fecha exacta desde la plantilla; los ingresos variables y los gastos se suavizan como tasa diaria promedio de las últimas 4 semanas.
 - **Alertas (RF19-21)**: umbral configurable por usuario, verificación automática al cargar el dashboard (con límite de una alerta por día) y botón manual "Revisar ahora" en Notificaciones que ignora ese límite.
 - **Aportes a metas (RF24)**: si un aporte haría caer la proyección de liquidez por debajo del umbral, se muestra una advertencia en vez de bloquear la acción; el usuario puede confirmar igual.
+- **Préstamos y gastos compartidos (RF49-55)**: tablas propias (`loans`, `shared_expenses`/`shared_expense_participants`), separadas de `incomes`/`expenses`, para no mezclar "dinero entre personas" con el flujo financiero real. Un gasto compartido solo crea un `Expense` real por la parte que le corresponde al estudiante (`my_share`); el resto queda como deuda pendiente por participante, nunca contado dos veces.
+
+### 7.1 Recordatorios y notificaciones
+
+- **Inactividad (RF38)**: `reminders:inactivity` (programado diario) revisa la fecha del último gasto de cada estudiante activo; si pasaron 3+ días, crea una notificación en la app y, si el estudiante lo activó, un correo — con throttle de 3 días para no repetir el aviso a diario (`App\Services\InactivityReminderService`).
+- **Confirmación de ingreso fijo (RF39)**: al generarse automáticamente una ocurrencia (`incomes:generate-recurring`), se le pide al estudiante confirmarla; si no la recibió, puede borrarla desde `/historial`.
+- **Toggles por tipo (RF40)**: en `/configuracion`, cuatro casillas (liquidez baja, inactividad, confirmación de ingreso, resumen semanal) controlan **solo el envío por correo** — la notificación en la app (`/notificaciones`) siempre aparece, vía el sistema nativo de notificaciones de Laravel (tabla `notifications`).
+- **Resumen semanal (RF43)**: `reports:send-weekly-summary` (programado los lunes 8am) envía por correo el balance de los últimos 7 días a quien lo tenga activado.
 
 ## 8. Requerimientos fuera de alcance
 
-No implementados en esta versión (documentado explícitamente, sin dejar código a medias):
-
-- RF37 — Registro simple de incidencias reportadas por estudiantes (el resto de F010 sí está implementado, ver arriba)
-- F011 — Notificaciones y recordatorios (más allá de la alerta de iliquidez): recordatorio de 3 días sin gastos (RF38), confirmación de ingreso esperado (RF39), toggles individuales por tipo (RF40)
-- RF41-44 — Exportación de historial completo, eliminación de historial conservando meta, resumen semanal automático por correo, comparación contra periodo anterior
-- F014 — Gestión de préstamos entre personas
-- F015 — Gastos compartidos
-- F017 — Ayuda y soporte (FAQ, reporte de incidencias)
-- F018 — Configuración inicial / onboarding guiado
-- F019 — Accesibilidad dedicada (más allá de HTML semántico y contraste razonable ya presentes)
+Ninguno — los 64 RF están implementados (ver [sección 7](#7-requerimientos-implementados)). El desarrollo se hizo en dos etapas: primero F001-F010/F013/F016 (el núcleo de finanzas personales), y luego F011 y F014-F019, junto con el flujo de "hablar con un asesor" (ver [6.2](#62-hablar-con-un-asesor-y-reporte-de-incidencias)), que no estaba en los RF originales pero se pidió explícitamente durante el desarrollo.
 
 ## 9. Paquetes instalados además del esqueleto base
 
@@ -416,30 +430,43 @@ Todas bajo `middleware(['auth', 'active'])`, más las rutas de invitado que trae
 | `GET/POST /metas`, `/metas/{id}/aportes`, `/metas-historial` | CRUD de metas + aportes + historial |
 | `GET /reportes`, `/reportes/pdf`, `/reportes/csv` | Reportes + exportación |
 | `GET /historial`, `POST /historial/{tipo}/{id}/duplicar` | Historial unificado |
-| `GET/POST /notificaciones` | Alertas de liquidez |
-| `GET/PATCH /configuracion` | Preferencias del usuario |
+| `GET /historial/exportar` | Exportar TODO el historial a CSV (RF41, sin filtros) |
+| `DELETE /historial` | Vaciar todo el historial de ingresos/gastos, sin afectar metas (RF42) |
+| `GET/POST/PATCH/DELETE /prestamos` | CRUD de préstamos entre personas (F014) |
+| `GET/POST /gastos-compartidos`, `DELETE .../{id}`, `PATCH .../pagado` | Gastos compartidos y sus participantes (F015) |
+| `GET/POST /notificaciones` | Alertas de liquidez + recordatorios (inactividad, confirmación de ingreso) |
+| `GET/POST /ayuda` | FAQ y reporte de incidencias (F017) |
+| `GET/PATCH /configuracion`, `PATCH .../onboarding` | Preferencias del usuario + marcar visto el tour de bienvenida |
 | `GET/PATCH/DELETE /profile` | Perfil (Breeze) |
 
-Bajo `middleware(['auth', 'active', 'admin'])`, prefijo `/admin`:
+Bajo `middleware(['auth', 'active', 'staff'])` (admin **o** decano), prefijo `/admin`:
+
+| Ruta | Descripción |
+|---|---|
+| `GET /admin/usuarios` | Lista de estudiantes (buscar, filtrar por estado) |
+| `PATCH /admin/usuarios/{id}/estado` | Activar/desactivar una cuenta |
+| `DELETE /admin/usuarios/{id}` | Eliminar una cuenta y todos sus datos |
+| `POST /admin/usuarios`, `PATCH .../{id}/facultad` | Alta manual de estudiante y reasignar su facultad (solo admin) |
+| `GET /admin/usuarios/exportar` | CSV de estudiantes (acotado a la facultad si es decano) |
+| `GET/POST /admin/usuarios/importar` | Alta masiva de estudiantes por CSV (ya aprobados) |
+| `PATCH /admin/usuarios/{id}/aprobar` | Aprobar una solicitud pendiente (genera y envía la contraseña) |
+| `GET /admin/soporte`, `PATCH .../{id}/atender` | Solicitudes de "hablar con un asesor" e incidencias (RF37, ver [6.2](#62-hablar-con-un-asesor-y-reporte-de-incidencias)) |
+| `GET/POST /admin/categorias` | Crear categorías globales |
+| `PATCH /admin/categorias/{id}` | Renombrar una categoría global |
+| `PATCH /admin/categorias/{id}/estado` | Activar/desactivar una categoría global |
+
+Bajo `middleware(['auth', 'active', 'admin'])` (solo admin master), prefijo `/admin`:
 
 | Ruta | Descripción |
 |---|---|
 | `GET /admin/dashboard` | Métricas agregadas del sistema |
-| `GET /admin/usuarios` | Lista de estudiantes (buscar, filtrar por estado) |
-| `PATCH /admin/usuarios/{id}/estado` | Activar/desactivar una cuenta |
-| `DELETE /admin/usuarios/{id}` | Eliminar una cuenta y todos sus datos |
-| `GET/POST /admin/categorias` | Crear categorías globales |
-| `PATCH /admin/categorias/{id}` | Renombrar una categoría global |
-| `PATCH /admin/categorias/{id}/estado` | Activar/desactivar una categoría global |
 | `GET/POST /admin/ia`, `PUT /admin/ia/{id}`, `PATCH .../estado`, `DELETE /admin/ia/{id}` | Gestión de proveedores de IA |
-| `PUT /admin/ia-prompt`, `DELETE /admin/ia-prompt` | Editar o restaurar el prompt del asistente (solo admin master) |
-| `GET /admin/usuarios/exportar` | CSV de estudiantes (acotado a la facultad si es decano) |
-| `GET/POST /admin/usuarios/importar` | Alta masiva de estudiantes por CSV (ya aprobados) |
-| `PATCH /admin/usuarios/{id}/aprobar` | Aprobar una solicitud pendiente (genera y envía la contraseña) |
-| `GET/PUT /cambiar-contrasena` | Forzar el cambio de contraseña temporal en el primer login |
-| `GET/POST /admin/decanos`, `POST /admin/decanos/{faculty}/decano` | Crear facultades y asignarles un decano (solo admin master) |
+| `PUT /admin/ia-prompt`, `DELETE /admin/ia-prompt` | Editar o restaurar el prompt del asistente |
+| `GET/POST /admin/decanos`, `POST /admin/decanos/{faculty}/decano` | Crear facultades y asignarles un decano |
 
-Y en el grupo de estudiante: `POST /asistente/mensaje` (`chat.send`) — envía un mensaje al asistente (recomendaciones o "agrega un gasto") y devuelve la respuesta en JSON.
+Y `GET/PUT /cambiar-contrasena` (middleware `auth`, `active`, fuera de `password-fresh` para evitar un bucle de redirección) fuerza el cambio de contraseña temporal en el primer login.
+
+Y en el grupo de estudiante: `POST /asistente/mensaje` (`chat.send`) — envía un mensaje al asistente (recomendaciones, "agrega un gasto" o "hablar con un asesor") y devuelve la respuesta en JSON.
 
 ## 11. Cómo ejecutar el proyecto
 
@@ -478,5 +505,5 @@ htdocs/                  ← raíz pública del hosting
 - **Assets compilados**: `public/build/` está en `.gitignore`, así que no viaja por git — hay que copiarlo a mano a `htdocs/build/` cada vez que cambie algo en `resources/js/` o `resources/css/` (correr `npm run build` localmente primero).
 - **Base de datos — dos escenarios distintos**:
   - **Primera vez, o una base de datos que no importa resetear** (ej. solo tiene datos de ejemplo): el archivo `kashafin.sql` en la raíz del repo es un volcado completo (`mysqldump --add-drop-table`, sin `CREATE/DROP DATABASE` porque el hosting no da permiso) listo para la pestaña **Importar** de phpMyAdmin — reemplaza **todas** las tablas. Se regenera corriendo las migraciones contra un MySQL local (XAMPP) y volviendo a hacer el dump.
-  - **Ya hay datos reales en producción que no se pueden perder** (proveedores de IA configurados, estudiantes reales, etc.): **no reimportar el dump completo** — borraría todo eso. En su lugar, se escribe un script SQL *incremental* con solo los `CREATE TABLE`/`ALTER TABLE` nuevos desde el último despliegue (nunca un `DROP`), se prueba contra una copia local de la última versión conocida del esquema de producción (MySQL de XAMPP, importando el `kashafin.sql` viejo y corriendo el script encima para confirmar que no tira error y que los datos existentes sobreviven) y se pega en la pestaña **SQL** de phpMyAdmin (no en "Importar"). Ejemplo real: `actualizacion_incremental.sql` en la raíz del repo, para el salto que agregó facultades/decanos, el prompt editable, y el idioma por estudiante — verificado localmente antes de entregarlo. Siempre recomendar exportar un respaldo desde phpMyAdmin antes de correrlo, aunque esté probado.
+  - **Ya hay datos reales en producción que no se pueden perder** (proveedores de IA configurados, estudiantes reales, etc.): **no reimportar el dump completo** — borraría todo eso. En su lugar, se escribe un script SQL *incremental* con solo los `CREATE TABLE`/`ALTER TABLE` nuevos desde el último despliegue (nunca un `DROP`), se prueba contra una copia local de la última versión conocida del esquema de producción (MySQL de XAMPP: migrar solo hasta la versión anterior, correr el script encima, y confirmar con `php artisan migrate` que Laravel ya no tiene nada pendiente que migrar — señal de que el esquema resultante coincide exactamente con el de las migraciones) y se pega en la pestaña **SQL** de phpMyAdmin (no en "Importar"). Dos scripts ya aplicados, de más viejo a más nuevo: `actualizacion_incremental.sql` (facultades/decanos, prompt editable, idioma por estudiante) y `actualizacion_incremental_2.sql` (chat con un asesor/incidencias, recordatorios, préstamos, gastos compartidos, onboarding, tamaño de texto) — ambos verificados localmente antes de entregarlos, incluyendo correr la suite de tests completa contra el esquema resultante. Siempre recomendar exportar un respaldo desde phpMyAdmin antes de correrlos, aunque estén probados.
 - **`.env` de producción**: vive solo en el hosting, nunca se sube por git (está en `.gitignore`). Apunta a la base MySQL real del hosting — nunca debe sobrescribirse con el `.env` local (que usa SQLite para desarrollo).
