@@ -1,5 +1,17 @@
 <x-app-layout title="Historial">
-    <x-page-header title="Historial de movimientos" subtitle="Todos tus ingresos y gastos en un solo lugar." />
+    <x-page-header title="Historial de movimientos" subtitle="Todos tus ingresos y gastos en un solo lugar.">
+        <div class="flex gap-2">
+            <a href="{{ route('history.export') }}" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <x-icon name="download" class="w-4 h-4" /> Exportar todo (CSV)
+            </a>
+            <form method="POST" action="{{ route('history.clear') }}" onsubmit="return confirm('¿Vaciar todo tu historial de ingresos y gastos? Tus metas de ahorro no se verán afectadas. Esta acción no se puede deshacer.');">
+                @csrf @method('DELETE')
+                <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-red-300 dark:border-red-700 px-3 py-2 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">
+                    <x-icon name="trash" class="w-4 h-4" /> Vaciar historial
+                </button>
+            </form>
+        </div>
+    </x-page-header>
 
     <x-card class="mb-6">
         <form method="GET" action="{{ route('history.index') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end">

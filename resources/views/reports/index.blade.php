@@ -50,6 +50,37 @@
         </x-card>
     </div>
 
+    <x-card class="mb-6">
+        <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Comparación contra el periodo anterior</h3>
+        <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+            Periodo anterior: {{ $comparison['previous_from']->format('d/m/Y') }} al {{ $comparison['previous_to']->format('d/m/Y') }}
+        </p>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-gray-500 dark:text-gray-400">Ingresos</p>
+                <p class="font-semibold text-brand-600">S/ {{ number_format($summary['income'], 2) }}</p>
+                @if ($comparison['income_change_percent'] === null)
+                    <p class="text-xs text-gray-400">Sin datos del periodo anterior para comparar</p>
+                @else
+                    <p class="text-xs {{ $comparison['income_change_percent'] >= 0 ? 'text-brand-600' : 'text-red-600' }}">
+                        {{ $comparison['income_change_percent'] >= 0 ? '▲' : '▼' }} {{ abs($comparison['income_change_percent']) }}% vs. S/ {{ number_format($comparison['previous']['income'], 2) }}
+                    </p>
+                @endif
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400">Gastos</p>
+                <p class="font-semibold text-red-600">S/ {{ number_format($summary['expense'], 2) }}</p>
+                @if ($comparison['expense_change_percent'] === null)
+                    <p class="text-xs text-gray-400">Sin datos del periodo anterior para comparar</p>
+                @else
+                    <p class="text-xs {{ $comparison['expense_change_percent'] <= 0 ? 'text-brand-600' : 'text-red-600' }}">
+                        {{ $comparison['expense_change_percent'] >= 0 ? '▲' : '▼' }} {{ abs($comparison['expense_change_percent']) }}% vs. S/ {{ number_format($comparison['previous']['expense'], 2) }}
+                    </p>
+                @endif
+            </div>
+        </div>
+    </x-card>
+
     <x-card>
         <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Detalle por categoría</h3>
         @if ($byCategory->isEmpty())

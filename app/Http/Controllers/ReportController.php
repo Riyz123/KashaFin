@@ -19,6 +19,7 @@ class ReportController extends Controller
             'to' => $to,
             'byCategory' => $reports->expensesByCategory($user, $from, $to),
             'summary' => $reports->incomeVsExpense($user, $from, $to),
+            'comparison' => $reports->periodComparison($user, $from->copy(), $to->copy()),
         ]);
     }
 

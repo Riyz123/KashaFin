@@ -69,6 +69,10 @@
                     <input type="checkbox" name="notify_income_confirmation_by_email" value="1" @checked($settings->notify_income_confirmation_by_email) class="rounded text-brand-600 focus:ring-brand-500">
                     Confirmación de un ingreso fijo esperado
                 </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" name="notify_weekly_summary_by_email" value="1" @checked($settings->notify_weekly_summary_by_email) class="rounded text-brand-600 focus:ring-brand-500">
+                    Resumen semanal de mis finanzas
+                </label>
             </div>
 
             <x-primary-button>Guardar configuración</x-primary-button>

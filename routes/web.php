@@ -76,6 +76,8 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     Route::get('reportes/csv', [ReportController::class, 'exportCsv'])->name('reports.csv');
 
     Route::get('historial', [HistoryController::class, 'index'])->name('history.index');
+    Route::get('historial/exportar', [HistoryController::class, 'exportCsv'])->name('history.export');
+    Route::delete('historial', [HistoryController::class, 'clear'])->name('history.clear');
     Route::post('historial/{type}/{id}/duplicar', [HistoryController::class, 'duplicate'])
         ->whereIn('type', ['ingreso', 'gasto'])
         ->name('history.duplicate');

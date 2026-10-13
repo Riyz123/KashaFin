@@ -22,6 +22,7 @@ class UpdateSettingsRequest extends FormRequest
             'notify_low_liquidity_by_email' => ['nullable', 'boolean'],
             'notify_inactivity_by_email' => ['nullable', 'boolean'],
             'notify_income_confirmation_by_email' => ['nullable', 'boolean'],
+            'notify_weekly_summary_by_email' => ['nullable', 'boolean'],
             'starting_balance' => ['required', 'numeric'],
         ];
     }

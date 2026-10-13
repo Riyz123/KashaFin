@@ -35,4 +35,40 @@ class ReportService
             'balance' => round($income - $expense, 2),
         ];
     }
+
+    /**
+     * RF44: current period vs. the immediately preceding period of the same
+     * length (e.g. this month vs. last month, this week vs. last week).
+     */
+    public function periodComparison(User $user, Carbon $from, Carbon $to): array
+    {
+        $days = $from->startOfDay()->diffInDays($to->copy()->startOfDay()) + 1;
+        $previousTo = $from->copy()->subDay()->endOfDay();
+        $previousFrom = $previousTo->copy()->subDays($days - 1)->startOfDay();
+
+        $current = $this->incomeVsExpense($user, $from, $to);
+        $previous = $this->incomeVsExpense($user, $previousFrom, $previousTo);
+
+        return [
+            'previous_from' => $previousFrom,
+            'previous_to' => $previousTo,
+            'current' => $current,
+            'previous' => $previous,
+            'income_change_percent' => $this->percentChange($previous['income'], $current['income']),
+            'expense_change_percent' => $this->percentChange($previous['expense'], $current['expense']),
+        ];
+    }
+
+    /**
+     * Null means "not comparable" (previous period was zero and current
+     * isn't) — showing a fabricated "+infinity%" would be misleading.
+     */
+    private function percentChange(float $previous, float $current): ?float
+    {
+        if ($previous === 0.0) {
+            return $current === 0.0 ? 0.0 : null;
+        }
+
+        return round((($current - $previous) / $previous) * 100, 1);
+    }
 }

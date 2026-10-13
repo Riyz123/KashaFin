@@ -17,6 +17,7 @@ class UserSetting extends Model
         'notify_low_liquidity_by_email',
         'notify_inactivity_by_email',
         'notify_income_confirmation_by_email',
+        'notify_weekly_summary_by_email',
         'starting_balance',
     ];
 
@@ -29,6 +30,7 @@ class UserSetting extends Model
             'notify_low_liquidity_by_email' => 'boolean',
             'notify_inactivity_by_email' => 'boolean',
             'notify_income_confirmation_by_email' => 'boolean',
+            'notify_weekly_summary_by_email' => 'boolean',
         ];
     }
 

@@ -60,6 +60,58 @@ class HistoryController extends Controller
         ]);
     }
 
+    /**
+     * RF41: the complete history, ignoring any filter on screen — unlike
+     * the reports export, which is scoped to a date range.
+     */
+    public function exportCsv(Request $request)
+    {
+        $user = $request->user();
+        $filename = 'historial-completo-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($user) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto']);
+
+            $user->incomes()->orderBy('date')->get()->each(function (Income $income) use ($handle) {
+                fputcsv($handle, [
+                    $income->date->toDateString(),
+                    'Ingreso',
+                    $income->type === 'fijo' ? 'Ingreso fijo' : 'Ingreso variable',
+                    $income->description,
+                    $income->amount,
+                ]);
+            });
+
+            $user->expenses()->with('category')->orderBy('date')->get()->each(function (Expense $expense) use ($handle) {
+                fputcsv($handle, [
+                    $expense->date->toDateString(),
+                    'Gasto',
+                    $expense->category?->name ?? 'Sin categoría',
+                    $expense->description,
+                    $expense->amount,
+                ]);
+            });
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * RF42: wipes all income/expense history — deliberately leaves
+     * savings_goals and goal_contributions untouched, since those live in
+     * their own tables and are never referenced by an expense/income row.
+     */
+    public function clear(Request $request)
+    {
+        $user = $request->user();
+
+        $user->incomes()->delete();
+        $user->expenses()->delete();
+
+        return redirect()->route('history.index')->with('status', 'Se vació tu historial de ingresos y gastos. Tus metas de ahorro no se vieron afectadas.');
+    }
+
     public function duplicate(Request $request, string $type, int $id)
     {
         abort_unless(in_array($type, ['ingreso', 'gasto'], true), 404);
