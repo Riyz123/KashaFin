@@ -27,6 +27,7 @@ class ChatService
         private ExpenseChatIntent $expenseIntent,
         private BudgetChatIntent $budgetIntent,
         private IncomeChatIntent $incomeIntent,
+        private SavingsGoalChatIntent $goalIntent,
     ) {}
 
     /**
@@ -78,6 +79,7 @@ class ChatService
             'add_expense' => $this->expenseIntent->createFromToolCall($user, $aiReply->toolArguments),
             'add_budget' => $this->budgetIntent->createFromToolCall($user, $aiReply->toolArguments),
             'add_income' => $this->incomeIntent->createFromToolCall($user, $aiReply->toolArguments),
+            'add_goal' => $this->goalIntent->createFromToolCall($user, $aiReply->toolArguments),
             default => 'No reconocí esa acción, ¿puedes reformularla?',
         };
     }
@@ -171,6 +173,28 @@ class ChatService
                     'required' => ['amount', 'type'],
                 ],
             ],
+            [
+                'name' => 'add_goal',
+                'description' => 'Crea una meta de ahorro nueva cuando el estudiante quiera ahorrar para algo, en cualquier forma en que lo exprese ("quiero ahorrar para...", "ponme una meta de...", "quiero juntar plata para...").',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'name' => [
+                            'type' => 'string',
+                            'description' => 'Nombre corto de la meta (ej. "Viaje a Cusco", "Laptop nueva").',
+                        ],
+                        'target_amount' => [
+                            'type' => 'number',
+                            'description' => 'Monto total a ahorrar. Nunca inventes un número si no lo dio.',
+                        ],
+                        'target_date' => [
+                            'type' => 'string',
+                            'description' => 'Fecha límite opcional en formato YYYY-MM-DD, solo si el estudiante la mencionó explícitamente.',
+                        ],
+                    ],
+                    'required' => ['name', 'target_amount'],
+                ],
+            ],
         ];
     }
 
@@ -213,14 +237,15 @@ class ChatService
             "El estudiante se llama {$firstName}.\n\n".
             "Entiendes español, inglés y quechua. El estudiante configuró {$language} como su idioma preferido ".
             "en sus ajustes — responde siempre en {$language}, sin importar en qué idioma te escriba él.\n\n".
-            "Tienes tres herramientas disponibles: add_expense, add_budget y add_income. Úsalas cuando el ".
-            "estudiante quiera registrar un gasto, definir un presupuesto o anotar un ingreso, sin importar ".
-            "cómo lo exprese (\"me gasté 20 en \", \"anota que pagué...\", \"quiero poner un tope de...\", ".
-            "\"me depositaron...\", \"recibí mi beca...\", etc.). Usa siempre el monto exacto que haya dado — ".
-            "nunca inventes ni redondees un número. Para add_income necesitas saber si es fijo (se repite) o ".
-            "variable (ocasional), y si es fijo, cada cuánto se repite — pregúntalo si no está claro. Si falta ".
-            "cualquier dato obligatorio, no invoques la herramienta todavía: pregúntale primero en texto normal ".
-            "y espera su respuesta.\n\n".
+            "Tienes cuatro herramientas disponibles: add_expense, add_budget, add_income y add_goal. Úsalas ".
+            "cuando el estudiante quiera registrar un gasto, definir un presupuesto, anotar un ingreso o crear ".
+            "una meta de ahorro, sin importar cómo lo exprese (\"me gasté 20 en \", \"anota que pagué...\", ".
+            "\"quiero poner un tope de...\", \"me depositaron...\", \"recibí mi beca...\", \"quiero ahorrar ".
+            "para...\", \"ponme una meta de...\", etc.). Usa siempre el monto exacto que haya dado — nunca ".
+            "inventes ni redondees un número. Para add_income necesitas saber si es fijo (se repite) o variable ".
+            "(ocasional), y si es fijo, cada cuánto se repite — pregúntalo si no está claro. Si falta cualquier ".
+            "dato obligatorio, no invoques la herramienta todavía: pregúntale primero en texto normal y espera ".
+            "su respuesta.\n\n".
             "Si el estudiante te habla de algo que no tiene que ver con finanzas personales (un videojuego, ".
             "deportes, tareas, lo que sea), entiende igual de qué se trata — no finjas no entender — pero ".
             "acláralo con naturalidad: dile que tu enfoque es ayudarlo con sus finanzas en KashaFin, y conecta ".
