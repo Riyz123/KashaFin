@@ -89,6 +89,24 @@ class User extends Authenticatable
     }
 
     /**
+     * Shared by <x-presence-indicator> (first paint) and the live-refresh
+     * endpoint it polls afterward, so the wording can't drift between the
+     * two.
+     */
+    public function presenceLabel(): string
+    {
+        if ($this->isOnline()) {
+            return 'En línea';
+        }
+
+        if ($this->last_seen_at) {
+            return 'Última vez '.$this->last_seen_at->diffForHumans();
+        }
+
+        return 'Nunca ha entrado';
+    }
+
+    /**
      * Called on every request by TrackLastSeen, but only actually writes
      * when it's been a while — a plain "touch every request" would mean a
      * write query per page load for every active user, which is wasteful on

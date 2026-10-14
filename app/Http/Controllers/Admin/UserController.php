@@ -39,6 +39,23 @@ class UserController extends Controller
     }
 
     /**
+     * Polled every ~20s from the Usuarios page so "en línea"/"última vez"
+     * updates on its own — scoped the same way the list itself is (a dean
+     * only ever gets presence for their own faculty's students, never
+     * anyone else's), so this can't be used to probe arbitrary user ids.
+     */
+    public function presence(Request $request)
+    {
+        $ids = array_filter(explode(',', (string) $request->query('ids', '')));
+
+        $users = $this->scopedStudents($request)->whereIn('id', $ids)->get(['id', 'last_seen_at']);
+
+        return response()->json($users->mapWithKeys(fn (User $user) => [
+            $user->id => ['online' => $user->isOnline(), 'label' => $user->presenceLabel()],
+        ]));
+    }
+
+    /**
      * Manually create a student account (not self-registered, not from a
      * CSV) — already approved, same temporary-password-by-email mechanism
      * as the other two paths. A dean creates it in their own faculty; the

@@ -70,7 +70,7 @@
         @endif
     </x-card>
 
-    <x-card>
+    <x-card x-data="presencePoll([{{ $users->pluck('id')->implode(',') }}], '{{ route('admin.users.presence') }}')">
         @if ($users->isEmpty())
             <x-empty-state message="No se encontraron estudiantes con esos filtros." />
         @else

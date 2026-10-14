@@ -141,6 +141,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::get('usuarios', [AdminUserController::class, 'index'])->name('users.index');
     Route::post('usuarios', [AdminUserController::class, 'store'])->name('users.store');
     Route::get('usuarios/exportar', [AdminUserController::class, 'export'])->name('users.export');
+    Route::get('usuarios/presencia', [AdminUserController::class, 'presence'])->name('users.presence');
     Route::get('usuarios/importar', [AdminUserController::class, 'importForm'])->name('users.import-form');
     Route::post('usuarios/importar', [AdminUserController::class, 'import'])->name('users.import');
     Route::patch('usuarios/{user}/estado', [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
