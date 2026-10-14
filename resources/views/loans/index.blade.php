@@ -20,7 +20,15 @@
 
     @if ($pendingConfirmations->isNotEmpty())
         <x-card class="mb-6">
-            <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Confirmaciones pendientes</h3>
+            <div class="mb-3 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 dark:text-gray-100">Confirmaciones pendientes</h3>
+                @if ($pendingConfirmations->count() > 1)
+                    <form method="POST" action="{{ route('loans.approve-all') }}" onsubmit="return confirm('¿Aceptar las {{ $pendingConfirmations->count() }} confirmaciones pendientes?');">
+                        @csrf @method('PATCH')
+                        <button type="submit" class="text-xs font-semibold text-brand-600 hover:underline">Aceptar todas</button>
+                    </form>
+                @endif
+            </div>
             <div class="space-y-3">
                 @foreach ($pendingConfirmations as $pending)
                     <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
@@ -48,7 +56,15 @@
 
     @if ($paymentsToConfirm->isNotEmpty())
         <x-card class="mb-6">
-            <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Pagos por confirmar</h3>
+            <div class="mb-3 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 dark:text-gray-100">Pagos por confirmar</h3>
+                @if ($paymentsToConfirm->count() > 1)
+                    <form method="POST" action="{{ route('loans.confirm-all-payments') }}" onsubmit="return confirm('¿Confirmar los {{ $paymentsToConfirm->count() }} pagos pendientes?');">
+                        @csrf @method('PATCH')
+                        <button type="submit" class="text-xs font-semibold text-brand-600 hover:underline">Confirmar todos</button>
+                    </form>
+                @endif
+            </div>
             <div class="space-y-3">
                 @foreach ($paymentsToConfirm as $payment)
                     <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">

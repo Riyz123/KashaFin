@@ -92,6 +92,12 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     Route::patch('prestamos/{loan}/rechazar', [LoanController::class, 'reject'])->name('loans.reject');
     Route::patch('prestamos/{loan}/confirmar-pago', [LoanController::class, 'confirmPayment'])->name('loans.confirm-payment');
     Route::patch('prestamos/{loan}/rechazar-pago', [LoanController::class, 'rejectPaymentConfirmation'])->name('loans.reject-payment');
+    // Two path segments after "prestamos" (not one) so these never collide
+    // with the resource's PATCH prestamos/{loan} (update), regardless of
+    // registration order — a one-segment "prestamos/aprobar-todas" would
+    // bind "aprobar-todas" to {loan} and 404 before reaching this at all.
+    Route::patch('prestamos/confirmaciones/aprobar-todas', [LoanController::class, 'approveAll'])->name('loans.approve-all');
+    Route::patch('prestamos/pagos/confirmar-todos', [LoanController::class, 'confirmAllPayments'])->name('loans.confirm-all-payments');
 
     Route::get('gastos-compartidos', [SharedExpenseController::class, 'index'])->name('shared-expenses.index');
     Route::get('gastos-compartidos/nuevo', [SharedExpenseController::class, 'create'])->name('shared-expenses.create');
@@ -100,6 +106,7 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     Route::delete('gastos-compartidos/{sharedExpense}', [SharedExpenseController::class, 'destroy'])->name('shared-expenses.destroy');
     Route::patch('gastos-compartidos-participantes/{participant}/aceptar', [SharedExpenseController::class, 'accept'])->name('shared-expenses.accept');
     Route::patch('gastos-compartidos-participantes/{participant}/rechazar', [SharedExpenseController::class, 'reject'])->name('shared-expenses.reject');
+    Route::patch('gastos-compartidos-participantes/invitaciones/aceptar-todas', [SharedExpenseController::class, 'acceptAll'])->name('shared-expenses.accept-all');
     Route::post('gastos-compartidos-participantes/{participant}/aportes', [SharedExpenseController::class, 'storeContribution'])->name('shared-expenses.contributions.store');
 
     Route::get('reportes', [ReportController::class, 'index'])->name('reports.index');
@@ -138,6 +145,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::post('usuarios/importar', [AdminUserController::class, 'import'])->name('users.import');
     Route::patch('usuarios/{user}/estado', [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::patch('usuarios/{user}/aprobar', [AdminUserController::class, 'approve'])->name('users.approve');
+    Route::patch('usuarios/solicitudes/aprobar-todas', [AdminUserController::class, 'approveAll'])->name('users.approve-all');
     Route::patch('usuarios/{user}/reenviar-contrasena', [AdminUserController::class, 'resendPassword'])->name('users.resend-password');
     Route::patch('usuarios/{user}/facultad', [AdminUserController::class, 'updateFaculty'])->name('users.update-faculty');
     Route::delete('usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');

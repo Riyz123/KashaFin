@@ -139,6 +139,45 @@ class LoanController extends Controller
         return back()->with('status', 'Préstamo rechazado.');
     }
 
+    /**
+     * Approves every loan someone else registered against this account
+     * that's still waiting on a yes/no — same effect as clicking "Confirmar"
+     * on each one individually, just in one step for when there are several.
+     */
+    public function approveAll(Request $request)
+    {
+        $pending = Loan::query()
+            ->where('person_user_id', $request->user()->id)
+            ->where('status', 'pendiente_confirmacion')
+            ->get();
+
+        $pending->each(fn (Loan $loan) => $loan->approve());
+
+        return back()->with('status', $pending->isEmpty()
+            ? 'No había confirmaciones pendientes.'
+            : "Se confirmaron {$pending->count()} préstamo(s)."
+        );
+    }
+
+    /**
+     * Confirms every payment this account's debtors have reported as paid
+     * but that's still waiting on this account's yes/no.
+     */
+    public function confirmAllPayments(Request $request)
+    {
+        $pending = $request->user()->loans()
+            ->where('status', 'pago_pendiente_confirmacion')
+            ->where('direction', 'prestado')
+            ->get();
+
+        $pending->each(fn (Loan $loan) => $loan->confirmPayment());
+
+        return back()->with('status', $pending->isEmpty()
+            ? 'No había pagos pendientes de confirmar.'
+            : "Se confirmaron {$pending->count()} pago(s)."
+        );
+    }
+
     public function confirmPayment(Loan $loan)
     {
         $this->authorizeOwnership($loan);

@@ -128,6 +128,25 @@ class SharedExpenseController extends Controller
     }
 
     /**
+     * Accepts every pending invitation for this account in one go — same
+     * effect as accepting each one individually, without a daily_commitment
+     * (the same default as leaving that field blank on a single accept).
+     */
+    public function acceptAll(Request $request)
+    {
+        $pending = $request->user()->sharedExpenseParticipations()
+            ->where('status', 'pendiente')
+            ->get();
+
+        $pending->each(fn (SharedExpenseParticipant $participant) => $participant->accept(null));
+
+        return back()->with('status', $pending->isEmpty()
+            ? 'No había invitaciones pendientes.'
+            : "Se aceptaron {$pending->count()} invitación(es)."
+        );
+    }
+
+    /**
      * The participant logs their own payment toward their share — same
      * self-reported pattern as the rest of the app's money entry.
      */

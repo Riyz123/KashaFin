@@ -9,7 +9,15 @@
 
     @if ($pendingInvitations->isNotEmpty())
         <x-card class="mb-6">
-            <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Invitaciones pendientes</h3>
+            <div class="mb-3 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800 dark:text-gray-100">Invitaciones pendientes</h3>
+                @if ($pendingInvitations->count() > 1)
+                    <form method="POST" action="{{ route('shared-expenses.accept-all') }}" onsubmit="return confirm('¿Aceptar las {{ $pendingInvitations->count() }} invitaciones pendientes? (sin cuotas diarias)');">
+                        @csrf @method('PATCH')
+                        <button type="submit" class="text-xs font-semibold text-brand-600 hover:underline">Aceptar todas</button>
+                    </form>
+                @endif
+            </div>
             <div class="space-y-3">
                 @foreach ($pendingInvitations as $invite)
                     <div x-data="{ settingDaily: false }" class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">

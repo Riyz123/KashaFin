@@ -61,6 +61,13 @@
             <x-primary-button>Filtrar</x-primary-button>
             <a href="{{ route('admin.users.index') }}" class="text-sm text-gray-500 hover:underline dark:text-gray-400">Limpiar</a>
         </form>
+
+        @if ($status === 'pending' && $users->total() > 1)
+            <form method="POST" action="{{ route('admin.users.approve-all') }}" class="mt-3" onsubmit="return confirm('¿Aprobar las {{ $users->total() }} solicitudes pendientes? Se intentará enviar una contraseña a cada estudiante.');">
+                @csrf @method('PATCH')
+                <button type="submit" class="text-sm font-semibold text-brand-600 hover:underline">Aprobar todos los pendientes ({{ $users->total() }})</button>
+            </form>
+        @endif
     </x-card>
 
     <x-card>

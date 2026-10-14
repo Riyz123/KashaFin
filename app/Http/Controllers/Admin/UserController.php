@@ -118,6 +118,27 @@ class UserController extends Controller
     }
 
     /**
+     * Approves every pending request visible to this actor in one go (a
+     * dean's own faculty only, scopedStudents() already enforces that) —
+     * for when there's a backlog and going one by one is tedious. Each one
+     * still goes through grantAccess() individually, same as a single
+     * approve(), so nothing about the per-student behavior changes.
+     */
+    public function approveAll(Request $request)
+    {
+        $pending = $this->scopedStudents($request)->whereNull('approved_at')->get();
+
+        foreach ($pending as $student) {
+            $this->grantAccess($student);
+        }
+
+        return back()->with('status', $pending->isEmpty()
+            ? 'No había solicitudes pendientes.'
+            : "Se aprobaron {$pending->count()} solicitud(es). Se intentó enviarle una contraseña a cada estudiante por correo."
+        );
+    }
+
+    /**
      * For when the first temporary-password email never arrives (lost,
      * filtered as spam/quarantined, etc.) — generates and sends a brand new
      * one instead of leaving the account stuck. Only makes sense while the
