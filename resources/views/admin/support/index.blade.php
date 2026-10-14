@@ -39,12 +39,10 @@
 
                         <div class="flex gap-2">
                             @if ($request->isPending())
-                                @if ($request->type === 'asesor')
-                                    <form method="POST" action="{{ route('admin.support.start-live', $request) }}">
-                                        @csrf @method('PATCH')
-                                        <x-primary-button type="submit">Atender en vivo</x-primary-button>
-                                    </form>
-                                @endif
+                                <form method="POST" action="{{ route('admin.support.start-live', $request) }}">
+                                    @csrf @method('PATCH')
+                                    <x-primary-button type="submit">Atender en vivo</x-primary-button>
+                                </form>
                                 <form method="POST" action="{{ route('admin.support.attend', $request) }}">
                                     @csrf @method('PATCH')
                                     <x-secondary-button type="submit">Marcar como atendido</x-secondary-button>

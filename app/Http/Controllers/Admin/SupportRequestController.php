@@ -32,14 +32,14 @@ class SupportRequestController extends Controller
     }
 
     /**
-     * Only "asesor" requests go live — an "incidencia" report has nowhere
-     * to reply to (it's not tied to the chat widget), it only ever gets
-     * the plain attend() above.
+     * Both "asesor" and "incidencia" requests can go live — the thread
+     * lives in the student's own chat widget regardless of how the
+     * request originated, seeded with whichever message they first sent
+     * (the chat trigger phrase, or the incident report text).
      */
     public function startLive(Request $request, SupportRequest $supportRequest)
     {
         abort_unless($supportRequest->canBeManagedBy($request->user()), 403, 'No tienes permisos sobre esta solicitud.');
-        abort_unless($supportRequest->type === 'asesor', 422, 'Solo se puede atender en vivo una solicitud de hablar con un asesor.');
         abort_unless($supportRequest->isPending(), 422, 'Esta solicitud ya fue procesada.');
 
         $supportRequest->startLiveAttention($request->user());

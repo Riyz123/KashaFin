@@ -35,13 +35,20 @@ class LiveSupportTest extends TestCase
         ]);
     }
 
-    public function test_an_incidencia_request_cannot_be_started_live(): void
+    public function test_an_incidencia_request_can_also_be_started_live(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $student = User::factory()->create();
         $request = (new SupportRequestService)->create($student, 'incidencia', 'Hay un error en mi reporte');
 
-        $this->actingAs($admin)->patch(route('admin.support.start-live', $request))->assertStatus(422);
+        $this->actingAs($admin)->patch(route('admin.support.start-live', $request))->assertRedirect();
+
+        $this->assertSame('en_atencion', $request->fresh()->status);
+        $this->assertDatabaseHas('chat_messages', [
+            'user_id' => $student->id,
+            'content' => 'Hay un error en mi reporte',
+            'support_request_id' => $request->id,
+        ]);
     }
 
     public function test_while_live_the_student_chat_never_calls_the_ai_and_just_stores_the_message(): void
