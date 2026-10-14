@@ -36,11 +36,15 @@
         @else
             <div class="space-y-3">
                 @foreach ($reminders as $reminder)
+                    @php($link = \App\Support\NotificationLink::for($reminder->data))
                     <div class="flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 pb-3 last:border-0 last:pb-0">
                         <x-icon name="bell" class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" />
-                        <div>
+                        <div class="flex-1">
                             <p class="text-sm text-gray-800 dark:text-gray-100">{{ $reminder->data['message'] ?? 'Notificación' }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ $reminder->created_at->format('d/m/Y H:i') }}</p>
+                            @if ($link)
+                                <a href="{{ $link['url'] }}" class="mt-1 inline-block text-xs font-semibold text-brand-600 hover:underline">{{ $link['label'] }} &rarr;</a>
+                            @endif
                         </div>
                     </div>
                 @endforeach
