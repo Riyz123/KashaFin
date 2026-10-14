@@ -96,7 +96,7 @@ CREATE TABLE `budgets` (
 
 LOCK TABLES `budgets` WRITE;
 /*!40000 ALTER TABLE `budgets` DISABLE KEYS */;
-INSERT INTO `budgets` VALUES (1,3,1,'2026-10-01',100.00,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,3,2,'2026-10-01',200.00,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,3,4,'2026-10-01',100.00,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(4,3,6,'2026-10-01',50.00,'2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `budgets` VALUES (1,3,1,'2026-10-01',100.00,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,3,2,'2026-10-01',200.00,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,3,4,'2026-10-01',100.00,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(4,3,6,'2026-10-01',50.00,'2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `budgets` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `cache`;
@@ -151,7 +151,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (1,NULL,'Transporte','expense',1,1,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,NULL,'Alimentación','expense',1,1,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,NULL,'Materiales de estudio','document',1,1,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(4,NULL,'Entretenimiento','flag',1,1,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(5,NULL,'Otros','wallet',1,1,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(6,3,'Suscripciones',NULL,0,1,'2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `categories` VALUES (1,NULL,'Transporte','expense',1,1,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,NULL,'Alimentación','expense',1,1,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,NULL,'Materiales de estudio','document',1,1,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(4,NULL,'Entretenimiento','flag',1,1,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(5,NULL,'Otros','wallet',1,1,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(6,3,'Suscripciones',NULL,0,1,'2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `chat_messages`;
@@ -217,7 +217,7 @@ CREATE TABLE `expenses` (
 
 LOCK TABLES `expenses` WRITE;
 /*!40000 ALTER TABLE `expenses` DISABLE KEYS */;
-INSERT INTO `expenses` VALUES (1,3,1,8.28,'2026-09-07','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,3,1,4.87,'2026-09-13','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,3,1,6.46,'2026-10-08','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(4,3,1,9.05,'2026-08-28','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(5,3,1,3.99,'2026-10-05','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(6,3,1,3.34,'2026-10-01','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(7,3,1,5.56,'2026-08-31','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(8,3,1,10.80,'2026-09-07','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(9,3,1,6.75,'2026-09-13','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(10,3,1,10.16,'2026-10-08','Pasaje','2026-10-13 20:18:45','2026-10-13 20:18:45'),(11,3,2,21.97,'2026-09-29','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(12,3,2,17.49,'2026-09-12','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(13,3,2,10.51,'2026-09-30','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(14,3,2,21.49,'2026-10-05','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(15,3,2,12.44,'2026-08-19','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(16,3,2,22.14,'2026-08-25','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(17,3,2,19.56,'2026-08-22','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(18,3,2,17.71,'2026-10-05','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(19,3,2,13.26,'2026-09-27','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(20,3,2,17.18,'2026-09-03','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(21,3,2,20.29,'2026-10-07','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(22,3,2,10.89,'2026-09-13','Almuerzo','2026-10-13 20:18:45','2026-10-13 20:18:45'),(23,3,3,43.36,'2026-09-10','Fotocopias / útiles','2026-10-13 20:18:45','2026-10-13 20:18:45'),(24,3,3,34.98,'2026-09-14','Fotocopias / útiles','2026-10-13 20:18:45','2026-10-13 20:18:45'),(25,3,3,16.97,'2026-09-29','Fotocopias / útiles','2026-10-13 20:18:45','2026-10-13 20:18:45'),(26,3,3,46.56,'2026-10-04','Fotocopias / útiles','2026-10-13 20:18:45','2026-10-13 20:18:45'),(27,3,3,62.07,'2026-10-05','Fotocopias / útiles','2026-10-13 20:18:45','2026-10-13 20:18:45'),(28,3,4,51.16,'2026-09-04','Salida con amigos','2026-10-13 20:18:45','2026-10-13 20:18:45'),(29,3,4,42.95,'2026-09-15','Salida con amigos','2026-10-13 20:18:45','2026-10-13 20:18:45'),(30,3,4,31.74,'2026-09-28','Salida con amigos','2026-10-13 20:18:45','2026-10-13 20:18:45'),(31,3,4,50.54,'2026-09-22','Salida con amigos','2026-10-13 20:18:45','2026-10-13 20:18:45'),(32,3,5,24.65,'2026-10-13','Gasto varios','2026-10-13 20:18:45','2026-10-13 20:18:45'),(33,3,5,14.59,'2026-08-25','Gasto varios','2026-10-13 20:18:45','2026-10-13 20:18:45'),(34,3,5,37.42,'2026-08-24','Gasto varios','2026-10-13 20:18:45','2026-10-13 20:18:45'),(35,3,5,21.71,'2026-09-06','Gasto varios','2026-10-13 20:18:45','2026-10-13 20:18:45'),(36,3,6,45.00,'2026-10-03','Streaming de música','2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `expenses` VALUES (1,3,1,10.41,'2026-10-12','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,3,1,6.19,'2026-09-19','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,3,1,10.74,'2026-09-28','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(4,3,1,8.16,'2026-09-09','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(5,3,1,6.20,'2026-09-02','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(6,3,1,3.36,'2026-09-11','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(7,3,1,10.88,'2026-10-12','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(8,3,1,5.70,'2026-09-18','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(9,3,1,7.59,'2026-08-21','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(10,3,1,8.92,'2026-09-21','Pasaje','2026-10-14 05:26:24','2026-10-14 05:26:24'),(11,3,2,16.88,'2026-10-05','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(12,3,2,10.97,'2026-09-28','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(13,3,2,17.19,'2026-09-19','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(14,3,2,23.06,'2026-10-05','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(15,3,2,10.40,'2026-09-14','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(16,3,2,10.03,'2026-09-25','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(17,3,2,14.95,'2026-10-09','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(18,3,2,18.37,'2026-09-25','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(19,3,2,23.00,'2026-09-30','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(20,3,2,23.71,'2026-09-12','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(21,3,2,8.44,'2026-10-04','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(22,3,2,21.41,'2026-08-23','Almuerzo','2026-10-14 05:26:24','2026-10-14 05:26:24'),(23,3,3,32.16,'2026-08-29','Fotocopias / útiles','2026-10-14 05:26:24','2026-10-14 05:26:24'),(24,3,3,55.25,'2026-10-12','Fotocopias / útiles','2026-10-14 05:26:24','2026-10-14 05:26:24'),(25,3,3,72.82,'2026-09-16','Fotocopias / útiles','2026-10-14 05:26:24','2026-10-14 05:26:24'),(26,3,3,32.86,'2026-10-14','Fotocopias / útiles','2026-10-14 05:26:24','2026-10-14 05:26:24'),(27,3,3,17.20,'2026-10-07','Fotocopias / útiles','2026-10-14 05:26:24','2026-10-14 05:26:24'),(28,3,4,42.42,'2026-10-14','Salida con amigos','2026-10-14 05:26:24','2026-10-14 05:26:24'),(29,3,4,52.79,'2026-09-15','Salida con amigos','2026-10-14 05:26:24','2026-10-14 05:26:24'),(30,3,4,51.64,'2026-08-28','Salida con amigos','2026-10-14 05:26:24','2026-10-14 05:26:24'),(31,3,4,28.17,'2026-09-18','Salida con amigos','2026-10-14 05:26:24','2026-10-14 05:26:24'),(32,3,5,19.08,'2026-09-19','Gasto varios','2026-10-14 05:26:24','2026-10-14 05:26:24'),(33,3,5,37.88,'2026-08-26','Gasto varios','2026-10-14 05:26:24','2026-10-14 05:26:24'),(34,3,5,11.12,'2026-08-25','Gasto varios','2026-10-14 05:26:24','2026-10-14 05:26:24'),(35,3,5,23.06,'2026-09-22','Gasto varios','2026-10-14 05:26:24','2026-10-14 05:26:24'),(36,3,6,45.00,'2026-10-03','Streaming de música','2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `expenses` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `faculties`;
@@ -234,7 +234,7 @@ CREATE TABLE `faculties` (
 
 LOCK TABLES `faculties` WRITE;
 /*!40000 ALTER TABLE `faculties` DISABLE KEYS */;
-INSERT INTO `faculties` VALUES (1,'Ingeniería','2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,'Ciencias de la Salud','2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,'Negocios','2026-10-13 20:18:45','2026-10-13 20:18:45'),(4,'Comunicaciones','2026-10-13 20:18:45','2026-10-13 20:18:45'),(5,'Derecho','2026-10-13 20:18:45','2026-10-13 20:18:45'),(6,'Arquitectura','2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `faculties` VALUES (1,'Ingeniería','2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,'Ciencias de la Salud','2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,'Negocios','2026-10-14 05:26:24','2026-10-14 05:26:24'),(4,'Comunicaciones','2026-10-14 05:26:24','2026-10-14 05:26:24'),(5,'Derecho','2026-10-14 05:26:24','2026-10-14 05:26:24'),(6,'Arquitectura','2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `faculties` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `failed_jobs`;
@@ -279,7 +279,7 @@ CREATE TABLE `goal_contributions` (
 
 LOCK TABLES `goal_contributions` WRITE;
 /*!40000 ALTER TABLE `goal_contributions` DISABLE KEYS */;
-INSERT INTO `goal_contributions` VALUES (1,1,3,1000.00,'2026-09-23','Ahorro inicial','2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,1,3,600.00,'2026-10-07','Aporte de freelance','2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,3,3,500.00,'2026-09-03','Meta alcanzada','2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `goal_contributions` VALUES (1,1,3,1000.00,'2026-09-24','Ahorro inicial','2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,1,3,600.00,'2026-10-08','Aporte de freelance','2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,3,3,500.00,'2026-09-04','Meta alcanzada','2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `goal_contributions` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `incomes`;
@@ -308,7 +308,7 @@ CREATE TABLE `incomes` (
 
 LOCK TABLES `incomes` WRITE;
 /*!40000 ALTER TABLE `incomes` DISABLE KEYS */;
-INSERT INTO `incomes` VALUES (1,3,NULL,850.00,'2026-10-05','Beca universitaria','fijo','mensual','2026-11-05','2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,3,NULL,150.00,'2026-09-18','Trabajo freelance','variable',NULL,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,3,NULL,90.00,'2026-09-25','Venta de apuntes','variable',NULL,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(4,3,NULL,120.00,'2026-10-01','Trabajo freelance','variable',NULL,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(5,3,NULL,60.00,'2026-10-08','Venta ocasional','variable',NULL,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(6,3,NULL,100.00,'2026-10-11','Trabajo freelance','variable',NULL,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `incomes` VALUES (1,3,NULL,850.00,'2026-10-05','Beca universitaria','fijo','mensual','2026-11-05','2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,3,NULL,150.00,'2026-09-19','Trabajo freelance','variable',NULL,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,3,NULL,90.00,'2026-09-26','Venta de apuntes','variable',NULL,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(4,3,NULL,120.00,'2026-10-02','Trabajo freelance','variable',NULL,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(5,3,NULL,60.00,'2026-10-09','Venta ocasional','variable',NULL,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(6,3,NULL,100.00,'2026-10-12','Trabajo freelance','variable',NULL,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `incomes` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `job_batches`;
@@ -373,7 +373,7 @@ CREATE TABLE `liquidity_alerts` (
 
 LOCK TABLES `liquidity_alerts` WRITE;
 /*!40000 ALTER TABLE `liquidity_alerts` DISABLE KEYS */;
-INSERT INTO `liquidity_alerts` VALUES (1,3,80.00,150.00,'dashboard','2026-10-10 20:18:45','2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `liquidity_alerts` VALUES (1,3,80.00,150.00,'dashboard','2026-10-11 05:26:24','2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `liquidity_alerts` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `loans`;
@@ -415,12 +415,12 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_09_23_035500_create_user_settings_table',1),(5,'2026_09_23_035501_create_categories_table',1),(6,'2026_09_23_035501_create_expenses_table',1),(7,'2026_09_23_035501_create_incomes_table',1),(8,'2026_09_23_035502_create_budgets_table',1),(9,'2026_09_23_035502_create_savings_goals_table',1),(10,'2026_09_23_035503_create_goal_contributions_table',1),(11,'2026_09_23_035503_create_liquidity_alerts_table',1),(12,'2026_10_07_163045_add_role_and_is_active_to_users_table',1),(13,'2026_10_07_163046_add_is_active_to_categories_table',1),(14,'2026_10_07_173755_create_ai_providers_table',1),(15,'2026_10_07_173755_create_ai_usage_logs_table',1),(16,'2026_10_07_173755_create_chat_messages_table',1),(17,'2026_10_07_173756_create_chat_states_table',1),(18,'2026_10_07_211430_create_ai_settings_table',1),(19,'2026_10_07_211616_add_language_to_user_settings_table',1),(20,'2026_10_07_211921_create_faculties_table',1),(21,'2026_10_07_211922_add_faculty_id_to_users_table',1),(22,'2026_10_07_215156_add_approval_fields_to_users_table',1),(23,'2026_10_12_000001_create_support_requests_table',1),(24,'2026_10_12_000002_create_notifications_table',1),(25,'2026_10_12_000003_add_reminder_toggles_to_user_settings_table',1),(26,'2026_10_12_000004_add_weekly_summary_toggle_to_user_settings_table',1),(27,'2026_10_12_000005_create_loans_table',1),(28,'2026_10_12_000006_create_shared_expenses_table',1),(29,'2026_10_12_000007_add_onboarding_completed_at_to_user_settings_table',1),(30,'2026_10_12_000008_add_font_size_to_user_settings_table',1),(31,'2026_10_13_000001_redesign_shared_expense_participants',1),(32,'2026_10_13_000002_add_person_user_id_to_loans_table',1),(33,'2026_10_13_150933_add_confirmation_workflow_to_loans_table',1);
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_09_23_035500_create_user_settings_table',1),(5,'2026_09_23_035501_create_categories_table',1),(6,'2026_09_23_035501_create_expenses_table',1),(7,'2026_09_23_035501_create_incomes_table',1),(8,'2026_09_23_035502_create_budgets_table',1),(9,'2026_09_23_035502_create_savings_goals_table',1),(10,'2026_09_23_035503_create_goal_contributions_table',1),(11,'2026_09_23_035503_create_liquidity_alerts_table',1),(12,'2026_10_07_163045_add_role_and_is_active_to_users_table',1),(13,'2026_10_07_163046_add_is_active_to_categories_table',1),(14,'2026_10_07_173755_create_ai_providers_table',1),(15,'2026_10_07_173755_create_ai_usage_logs_table',1),(16,'2026_10_07_173755_create_chat_messages_table',1),(17,'2026_10_07_173756_create_chat_states_table',1),(18,'2026_10_07_211430_create_ai_settings_table',1),(19,'2026_10_07_211616_add_language_to_user_settings_table',1),(20,'2026_10_07_211921_create_faculties_table',1),(21,'2026_10_07_211922_add_faculty_id_to_users_table',1),(22,'2026_10_07_215156_add_approval_fields_to_users_table',1),(23,'2026_10_12_000001_create_support_requests_table',1),(24,'2026_10_12_000002_create_notifications_table',1),(25,'2026_10_12_000003_add_reminder_toggles_to_user_settings_table',1),(26,'2026_10_12_000004_add_weekly_summary_toggle_to_user_settings_table',1),(27,'2026_10_12_000005_create_loans_table',1),(28,'2026_10_12_000006_create_shared_expenses_table',1),(29,'2026_10_12_000007_add_onboarding_completed_at_to_user_settings_table',1),(30,'2026_10_12_000008_add_font_size_to_user_settings_table',1),(31,'2026_10_13_000001_redesign_shared_expense_participants',1),(32,'2026_10_13_000002_add_person_user_id_to_loans_table',1),(33,'2026_10_13_150933_add_confirmation_workflow_to_loans_table',1),(34,'2026_10_13_192218_add_last_seen_at_to_users_table',1);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `notifications`;
@@ -481,7 +481,7 @@ CREATE TABLE `savings_goals` (
 
 LOCK TABLES `savings_goals` WRITE;
 /*!40000 ALTER TABLE `savings_goals` DISABLE KEYS */;
-INSERT INTO `savings_goals` VALUES (1,3,'Nueva laptop',2400.00,'2027-03-13',1600.00,'active',NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,3,'Viaje de graduación',2000.00,'2027-07-13',600.00,'active',NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,3,'Fondo de emergencia',500.00,NULL,500.00,'completed','2026-10-13 20:18:45','2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `savings_goals` VALUES (1,3,'Nueva laptop',2400.00,'2027-03-14',1600.00,'active',NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,3,'Viaje de graduación',2000.00,'2027-07-14',600.00,'active',NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,3,'Fondo de emergencia',500.00,NULL,500.00,'completed','2026-10-14 05:26:24','2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `savings_goals` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `sessions`;
@@ -632,7 +632,7 @@ CREATE TABLE `user_settings` (
 
 LOCK TABLES `user_settings` WRITE;
 /*!40000 ALTER TABLE `user_settings` DISABLE KEYS */;
-INSERT INTO `user_settings` VALUES (1,1,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,2,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,3,'PEN','light','normal','es',1,150.00,1,1,1,1,500.00,NULL,'2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `user_settings` VALUES (1,1,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,2,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,3,'PEN','light','normal','es',1,150.00,1,1,1,1,500.00,NULL,'2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `user_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `users`;
@@ -647,6 +647,7 @@ CREATE TABLE `users` (
   `role` enum('estudiante','decano','admin') NOT NULL DEFAULT 'estudiante',
   `faculty_id` bigint(20) unsigned DEFAULT NULL,
   `approved_at` timestamp NULL DEFAULT NULL,
+  `last_seen_at` timestamp NULL DEFAULT NULL,
   `must_change_password` tinyint(1) NOT NULL DEFAULT 0,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `remember_token` varchar(100) DEFAULT NULL,
@@ -661,7 +662,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Administrador KashaFin','admin@kashafin.test','2026-10-13 20:18:45','$2y$12$7zqJxgPFuZNiSd0NVfIhVuMWPL5ND8YOKps7pjByO.G.iyregiLv.','admin',NULL,'2026-10-13 20:18:45',0,1,'YoZuRngQmb','2026-10-13 20:18:45','2026-10-13 20:18:45'),(2,'Decano Demo','decano@kashafin.test','2026-10-13 20:18:45','$2y$12$7zqJxgPFuZNiSd0NVfIhVuMWPL5ND8YOKps7pjByO.G.iyregiLv.','decano',1,'2026-10-13 20:18:45',0,1,'LI0rzToqpg','2026-10-13 20:18:45','2026-10-13 20:18:45'),(3,'Estudiante Demo','demo@kashafin.test','2026-10-13 20:18:45','$2y$12$7zqJxgPFuZNiSd0NVfIhVuMWPL5ND8YOKps7pjByO.G.iyregiLv.','estudiante',1,'2026-10-13 20:18:45',0,1,'BV2QrAiCSQ','2026-10-13 20:18:45','2026-10-13 20:18:45');
+INSERT INTO `users` VALUES (1,'Administrador KashaFin','admin@kashafin.test','2026-10-14 05:26:24','$2y$12$ZCixaSROdkEXhpMgbGIQD.0Vi8jGbXbg50fuDr76CZs7weq1YymV2','admin',NULL,'2026-10-14 05:26:24',NULL,0,1,'jz2Shlf4pY','2026-10-14 05:26:24','2026-10-14 05:26:24'),(2,'Decano Demo','decano@kashafin.test','2026-10-14 05:26:24','$2y$12$ZCixaSROdkEXhpMgbGIQD.0Vi8jGbXbg50fuDr76CZs7weq1YymV2','decano',1,'2026-10-14 05:26:24',NULL,0,1,'Ftxh9WwO4p','2026-10-14 05:26:24','2026-10-14 05:26:24'),(3,'Estudiante Demo','demo@kashafin.test','2026-10-14 05:26:24','$2y$12$ZCixaSROdkEXhpMgbGIQD.0Vi8jGbXbg50fuDr76CZs7weq1YymV2','estudiante',1,'2026-10-14 05:26:24',NULL,0,1,'ndbsALgh28','2026-10-14 05:26:24','2026-10-14 05:26:24');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
