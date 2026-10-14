@@ -9,10 +9,13 @@ use App\Models\SharedExpense;
 use App\Models\SharedExpenseParticipant;
 use App\Models\User;
 use App\Notifications\SharedExpenseInviteNotification;
+use App\Services\PersonSearchService;
 use Illuminate\Http\Request;
 
 class SharedExpenseController extends Controller
 {
+    public function __construct(private PersonSearchService $personSearch) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -66,19 +69,7 @@ class SharedExpenseController extends Controller
      */
     public function searchUsers(Request $request)
     {
-        $query = trim((string) $request->query('q', ''));
-
-        if (mb_strlen($query) < 2) {
-            return response()->json([]);
-        }
-
-        $matches = User::query()
-            ->where('id', '!=', $request->user()->id)
-            ->where('role', '!=', 'admin')
-            ->where(fn ($q) => $q->where('name', 'like', "%{$query}%")->orWhere('email', 'like', "%{$query}%"))
-            ->orderBy('name')
-            ->limit(8)
-            ->get(['id', 'name', 'email']);
+        $matches = $this->personSearch->search($request->user(), (string) $request->query('q', ''));
 
         return response()->json($matches);
     }

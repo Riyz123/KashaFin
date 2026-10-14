@@ -28,6 +28,7 @@ class ChatService
         private BudgetChatIntent $budgetIntent,
         private IncomeChatIntent $incomeIntent,
         private SavingsGoalChatIntent $goalIntent,
+        private LoanChatIntent $loanIntent,
     ) {}
 
     /**
@@ -80,6 +81,7 @@ class ChatService
             'add_budget' => $this->budgetIntent->createFromToolCall($user, $aiReply->toolArguments),
             'add_income' => $this->incomeIntent->createFromToolCall($user, $aiReply->toolArguments),
             'add_goal' => $this->goalIntent->createFromToolCall($user, $aiReply->toolArguments),
+            'add_loan' => $this->loanIntent->createFromToolCall($user, $aiReply->toolArguments),
             default => 'No reconocí esa acción, ¿puedes reformularla?',
         };
     }
@@ -195,6 +197,33 @@ class ChatService
                     'required' => ['name', 'target_amount'],
                 ],
             ],
+            [
+                'name' => 'add_loan',
+                'description' => 'Registra un préstamo informal entre el estudiante y otra persona cuando diga que le prestó dinero a alguien o que alguien le prestó a él, en cualquier forma en que lo exprese ("le presté a Ana 50 soles", "me prestaron 100", "Luis me debe...").',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'direction' => [
+                            'type' => 'string',
+                            'enum' => ['prestado', 'recibido'],
+                            'description' => '"prestado" si el estudiante fue quien prestó el dinero; "recibido" si a él le prestaron.',
+                        ],
+                        'amount' => [
+                            'type' => 'number',
+                            'description' => 'Monto exacto que el estudiante mencionó. Nunca inventes un número si no lo dio.',
+                        ],
+                        'person_name' => [
+                            'type' => 'string',
+                            'description' => 'Nombre de la otra persona o entidad (puede ser un compañero con cuenta en KashaFin, o alguien externo como una tienda).',
+                        ],
+                        'due_date' => [
+                            'type' => 'string',
+                            'description' => 'Fecha límite opcional en formato YYYY-MM-DD, solo si el estudiante la mencionó explícitamente.',
+                        ],
+                    ],
+                    'required' => ['direction', 'amount', 'person_name'],
+                ],
+            ],
         ];
     }
 
@@ -237,15 +266,16 @@ class ChatService
             "El estudiante se llama {$firstName}.\n\n".
             "Entiendes español, inglés y quechua. El estudiante configuró {$language} como su idioma preferido ".
             "en sus ajustes — responde siempre en {$language}, sin importar en qué idioma te escriba él.\n\n".
-            "Tienes cuatro herramientas disponibles: add_expense, add_budget, add_income y add_goal. Úsalas ".
-            "cuando el estudiante quiera registrar un gasto, definir un presupuesto, anotar un ingreso o crear ".
-            "una meta de ahorro, sin importar cómo lo exprese (\"me gasté 20 en \", \"anota que pagué...\", ".
-            "\"quiero poner un tope de...\", \"me depositaron...\", \"recibí mi beca...\", \"quiero ahorrar ".
-            "para...\", \"ponme una meta de...\", etc.). Usa siempre el monto exacto que haya dado — nunca ".
-            "inventes ni redondees un número. Para add_income necesitas saber si es fijo (se repite) o variable ".
-            "(ocasional), y si es fijo, cada cuánto se repite — pregúntalo si no está claro. Si falta cualquier ".
-            "dato obligatorio, no invoques la herramienta todavía: pregúntale primero en texto normal y espera ".
-            "su respuesta.\n\n".
+            "Tienes cinco herramientas disponibles: add_expense, add_budget, add_income, add_goal y add_loan. ".
+            "Úsalas cuando el estudiante quiera registrar un gasto, definir un presupuesto, anotar un ingreso, ".
+            "crear una meta de ahorro, o registrar que prestó o le prestaron dinero, sin importar cómo lo ".
+            "exprese (\"me gasté 20 en \", \"anota que pagué...\", \"quiero poner un tope de...\", \"me ".
+            "depositaron...\", \"recibí mi beca...\", \"quiero ahorrar para...\", \"ponme una meta de...\", ".
+            "\"le presté a Ana 50\", \"Luis me debe 30\", etc.). Usa siempre el monto exacto que haya dado — ".
+            "nunca inventes ni redondees un número. Para add_income necesitas saber si es fijo (se repite) o ".
+            "variable (ocasional), y si es fijo, cada cuánto se repite — pregúntalo si no está claro. Si falta ".
+            "cualquier dato obligatorio, no invoques la herramienta todavía: pregúntale primero en texto ".
+            "normal y espera su respuesta.\n\n".
             "Si el estudiante te habla de algo que no tiene que ver con finanzas personales (un videojuego, ".
             "deportes, tareas, lo que sea), entiende igual de qué se trata — no finjas no entender — pero ".
             "acláralo con naturalidad: dile que tu enfoque es ayudarlo con sus finanzas en KashaFin, y conecta ".

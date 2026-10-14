@@ -8,6 +8,7 @@ use App\Services\Ai\BudgetChatIntent;
 use App\Services\Ai\ChatService;
 use App\Services\Ai\ExpenseChatIntent;
 use App\Services\Ai\IncomeChatIntent;
+use App\Services\Ai\LoanChatIntent;
 use App\Services\Ai\SavingsGoalChatIntent;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,7 @@ class ChatController extends Controller
         BudgetChatIntent $budgetIntent,
         IncomeChatIntent $incomeIntent,
         SavingsGoalChatIntent $goalIntent,
+        LoanChatIntent $loanIntent,
         ChatService $chat
     ) {
         $data = $request->validate([
@@ -35,7 +37,8 @@ class ChatController extends Controller
             ?? $expenseIntent->handle($user, $message)
             ?? $budgetIntent->handle($user, $message)
             ?? $incomeIntent->handle($user, $message)
-            ?? $goalIntent->handle($user, $message);
+            ?? $goalIntent->handle($user, $message)
+            ?? $loanIntent->handle($user, $message);
 
         if ($intentReply !== null) {
             ChatMessage::create(['user_id' => $user->id, 'role' => 'user', 'content' => $message]);
