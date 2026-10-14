@@ -4,17 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSharedExpenseRequest;
 use App\Models\Category;
-use App\Models\Expense;
 use App\Models\SharedExpense;
 use App\Models\SharedExpenseParticipant;
-use App\Models\User;
-use App\Notifications\SharedExpenseInviteNotification;
 use App\Services\PersonSearchService;
+use App\Services\SharedExpenseCreationService;
 use Illuminate\Http\Request;
 
 class SharedExpenseController extends Controller
 {
-    public function __construct(private PersonSearchService $personSearch) {}
+    public function __construct(
+        private PersonSearchService $personSearch,
+        private SharedExpenseCreationService $sharedExpenseCreation,
+    ) {}
 
     public function index(Request $request)
     {
@@ -82,45 +83,7 @@ class SharedExpenseController extends Controller
      */
     public function store(StoreSharedExpenseRequest $request)
     {
-        $data = $request->validated();
-        $user = $request->user();
-        $myShare = (float) ($data['my_share'] ?? 0);
-
-        $expense = null;
-
-        if ($myShare > 0) {
-            $expense = Expense::create([
-                'user_id' => $user->id,
-                'category_id' => $data['category_id'] ?? null,
-                'amount' => $myShare,
-                'date' => $data['date'],
-                'description' => $data['description'].' (mi parte)',
-            ]);
-        }
-
-        $sharedExpense = SharedExpense::create([
-            'user_id' => $user->id,
-            'category_id' => $data['category_id'] ?? null,
-            'expense_id' => $expense?->id,
-            'description' => $data['description'],
-            'total_amount' => $data['total_amount'],
-            'my_share' => $myShare,
-            'date' => $data['date'],
-        ]);
-
-        foreach ($data['participants'] as $participantData) {
-            $invitedUser = User::find($participantData['user_id']);
-
-            $participant = $sharedExpense->participants()->create([
-                'user_id' => $invitedUser->id,
-                'name' => $invitedUser->name,
-                'amount_owed' => $participantData['amount_owed'],
-                'daily_commitment' => $participantData['daily_commitment'] ?? null,
-                'status' => 'pendiente',
-            ]);
-
-            $invitedUser->notify(new SharedExpenseInviteNotification($participant));
-        }
+        $this->sharedExpenseCreation->create($request->user(), $request->validated());
 
         return redirect()->route('shared-expenses.index')->with('status', 'Gasto compartido registrado. Se notificó a cada participante.');
     }
