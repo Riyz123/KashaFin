@@ -49,6 +49,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'approved_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
@@ -80,6 +81,27 @@ class User extends Authenticatable
     public function isPendingApproval(): bool
     {
         return $this->role === 'estudiante' && $this->approved_at === null;
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at !== null && $this->last_seen_at->greaterThan(now()->subMinutes(5));
+    }
+
+    /**
+     * Called on every request by TrackLastSeen, but only actually writes
+     * when it's been a while — a plain "touch every request" would mean a
+     * write query per page load for every active user, which is wasteful on
+     * shared hosting and pointless precision nobody needs for an "online"
+     * indicator with a 5-minute window.
+     */
+    public function markSeen(): void
+    {
+        if ($this->last_seen_at !== null && $this->last_seen_at->greaterThan(now()->subMinutes(2))) {
+            return;
+        }
+
+        $this->forceFill(['last_seen_at' => now()])->saveQuietly();
     }
 
     /**

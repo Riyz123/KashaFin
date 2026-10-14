@@ -94,6 +94,7 @@
                             <div>
                                 <p class="font-medium text-gray-800 dark:text-gray-100">{{ $user->name }}</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ $user->email }}</p>
+                                <x-presence-indicator :user="$user" />
                                 @if (auth()->user()->isAdmin())
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Facultad: {{ $user->faculty?->name ?? 'sin facultad' }}</p>
                                 @endif
@@ -150,7 +151,10 @@
                         @foreach ($users as $user)
                             @php([$label, $classes] = $badge($user))
                             <tr>
-                                <td class="py-3 pr-4 text-gray-800 dark:text-gray-100">{{ $user->name }}</td>
+                                <td class="py-3 pr-4 text-gray-800 dark:text-gray-100">
+                                    {{ $user->name }}
+                                    <x-presence-indicator :user="$user" />
+                                </td>
                                 <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $user->email }}</td>
                                 @if (auth()->user()->isAdmin())
                                     <td class="py-3 pr-4">
