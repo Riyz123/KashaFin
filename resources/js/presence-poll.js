@@ -1,6 +1,6 @@
 /**
  * Refreshes the "en línea"/"última vez" indicator on the admin's Usuarios
- * page every ~20s without a page reload — same polling pattern as
+ * page every ~5s without a page reload — same polling pattern as
  * notifications-poll.js. The interval is cleared on `turbo:before-cache`
  * (fired right before Turbo Drive swaps/caches the current page) so
  * navigating away doesn't leave an orphaned timer running.
@@ -16,7 +16,7 @@ export function registerPresencePoll(Alpine) {
 
             this.poll();
 
-            const intervalId = setInterval(() => this.poll(), 20000);
+            const intervalId = setInterval(() => this.poll(), 5000);
 
             document.addEventListener('turbo:before-cache', () => clearInterval(intervalId), { once: true });
         },

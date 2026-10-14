@@ -34,6 +34,17 @@
     border-width: 0;
 }
 
+/* Theme toggle: a circular "reveal" animated by JS (theme-toggle.js) via
+   the View Transitions API, expanding from the button that was clicked.
+   Scoped to .theme-transition so it never affects the page-to-page fade
+   Turbo Drive does on normal navigation (that one keeps the browser's
+   default crossfade). */
+.theme-transition::view-transition-old(root),
+.theme-transition::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
 /* RF: configurable text size, independent of the browser/OS zoom. */
 html.text-scale-large {
     font-size: 112.5%;

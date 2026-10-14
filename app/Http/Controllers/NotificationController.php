@@ -44,7 +44,7 @@ class NotificationController extends Controller
     }
 
     /**
-     * Polled every ~20s from the sidebar (InfinityFree has no WebSockets,
+     * Polled every ~5s from the sidebar (InfinityFree has no WebSockets,
      * so this is the closest thing to "live" available). Deliberately
      * lightweight: just the count and enough of each item to show a toast,
      * never the full paginated view.

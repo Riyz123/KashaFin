@@ -1,5 +1,5 @@
 /**
- * Polls the unread-notifications count every ~20s (InfinityFree has no
+ * Polls the unread-notifications count every ~5s (InfinityFree has no
  * WebSockets, so this is the closest thing to "live" available here) and
  * plays a short beep — synthesized with the Web Audio API, no sound file
  * to upload — the first time the count goes up since the last poll.
@@ -13,7 +13,7 @@ export function registerNotificationsPoll(Alpine) {
         init() {
             this.poll();
 
-            const intervalId = setInterval(() => this.poll(), 20000);
+            const intervalId = setInterval(() => this.poll(), 5000);
 
             // Turbo Drive swaps the whole <body> on every in-app
             // navigation, which recreates this component (and its

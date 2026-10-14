@@ -14,12 +14,7 @@
             x-data="{ dark: document.documentElement.classList.contains('dark') }"
             @click="
                 dark = !dark;
-                document.documentElement.classList.toggle('dark', dark);
-                fetch('{{ route('settings.theme') }}', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ theme: dark ? 'dark' : 'light' }),
-                });
+                window.toggleThemeAnimated(dark, '{{ route('settings.theme') }}', '{{ csrf_token() }}', $event);
             "
             class="rounded-md p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
             title="Cambiar tema"

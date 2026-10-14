@@ -13,12 +13,14 @@ import { mountReportCharts } from './charts/report-charts';
 import { registerChatWidget } from './chat-voice';
 import { registerNotificationsPoll } from './notifications-poll';
 import { registerPresencePoll } from './presence-poll';
+import { registerThemeToggle } from './theme-toggle';
 
 window.Alpine = Alpine;
 
 registerChatWidget(Alpine);
 registerNotificationsPoll(Alpine);
 registerPresencePoll(Alpine);
+registerThemeToggle();
 
 Alpine.start();
 
