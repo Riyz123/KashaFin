@@ -12,7 +12,14 @@ export function registerNotificationsPoll(Alpine) {
 
         init() {
             this.poll();
-            setInterval(() => this.poll(), 20000);
+
+            const intervalId = setInterval(() => this.poll(), 20000);
+
+            // Turbo Drive swaps the whole <body> on every in-app
+            // navigation, which recreates this component (and its
+            // interval) on the next page — without this, the old interval
+            // would keep ticking and polling in the background forever.
+            document.addEventListener('turbo:before-cache', () => clearInterval(intervalId), { once: true });
         },
 
         async poll() {

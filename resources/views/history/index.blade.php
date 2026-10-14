@@ -1,7 +1,7 @@
 <x-app-layout title="Historial">
     <x-page-header title="Historial de movimientos" subtitle="Todos tus ingresos y gastos en un solo lugar.">
         <div class="flex flex-wrap gap-2">
-            <a href="{{ route('history.export') }}" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <a href="{{ route('history.export') }}" data-turbo="false" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
                 <x-icon name="download" class="w-4 h-4" /> Exportar todo (CSV)
             </a>
             <form method="POST" action="{{ route('history.clear') }}" onsubmit="return confirm('¿Vaciar todo tu historial de ingresos y gastos? Tus metas de ahorro no se verán afectadas. Esta acción no se puede deshacer.');">

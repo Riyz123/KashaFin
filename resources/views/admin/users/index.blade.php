@@ -3,7 +3,7 @@
         <a href="{{ route('admin.users.import-form') }}" class="inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
             Importar CSV
         </a>
-        <a href="{{ route('admin.users.export', request()->query()) }}" class="inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+        <a href="{{ route('admin.users.export', request()->query()) }}" data-turbo="false" class="inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
             Exportar CSV
         </a>
     </x-page-header>

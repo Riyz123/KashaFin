@@ -13,10 +13,10 @@
             </div>
             <x-primary-button>Aplicar</x-primary-button>
             <div class="ml-auto flex gap-2">
-                <a href="{{ route('reports.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()]) }}" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <a href="{{ route('reports.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()]) }}" data-turbo="false" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
                     <x-icon name="download" class="w-4 h-4" /> PDF
                 </a>
-                <a href="{{ route('reports.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()]) }}" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <a href="{{ route('reports.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()]) }}" data-turbo="false" class="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
                     <x-icon name="download" class="w-4 h-4" /> Excel/CSV
                 </a>
             </div>
@@ -42,7 +42,7 @@
                 <canvas id="comparisonChart"></canvas>
             </div>
             <script type="application/json" id="comparison-series">{!! \Illuminate\Support\Js::encode($summary) !!}</script>
-            <div class="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
+            <div class="mt-4 grid grid-cols-1 gap-2 text-center text-sm sm:grid-cols-3">
                 <div><p class="text-gray-500 dark:text-gray-400">Ingresos</p><p class="font-semibold text-brand-600">S/ {{ number_format($summary['income'], 2) }}</p></div>
                 <div><p class="text-gray-500 dark:text-gray-400">Gastos</p><p class="font-semibold text-red-600">S/ {{ number_format($summary['expense'], 2) }}</p></div>
                 <div><p class="text-gray-500 dark:text-gray-400">Balance</p><p class="font-semibold {{ $summary['balance'] >= 0 ? 'text-brand-600' : 'text-red-600' }}">S/ {{ number_format($summary['balance'], 2) }}</p></div>
@@ -55,7 +55,7 @@
         <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Periodo anterior: {{ $comparison['previous_from']->format('d/m/Y') }} al {{ $comparison['previous_to']->format('d/m/Y') }}
         </p>
-        <div class="grid grid-cols-2 gap-4 text-sm">
+        <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
                 <p class="text-gray-500 dark:text-gray-400">Ingresos</p>
                 <p class="font-semibold text-brand-600">S/ {{ number_format($summary['income'], 2) }}</p>
@@ -86,6 +86,7 @@
         @if ($byCategory->isEmpty())
             <x-empty-state message="No hay gastos en este periodo." />
         @else
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead>
                     <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
@@ -102,6 +103,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         @endif
     </x-card>
 </x-app-layout>

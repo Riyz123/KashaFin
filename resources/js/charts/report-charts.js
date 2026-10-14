@@ -19,6 +19,8 @@ function mountCategoryChart() {
 
     const rows = JSON.parse(dataEl.textContent);
 
+    Chart.getChart(canvas)?.destroy();
+
     new Chart(canvas, {
         type: 'doughnut',
         data: {
@@ -47,6 +49,8 @@ function mountComparisonChart() {
     }
 
     const summary = JSON.parse(dataEl.textContent);
+
+    Chart.getChart(canvas)?.destroy();
 
     new Chart(canvas, {
         type: 'bar',

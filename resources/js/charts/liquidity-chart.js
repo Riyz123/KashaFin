@@ -18,6 +18,12 @@ export function mountLiquidityChart() {
     const pointColors = values.map((_, i) => (i === lowestIndex ? '#DC2626' : '#22C55E'));
     const pointRadii = values.map((_, i) => (i === lowestIndex ? 6 : 3));
 
+    // Turbo Drive doesn't refire DOMContentLoaded on in-app navigations —
+    // this now also runs on turbo:load, which fires on every visit
+    // including repeat visits to this same page, so a stale Chart.js
+    // instance from the previous visit must be torn down first.
+    Chart.getChart(canvas)?.destroy();
+
     new Chart(canvas, {
         type: 'line',
         data: {

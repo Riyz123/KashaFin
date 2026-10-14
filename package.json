@@ -19,6 +19,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "@hotwired/turbo": "^8.0.23",
         "chart.js": "^4.5.1"
     }
 }
