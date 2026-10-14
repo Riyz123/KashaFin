@@ -29,6 +29,7 @@ class ChatService
         private IncomeChatIntent $incomeIntent,
         private SavingsGoalChatIntent $goalIntent,
         private LoanChatIntent $loanIntent,
+        private SharedExpenseChatIntent $sharedExpenseIntent,
     ) {}
 
     /**
@@ -82,6 +83,7 @@ class ChatService
             'add_income' => $this->incomeIntent->createFromToolCall($user, $aiReply->toolArguments),
             'add_goal' => $this->goalIntent->createFromToolCall($user, $aiReply->toolArguments),
             'add_loan' => $this->loanIntent->createFromToolCall($user, $aiReply->toolArguments),
+            'add_shared_expense' => $this->sharedExpenseIntent->createFromToolCall($user, $aiReply->toolArguments),
             default => 'No reconocí esa acción, ¿puedes reformularla?',
         };
     }
@@ -224,6 +226,40 @@ class ChatService
                     'required' => ['direction', 'amount', 'person_name'],
                 ],
             ],
+            [
+                'name' => 'add_shared_expense',
+                'description' => 'Registra un gasto que el estudiante pagó pero quiere dividir con uno o más compañeros con cuenta en KashaFin, cuando lo exprese en cualquier forma ("compartamos la cuenta de...", "pagué X pero Luis me debe su parte", "dividamos el Uber"). Solo funciona con personas que tengan cuenta real en KashaFin — si el estudiante no sabe si la tiene, dile que intentarás buscarla por nombre.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'description' => [
+                            'type' => 'string',
+                            'description' => 'Breve descripción de en qué fue el gasto (ej. "Uber al aeropuerto", "Pizza del grupo").',
+                        ],
+                        'total_amount' => [
+                            'type' => 'number',
+                            'description' => 'Monto total del gasto completo, antes de dividir. Nunca lo inventes.',
+                        ],
+                        'my_share' => [
+                            'type' => 'number',
+                            'description' => 'La parte que le corresponde pagar al propio estudiante. Si no dijo que él puso algo, usa 0.',
+                        ],
+                        'participants' => [
+                            'type' => 'array',
+                            'description' => 'Una entrada por cada persona con la que se divide, con su nombre y el monto exacto que le toca. my_share más la suma de todos los participantes debe ser igual a total_amount.',
+                            'items' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'name' => ['type' => 'string', 'description' => 'Nombre de la persona (debe tener cuenta en KashaFin).'],
+                                    'amount_owed' => ['type' => 'number', 'description' => 'Monto exacto que le corresponde a esta persona.'],
+                                ],
+                                'required' => ['name', 'amount_owed'],
+                            ],
+                        ],
+                    ],
+                    'required' => ['description', 'total_amount', 'participants'],
+                ],
+            ],
         ];
     }
 
@@ -266,16 +302,19 @@ class ChatService
             "El estudiante se llama {$firstName}.\n\n".
             "Entiendes español, inglés y quechua. El estudiante configuró {$language} como su idioma preferido ".
             "en sus ajustes — responde siempre en {$language}, sin importar en qué idioma te escriba él.\n\n".
-            "Tienes cinco herramientas disponibles: add_expense, add_budget, add_income, add_goal y add_loan. ".
-            "Úsalas cuando el estudiante quiera registrar un gasto, definir un presupuesto, anotar un ingreso, ".
-            "crear una meta de ahorro, o registrar que prestó o le prestaron dinero, sin importar cómo lo ".
-            "exprese (\"me gasté 20 en \", \"anota que pagué...\", \"quiero poner un tope de...\", \"me ".
-            "depositaron...\", \"recibí mi beca...\", \"quiero ahorrar para...\", \"ponme una meta de...\", ".
-            "\"le presté a Ana 50\", \"Luis me debe 30\", etc.). Usa siempre el monto exacto que haya dado — ".
-            "nunca inventes ni redondees un número. Para add_income necesitas saber si es fijo (se repite) o ".
-            "variable (ocasional), y si es fijo, cada cuánto se repite — pregúntalo si no está claro. Si falta ".
-            "cualquier dato obligatorio, no invoques la herramienta todavía: pregúntale primero en texto ".
-            "normal y espera su respuesta.\n\n".
+            "Tienes seis herramientas disponibles: add_expense, add_budget, add_income, add_goal, add_loan y ".
+            "add_shared_expense. Úsalas cuando el estudiante quiera registrar un gasto, definir un presupuesto, ".
+            "anotar un ingreso, crear una meta de ahorro, registrar que prestó o le prestaron dinero, o dividir ".
+            "un gasto con compañeros, sin importar cómo lo exprese (\"me gasté 20 en \", \"anota que pagué...\", ".
+            "\"quiero poner un tope de...\", \"me depositaron...\", \"recibí mi beca...\", \"quiero ahorrar ".
+            "para...\", \"ponme una meta de...\", \"le presté a Ana 50\", \"Luis me debe 30\", \"dividamos la ".
+            "pizza con...\", etc.). Usa siempre el monto exacto que haya dado — nunca inventes ni redondees un ".
+            "número. Para add_income necesitas saber si es fijo (se repite) o variable (ocasional), y si es ".
+            "fijo, cada cuánto se repite — pregúntalo si no está claro. Para add_shared_expense necesitas el ".
+            "nombre de cada persona con la que se divide y cuánto le corresponde a cada una, y la suma de todo ".
+            "(incluida la parte del propio estudiante) debe dar el total — pregunta lo que falte antes de ".
+            "invocarla. Si falta cualquier dato obligatorio, no invoques la herramienta todavía: pregúntale ".
+            "primero en texto normal y espera su respuesta.\n\n".
             "Si el estudiante te habla de algo que no tiene que ver con finanzas personales (un videojuego, ".
             "deportes, tareas, lo que sea), entiende igual de qué se trata — no finjas no entender — pero ".
             "acláralo con naturalidad: dile que tu enfoque es ayudarlo con sus finanzas en KashaFin, y conecta ".
