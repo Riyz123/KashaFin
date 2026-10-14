@@ -29,6 +29,9 @@ class NotificationLink
             isset($data['support_request_id']) => [
                 'url' => route('admin.support.index'), 'label' => 'Ir a soporte',
             ],
+            isset($data['pending_student_id']) => [
+                'url' => route('admin.users.index', ['status' => 'pending']), 'label' => 'Ver estudiantes pendientes',
+            ],
             default => null,
         };
     }

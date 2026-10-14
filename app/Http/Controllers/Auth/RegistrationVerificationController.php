@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\RegistrationCodeMail;
+use App\Models\Faculty;
 use App\Models\User;
+use App\Notifications\NewPendingStudentNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -68,12 +70,14 @@ class RegistrationVerificationController extends Controller
             return back()->withErrors(['code' => 'Código incorrecto. Te quedan '.(self::MAX_ATTEMPTS - $pending['attempts']).' intento(s).']);
         }
 
-        User::create([
+        $student = User::create([
             'name' => $pending['name'],
             'email' => $email,
             'password' => Hash::make(Str::random(40)),
             'faculty_id' => $pending['faculty_id'],
         ]);
+
+        $this->notifyApprovers($student);
 
         Cache::forget($key);
         $request->session()->forget('registration_email');
@@ -103,6 +107,25 @@ class RegistrationVerificationController extends Controller
         Mail::to($email)->send(new RegistrationCodeMail($pending['name'], $pending['code']));
 
         return back()->with('status', 'Te enviamos un nuevo código.');
+    }
+
+    /**
+     * The dean of that faculty (if one exists yet) plus every master admin
+     * — whoever actually has the power to approve this student should
+     * find out the moment the request lands, not whenever they next
+     * happen to check the Usuarios page.
+     */
+    private function notifyApprovers(User $student): void
+    {
+        $approvers = User::where('role', 'admin')->get();
+
+        if ($dean = Faculty::find($student->faculty_id)?->dean()) {
+            $approvers->push($dean);
+        }
+
+        foreach ($approvers as $approver) {
+            $approver->notify(new NewPendingStudentNotification($student));
+        }
     }
 
     private function maskEmail(string $email): string

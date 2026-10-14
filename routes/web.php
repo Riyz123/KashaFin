@@ -44,6 +44,16 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::put('cambiar-contrasena', [ForcePasswordController::class, 'update'])->name('password.force-update');
 });
 
+// Notifications belong to the account, not to one side of the app — a dean
+// or the master admin can just as well receive one (a new pending student,
+// a support request) as a student can (a loan/shared-expense confirmation),
+// so this deliberately sits outside both the student-app and staff gates.
+Route::middleware(['auth', 'active', 'password-fresh'])->group(function () {
+    Route::get('notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notificaciones/no-leidas', [NotificationController::class, 'unread'])->name('notifications.unread');
+    Route::post('notificaciones/enviar', [NotificationController::class, 'sendNow'])->name('notifications.send');
+});
+
 Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -102,10 +112,6 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     Route::post('historial/{type}/{id}/duplicar', [HistoryController::class, 'duplicate'])
         ->whereIn('type', ['ingreso', 'gasto'])
         ->name('history.duplicate');
-
-    Route::get('notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('notificaciones/no-leidas', [NotificationController::class, 'unread'])->name('notifications.unread');
-    Route::post('notificaciones/enviar', [NotificationController::class, 'sendNow'])->name('notifications.send');
 
     Route::get('ayuda', [HelpController::class, 'index'])->name('help.index');
     Route::post('ayuda', [HelpController::class, 'store'])->name('help.store');

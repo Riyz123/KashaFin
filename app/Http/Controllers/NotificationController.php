@@ -22,7 +22,19 @@ class NotificationController extends Controller
         // per-item read affordance, opening the list clears the badge.
         $reminders->getCollection()->markAsRead();
 
-        return view('notifications.index', ['alerts' => $alerts, 'reminders' => $reminders]);
+        // A dean/admin has no personal liquidity data (that's a student
+        // concept), and sits outside the student-app layout entirely — but
+        // they can still receive notifications (a pending student, a
+        // support request), so this page serves both, picking the matching
+        // chrome instead of forcing the student sidebar on a dean.
+        $isStaff = $request->user()->isDean() || $request->user()->isAdmin();
+
+        return view('notifications.index', [
+            'alerts' => $alerts,
+            'reminders' => $reminders,
+            'isStaff' => $isStaff,
+            'layout' => $isStaff ? 'admin-layout' : 'app-layout',
+        ]);
     }
 
     /**
