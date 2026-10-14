@@ -36,6 +36,7 @@ function mountCategoryChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { position: 'bottom' } },
+            animation: { duration: 900, easing: 'easeOutQuart' },
         },
     });
 }
@@ -67,6 +68,11 @@ function mountComparisonChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
+            // Explicit so the bars reliably grow from 0 up to their real
+            // value on every mount, instead of relying on Chart.js's
+            // default (which some browser/OS "reduce motion" settings can
+            // skip entirely).
+            animation: { duration: 900, easing: 'easeOutQuart' },
         },
     });
 }

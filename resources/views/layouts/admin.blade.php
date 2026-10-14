@@ -15,6 +15,7 @@
     </head>
     <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <a href="#main-content" class="sr-only-focusable fixed left-2 top-2 z-[100] rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white">Saltar al contenido</a>
+        <div id="turbo-spinner" class="turbo-loading-spinner" aria-hidden="true"></div>
 
         <div x-data="{ open: false }" class="flex h-screen overflow-hidden">
             <x-admin-sidebar />

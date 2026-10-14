@@ -58,6 +58,7 @@ export function mountLiquidityChart() {
                     ticks: { callback: (value) => `S/ ${value}` },
                 },
             },
+            animation: { duration: 900, easing: 'easeOutQuart' },
         },
     });
 }

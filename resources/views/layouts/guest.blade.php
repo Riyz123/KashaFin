@@ -14,6 +14,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
+        <div id="turbo-spinner" class="turbo-loading-spinner" aria-hidden="true"></div>
         <div class="min-h-screen flex flex-col sm:justify-center items-center py-8 px-4 bg-brand-surface dark:bg-gray-900">
             <div class="flex flex-col items-center gap-2 text-center">
                 <a href="/" class="flex items-center gap-2 text-brand-dark dark:text-brand-light">
