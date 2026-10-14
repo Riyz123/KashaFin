@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * F015: an expense paid by the student but split with other KashaFin
@@ -15,6 +17,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class SharedExpense extends Model
 {
+    use LogsActivity;
+
+    protected static $doNotRecordEvents = ['updated'];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('shared_expense')
+            ->setDescriptionForEvent(fn (string $event) => ($event === 'created' ? 'Creó' : 'Eliminó').
+                " el gasto compartido \"{$this->description}\" por S/ ".number_format((float) $this->total_amount, 2));
+    }
+
     protected $fillable = ['user_id', 'category_id', 'expense_id', 'description', 'total_amount', 'my_share', 'date'];
 
     protected function casts(): array

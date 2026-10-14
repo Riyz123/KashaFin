@@ -1,13 +1,16 @@
 -- Actualización incremental de la base de datos en InfinityFree.
 --
--- Qué hace: agrega `users.last_seen_at`, para mostrar en el panel de admin
--- qué usuario está en línea y cuándo fue la última vez activo. (La parte de
--- préstamos de la ronda anterior ya la corriste, así que este archivo solo
--- trae lo nuevo.)
+-- Qué hace:
+-- 1) Agrega `users.last_seen_at`, para mostrar en el panel de admin qué
+--    usuario está en línea y cuándo fue la última vez activo.
+-- 2) Crea la tabla `activity_log` (paquete spatie/laravel-activitylog),
+--    que registra cada vez que se crea o se borra un ingreso, gasto,
+--    presupuesto, meta, préstamo o gasto compartido — la "Trazabilidad"
+--    nueva, tanto el recuadro por sección como la página global.
 --
 -- Verificado localmente contra una copia real de kashafin.sql en
 -- XAMPP/MariaDB antes de entregar esto: no borra ni modifica ningún dato
--- existente, solo agrega una columna nueva.
+-- existente, solo agrega una columna y una tabla nueva.
 --
 -- CÓMO USARLO:
 -- 1. En phpMyAdmin: pestaña "Exportar" de tu base de datos completa y
@@ -18,3 +21,22 @@
 
 ALTER TABLE `users`
   ADD `last_seen_at` TIMESTAMP NULL DEFAULT NULL AFTER `approved_at`;
+
+CREATE TABLE `activity_log` (
+  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `log_name` VARCHAR(255) DEFAULT NULL,
+  `description` TEXT NOT NULL,
+  `subject_type` VARCHAR(255) DEFAULT NULL,
+  `event` VARCHAR(255) DEFAULT NULL,
+  `subject_id` BIGINT(20) UNSIGNED DEFAULT NULL,
+  `causer_type` VARCHAR(255) DEFAULT NULL,
+  `causer_id` BIGINT(20) UNSIGNED DEFAULT NULL,
+  `properties` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`properties`)),
+  `batch_uuid` CHAR(36) DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `subject` (`subject_type`,`subject_id`),
+  KEY `causer` (`causer_type`,`causer_id`),
+  KEY `activity_log_log_name_index` (`log_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

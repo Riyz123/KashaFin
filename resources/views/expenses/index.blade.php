@@ -100,4 +100,6 @@
             <div class="mt-4">{{ $expenses->links() }}</div>
         @endif
     </x-card>
+
+    <x-activity-log logName="expense" />
 </x-app-layout>

@@ -56,4 +56,6 @@
             </div>
         @endif
     </x-card>
+
+    <x-activity-log logName="budget" />
 </x-app-layout>

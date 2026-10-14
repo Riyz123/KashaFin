@@ -77,4 +77,6 @@
             @endforeach
         </div>
     @endif
+
+    <x-activity-log logName="goal" />
 </x-app-layout>

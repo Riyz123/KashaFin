@@ -4,9 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Budget extends Model
 {
+    use LogsActivity;
+
+    protected static $doNotRecordEvents = ['updated'];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('budget')
+            ->setDescriptionForEvent(fn (string $event) => ($event === 'created' ? 'Definió' : 'Eliminó').
+                ' un presupuesto de S/ '.number_format((float) $this->amount, 2).
+                ($this->category?->name ? " para {$this->category->name}" : '').
+                ' ('.$this->period_month->format('m/Y').')');
+    }
+
     protected $fillable = [
         'user_id',
         'category_id',

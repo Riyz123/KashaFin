@@ -101,4 +101,6 @@
             <div class="mt-4">{{ $incomes->links() }}</div>
         @endif
     </x-card>
+
+    <x-activity-log logName="income" />
 </x-app-layout>

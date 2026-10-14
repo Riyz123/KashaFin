@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * F014: informal tracking of money lent to or borrowed from another
@@ -28,6 +30,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Loan extends Model
 {
+    use LogsActivity;
+
+    // Préstamos ya no se pueden editar (solo crear o eliminar), así que
+    // esto cubre el 100% de lo que le puede pasar a uno — igual se excluye
+    // 'updated' explícitamente por si algún cambio de estado interno
+    // (aprobar, rechazar, confirmar pago) llegara a tocar el modelo.
+    protected static $doNotRecordEvents = ['updated'];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('loan')
+            ->setDescriptionForEvent(fn (string $event) => ($event === 'created' ? 'Registró' : 'Eliminó').
+                ' un préstamo '.($this->direction === 'prestado' ? 'a' : 'de').
+                " {$this->person_name} por S/ ".number_format((float) $this->amount, 2));
+    }
+
     protected $fillable = [
         'user_id', 'person_name', 'person_user_id', 'direction', 'amount', 'date', 'due_date', 'status', 'notes', 'counterpart_loan_id',
     ];

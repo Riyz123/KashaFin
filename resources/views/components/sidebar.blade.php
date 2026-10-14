@@ -11,6 +11,7 @@ $navItems = [
     ['route' => 'shared-expenses.index', 'label' => 'Gastos compartidos', 'icon' => 'users', 'badge' => $pendingSharedExpenseInvites],
     ['route' => 'reports.index', 'label' => 'Reportes', 'icon' => 'document'],
     ['route' => 'history.index', 'label' => 'Historial', 'icon' => 'search'],
+    ['route' => 'activity.index', 'label' => 'Trazabilidad', 'icon' => 'document'],
     ['route' => 'notifications.index', 'label' => 'Notificaciones', 'icon' => 'bell'],
     ['route' => 'help.index', 'label' => 'Ayuda y soporte', 'icon' => 'help'],
     ['route' => 'settings.edit', 'label' => 'Configuración', 'icon' => 'cog'],

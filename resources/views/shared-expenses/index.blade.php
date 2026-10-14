@@ -209,4 +209,6 @@
             @endforeach
         </div>
     @endif
+
+    <x-activity-log logName="shared_expense" />
 </x-app-layout>

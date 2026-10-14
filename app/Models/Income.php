@@ -7,9 +7,24 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Income extends Model
 {
+    use LogsActivity;
+
+    protected static $doNotRecordEvents = ['updated'];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('income')
+            ->setDescriptionForEvent(fn (string $event) => ($event === 'created' ? 'Registró' : 'Eliminó').
+                ' un ingreso de S/ '.number_format((float) $this->amount, 2).
+                ' ('.($this->type === 'fijo' ? 'fijo' : 'variable').')');
+    }
+
     protected $fillable = [
         'user_id',
         'parent_income_id',

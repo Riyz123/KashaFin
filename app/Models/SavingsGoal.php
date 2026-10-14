@@ -6,9 +6,23 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class SavingsGoal extends Model
 {
+    use LogsActivity;
+
+    protected static $doNotRecordEvents = ['updated'];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('goal')
+            ->setDescriptionForEvent(fn (string $event) => ($event === 'created' ? 'Creó' : 'Eliminó').
+                " la meta \"{$this->name}\" por S/ ".number_format((float) $this->target_amount, 2));
+    }
+
     protected $fillable = [
         'user_id',
         'name',

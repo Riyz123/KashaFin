@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\AiProviderController as AdminAiProviderController;
 use App\Http\Controllers\Admin\AiPromptController as AdminAiPromptController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -119,6 +120,8 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     Route::post('historial/{type}/{id}/duplicar', [HistoryController::class, 'duplicate'])
         ->whereIn('type', ['ingreso', 'gasto'])
         ->name('history.duplicate');
+
+    Route::get('trazabilidad', [ActivityLogController::class, 'index'])->name('activity.index');
 
     Route::get('ayuda', [HelpController::class, 'index'])->name('help.index');
     Route::post('ayuda', [HelpController::class, 'store'])->name('help.store');
