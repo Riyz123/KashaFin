@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLoanRequest;
 use App\Models\Loan;
-use App\Notifications\LoanConfirmationNotification;
+use App\Services\LoanCreationService;
 use Illuminate\Http\Request;
 
 class LoanController extends Controller
 {
+    public function __construct(private LoanCreationService $loanCreation) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -70,21 +72,9 @@ class LoanController extends Controller
         $data = $request->validated();
         $data['user_id'] = $request->user()->id;
 
-        if (! empty($data['person_user_id'])) {
-            $data['status'] = 'pendiente_confirmacion';
-        }
+        $loan = $this->loanCreation->create($data);
 
-        $loan = Loan::create($data);
-
-        if ($loan->person_user_id) {
-            $loan->personUser->notify(new LoanConfirmationNotification($loan));
-        }
-
-        $status = $loan->person_user_id
-            ? 'Préstamo registrado. Se notificó a la otra persona para que lo confirme.'
-            : 'Préstamo registrado correctamente.';
-
-        return redirect()->route('loans.index')->with('status', $status);
+        return redirect()->route('loans.index')->with('status', $this->loanCreation->statusMessage($loan));
     }
 
     public function edit(Loan $loan)
