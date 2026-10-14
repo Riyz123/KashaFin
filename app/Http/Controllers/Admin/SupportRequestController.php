@@ -24,7 +24,7 @@ class SupportRequestController extends Controller
 
     public function attend(Request $request, SupportRequest $supportRequest)
     {
-        abort_unless($request->user()->canManage($supportRequest->user), 403, 'No tienes permisos sobre esta solicitud.');
+        abort_unless($supportRequest->canBeManagedBy($request->user()), 403, 'No tienes permisos sobre esta solicitud.');
 
         $supportRequest->markAttended($request->user());
 
@@ -38,7 +38,7 @@ class SupportRequestController extends Controller
      */
     public function startLive(Request $request, SupportRequest $supportRequest)
     {
-        abort_unless($request->user()->canManage($supportRequest->user), 403, 'No tienes permisos sobre esta solicitud.');
+        abort_unless($supportRequest->canBeManagedBy($request->user()), 403, 'No tienes permisos sobre esta solicitud.');
         abort_unless($supportRequest->type === 'asesor', 422, 'Solo se puede atender en vivo una solicitud de hablar con un asesor.');
         abort_unless($supportRequest->isPending(), 422, 'Esta solicitud ya fue procesada.');
 
@@ -49,7 +49,7 @@ class SupportRequestController extends Controller
 
     public function reply(Request $request, SupportRequest $supportRequest)
     {
-        abort_unless($request->user()->canManage($supportRequest->user), 403, 'No tienes permisos sobre esta solicitud.');
+        abort_unless($supportRequest->canBeManagedBy($request->user()), 403, 'No tienes permisos sobre esta solicitud.');
         abort_unless($supportRequest->isBeingAttendedLive(), 422, 'Esta solicitud no está en atención en vivo.');
 
         $data = $request->validate(['content' => ['required', 'string', 'max:1000']]);
@@ -72,7 +72,7 @@ class SupportRequestController extends Controller
      */
     public function messages(Request $request, SupportRequest $supportRequest)
     {
-        abort_unless($request->user()->canManage($supportRequest->user), 403);
+        abort_unless($supportRequest->canBeManagedBy($request->user()), 403);
 
         $afterId = (int) $request->query('after_id', 0);
 
@@ -86,7 +86,7 @@ class SupportRequestController extends Controller
 
     public function finalize(Request $request, SupportRequest $supportRequest)
     {
-        abort_unless($request->user()->canManage($supportRequest->user), 403, 'No tienes permisos sobre esta solicitud.');
+        abort_unless($supportRequest->canBeManagedBy($request->user()), 403, 'No tienes permisos sobre esta solicitud.');
         abort_unless($supportRequest->isBeingAttendedLive(), 422, 'Esta solicitud no está en atención en vivo.');
 
         $supportRequest->markAttended($request->user());

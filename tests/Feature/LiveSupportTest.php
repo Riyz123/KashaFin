@@ -160,4 +160,25 @@ class LiveSupportTest extends TestCase
 
         $this->actingAs($dean)->patch(route('admin.support.start-live', $request))->assertForbidden();
     }
+
+    /**
+     * The real bug this guards against: an admin testing the feature by
+     * filing a support request from their own admin account got a 403
+     * trying to act on it, because the old authorization check
+     * (User::canManage()) refuses to manage ANY admin-role account —
+     * correct for account actions like deactivating a user, wrong here,
+     * since handling a support ticket isn't account management.
+     */
+    public function test_an_admin_can_manage_a_support_request_filed_by_an_admin_account(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $request = (new SupportRequestService)->create($admin, 'asesor', 'Probando el flujo yo mismo');
+
+        $this->actingAs($admin)->patch(route('admin.support.start-live', $request))->assertRedirect();
+        $request->refresh();
+        $this->assertSame('en_atencion', $request->status);
+
+        $this->actingAs($admin)->patch(route('admin.support.finalize', $request))->assertRedirect();
+        $this->assertSame('atendido', $request->fresh()->status);
+    }
 }

@@ -108,4 +108,23 @@ class SupportRequest extends Model
 
         return $query->whereHas('user', fn ($q) => $q->where('faculty_id', $actor->faculty_id));
     }
+
+    /**
+     * Deliberately NOT User::canManage() — that one refuses to manage any
+     * admin-role account at all (it's meant for account-level actions like
+     * deactivating/deleting a user), which would wrongly 403 a master
+     * admin handling a support request filed by another admin account (or
+     * their own, e.g. while testing the feature themselves). A support
+     * request isn't account management, so the rule here mirrors
+     * scopeVisibleTo() instead: any admin can handle any request, a dean
+     * only requests from their own faculty.
+     */
+    public function canBeManagedBy(User $actor): bool
+    {
+        if ($actor->isAdmin()) {
+            return true;
+        }
+
+        return $actor->isDean() && $this->user->faculty_id === $actor->faculty_id;
+    }
 }

@@ -41,10 +41,24 @@ class NotificationLinkTest extends TestCase
         $this->assertSame(route('shared-expenses.index'), $link['url']);
     }
 
-    public function test_unknown_kind_has_no_link(): void
+    public function test_unknown_kind_has_no_link_but_still_has_a_section(): void
     {
-        $this->assertNull(NotificationLink::for(['kind' => 'inactivity', 'days_inactive' => 5]));
-        $this->assertNull(NotificationLink::for([]));
+        $inactivity = NotificationLink::for(['kind' => 'inactivity', 'days_inactive' => 5]);
+        $this->assertNull($inactivity['url']);
+        $this->assertSame('Recordatorio', $inactivity['section']);
+
+        $unknown = NotificationLink::for([]);
+        $this->assertNull($unknown['url']);
+        $this->assertSame('General', $unknown['section']);
+    }
+
+    public function test_each_kind_has_a_distinct_section_label(): void
+    {
+        $this->assertSame('Préstamos', NotificationLink::for(['kind' => 'loan_confirmation'])['section']);
+        $this->assertSame('Ingresos', NotificationLink::for(['kind' => 'income_confirmation'])['section']);
+        $this->assertSame('Gastos compartidos', NotificationLink::for(['shared_expense_id' => 1])['section']);
+        $this->assertSame('Soporte', NotificationLink::for(['support_request_id' => 1])['section']);
+        $this->assertSame('Usuarios', NotificationLink::for(['pending_student_id' => 1])['section']);
     }
 
     public function test_the_notifications_page_renders_a_go_to_button_for_a_loan_confirmation(): void
@@ -62,5 +76,7 @@ class NotificationLinkTest extends TestCase
         $response->assertOk();
         $response->assertSee(route('loans.index'), false);
         $response->assertSee('Ir a préstamos');
+        // The CSS class is uppercase; the actual text node stays "Préstamos".
+        $response->assertSee('Préstamos');
     }
 }
