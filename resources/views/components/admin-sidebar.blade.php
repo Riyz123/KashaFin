@@ -5,6 +5,7 @@ $navItems = [
     ...($isMasterAdmin ? [['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'home']] : []),
     ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'user'],
     ['route' => 'admin.support.index', 'label' => 'Soporte', 'icon' => 'bell', 'badge' => $pendingSupportCount],
+    ['route' => 'notifications.index', 'label' => 'Notificaciones', 'icon' => 'bell'],
     ['route' => 'admin.categories.index', 'label' => 'Categorías globales', 'icon' => 'wallet'],
     ...($isMasterAdmin ? [
         ['route' => 'admin.ai.index', 'label' => 'Asistente IA', 'icon' => 'chat'],
@@ -37,7 +38,9 @@ $navItems = [
             >
                 <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
                 <span class="flex-1">{{ $item['label'] }}</span>
-                @if (! empty($item['badge']))
+                @if ($item['route'] === 'notifications.index')
+                    <span x-data="notificationsBadge('{{ route('notifications.unread') }}')" x-show="count > 0" x-cloak x-text="count" class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white"></span>
+                @elseif (! empty($item['badge']))
                     <span class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">{{ $item['badge'] }}</span>
                 @endif
             </a>

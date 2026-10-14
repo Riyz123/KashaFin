@@ -104,6 +104,7 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
         ->name('history.duplicate');
 
     Route::get('notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notificaciones/no-leidas', [NotificationController::class, 'unread'])->name('notifications.unread');
     Route::post('notificaciones/enviar', [NotificationController::class, 'sendNow'])->name('notifications.send');
 
     Route::get('ayuda', [HelpController::class, 'index'])->name('help.index');
