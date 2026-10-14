@@ -171,7 +171,6 @@
                                     <button type="submit" class="text-brand-600 hover:underline">{{ $loan->person_user_id ? 'Ya pagué' : 'Marcar pagado' }}</button>
                                 </form>
                             @endif
-                            <a href="{{ route('loans.edit', $loan) }}" class="text-gray-500 hover:underline dark:text-gray-400">Editar</a>
                             <form method="POST" action="{{ route('loans.destroy', $loan) }}" onsubmit="return confirm('¿Eliminar este préstamo?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">Eliminar</button>

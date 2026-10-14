@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Loan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class LoanManagementTest extends TestCase
@@ -98,5 +99,13 @@ class LoanManagementTest extends TestCase
         $loan = Loan::first();
         $this->assertSame('Tienda de la esquina', $loan->person_name);
         $this->assertNull($loan->person_user_id);
+    }
+
+    public function test_a_loan_cannot_be_edited_only_created_or_deleted(): void
+    {
+        $this->assertFalse(Route::has('loans.edit'));
+        $this->assertFalse(Route::has('loans.update'));
+        $this->assertTrue(Route::has('loans.store'));
+        $this->assertTrue(Route::has('loans.destroy'));
     }
 }

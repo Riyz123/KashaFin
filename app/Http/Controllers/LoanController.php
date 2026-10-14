@@ -77,22 +77,6 @@ class LoanController extends Controller
         return redirect()->route('loans.index')->with('status', $this->loanCreation->statusMessage($loan));
     }
 
-    public function edit(Loan $loan)
-    {
-        $this->authorizeOwnership($loan);
-
-        return view('loans.edit', ['loan' => $loan]);
-    }
-
-    public function update(StoreLoanRequest $request, Loan $loan)
-    {
-        $this->authorizeOwnership($loan);
-
-        $loan->update($request->validated());
-
-        return redirect()->route('loans.index')->with('status', 'Préstamo actualizado correctamente.');
-    }
-
     public function destroy(Loan $loan)
     {
         $this->authorizeOwnership($loan);
