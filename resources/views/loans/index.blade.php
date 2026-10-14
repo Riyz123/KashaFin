@@ -22,7 +22,7 @@
         <x-card class="mb-6">
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="font-semibold text-gray-800 dark:text-gray-100">Confirmaciones pendientes</h3>
-                @if ($pendingConfirmations->count() > 1)
+                @if ($pendingConfirmations->isNotEmpty())
                     <form method="POST" action="{{ route('loans.approve-all') }}" onsubmit="return confirm('¿Aceptar las {{ $pendingConfirmations->count() }} confirmaciones pendientes?');">
                         @csrf @method('PATCH')
                         <button type="submit" class="text-xs font-semibold text-brand-600 hover:underline">Aceptar todas</button>
@@ -58,7 +58,7 @@
         <x-card class="mb-6">
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="font-semibold text-gray-800 dark:text-gray-100">Pagos por confirmar</h3>
-                @if ($paymentsToConfirm->count() > 1)
+                @if ($paymentsToConfirm->isNotEmpty())
                     <form method="POST" action="{{ route('loans.confirm-all-payments') }}" onsubmit="return confirm('¿Confirmar los {{ $paymentsToConfirm->count() }} pagos pendientes?');">
                         @csrf @method('PATCH')
                         <button type="submit" class="text-xs font-semibold text-brand-600 hover:underline">Confirmar todos</button>

@@ -12,22 +12,28 @@ class NotificationController extends Controller
     {
         $alerts = $request->user()->liquidityAlerts()
             ->orderByDesc('sent_at')
-            ->paginate(10, ['*'], 'alertas');
+            ->paginate(10, ['*'], 'alertas')
+            ->withQueryString();
 
         $reminders = $request->user()->notifications()
             ->latest()
-            ->paginate(10, ['*'], 'recordatorios');
+            ->paginate(10, ['*'], 'recordatorios')
+            ->withQueryString();
 
         // Visiting this page is what "reading" them means — there's no
         // per-item read affordance, opening the list clears the badge.
         $reminders->getCollection()->markAsRead();
 
         // A dean/admin has no personal liquidity data (that's a student
-        // concept), and sits outside the student-app layout entirely — but
-        // they can still receive notifications (a pending student, a
-        // support request), so this page serves both, picking the matching
-        // chrome instead of forcing the student sidebar on a dean.
-        $isStaff = $request->user()->isDean() || $request->user()->isAdmin();
+        // concept), and a dean sits outside the student-app layout entirely
+        // — but the master admin can legitimately be in EITHER app ("Ver
+        // app de estudiante"), so role alone isn't enough to pick the
+        // chrome: that would yank an admin into the admin panel the moment
+        // they click Notificaciones from inside the student sidebar. Each
+        // sidebar's link says which one it is; only a dean (never in the
+        // student app at all) ignores that and is always staff.
+        $isStaff = $request->user()->isDean()
+            || ($request->user()->isAdmin() && $request->query('panel') !== 'student');
 
         return view('notifications.index', [
             'alerts' => $alerts,

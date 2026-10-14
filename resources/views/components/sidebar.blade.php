@@ -20,7 +20,7 @@ $navItems = [
 <aside
     x-cloak
     :class="open ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-dark text-white transition-transform duration-200 ease-in-out md:static md:translate-x-0 md:shrink-0 flex flex-col"
+    class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-dark text-white transition-transform duration-200 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0 md:shrink-0 flex flex-col"
 >
     <div class="flex items-center gap-2 px-5 py-5">
         <x-application-logo variant="light" class="w-9 h-9 object-contain" />
@@ -33,7 +33,7 @@ $navItems = [
     <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
         @foreach ($navItems as $item)
             <a
-                href="{{ route($item['route']) }}"
+                href="{{ $item['route'] === 'notifications.index' ? route('notifications.index', ['panel' => 'student']) : route($item['route']) }}"
                 @click="open = false"
                 class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition {{ request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route']))
                     ? 'bg-brand-600 text-white'

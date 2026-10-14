@@ -11,7 +11,7 @@
         <x-card class="mb-6">
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="font-semibold text-gray-800 dark:text-gray-100">Invitaciones pendientes</h3>
-                @if ($pendingInvitations->count() > 1)
+                @if ($pendingInvitations->isNotEmpty())
                     <form method="POST" action="{{ route('shared-expenses.accept-all') }}" onsubmit="return confirm('¿Aceptar las {{ $pendingInvitations->count() }} invitaciones pendientes? (sin cuotas diarias)');">
                         @csrf @method('PATCH')
                         <button type="submit" class="text-xs font-semibold text-brand-600 hover:underline">Aceptar todas</button>
