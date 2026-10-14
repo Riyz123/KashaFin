@@ -15,10 +15,10 @@
     <body class="font-sans antialiased bg-brand-surface dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <a href="#main-content" class="sr-only-focusable fixed left-2 top-2 z-[100] rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white">Saltar al contenido</a>
 
-        <div x-data="{ open: false }" class="flex min-h-screen">
+        <div x-data="{ open: false }" class="flex h-screen overflow-hidden">
             <x-sidebar />
 
-            <div class="flex min-w-0 flex-1 flex-col">
+            <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <x-topbar :title="$title ?? null" />
 
                 @if (session('status'))
@@ -27,7 +27,7 @@
                     </div>
                 @endif
 
-                <main id="main-content" tabindex="-1" class="flex-1 px-4 py-6 sm:px-6 lg:px-8 focus:outline-none">
+                <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 focus:outline-none">
                     {{ $slot }}
                 </main>
             </div>

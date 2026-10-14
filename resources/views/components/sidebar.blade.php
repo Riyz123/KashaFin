@@ -20,7 +20,7 @@ $navItems = [
 <aside
     x-cloak
     :class="open ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-dark text-white transition-transform duration-200 ease-in-out md:sticky md:left-auto md:top-0 md:h-screen md:translate-x-0 md:shrink-0 flex flex-col"
+    class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-dark text-white transition-transform duration-200 ease-in-out md:static md:h-full md:translate-x-0 md:shrink-0 flex flex-col"
 >
     <div class="flex items-center gap-2 px-5 py-5">
         <x-application-logo variant="light" class="w-9 h-9 object-contain" />
