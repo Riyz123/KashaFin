@@ -1,6 +1,11 @@
 <div x-data="chatWidget()" x-init="init()" class="fixed bottom-4 right-4 z-50">
     <script type="application/json" id="chat-history">{!! \Illuminate\Support\Js::encode($recentChatMessages->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])->values()) !!}</script>
-    <script>window.chatSendUrl = @js(route('chat.send'));</script>
+    <script>
+        window.chatSendUrl = @js(route('chat.send'));
+        window.liveSupportPollUrl = @js(route('live-support.poll'));
+        window.hasLiveSupport = @js($hasLiveSupport);
+        window.lastMessageId = @js($lastMessageId);
+    </script>
 
     <button
         @click="open = !open"
@@ -16,7 +21,7 @@
         x-show="open"
         x-cloak
         x-transition
-        class="absolute bottom-16 right-0 flex h-[28rem] w-80 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:w-96"
+        class="fixed inset-x-4 bottom-20 flex h-[28rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:absolute sm:inset-x-auto sm:bottom-16 sm:right-0 sm:w-96"
     >
         <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
             <div>
@@ -35,6 +40,7 @@
             </template>
             <template x-for="(msg, index) in messages" :key="index">
                 <div :class="msg.role === 'user' ? 'text-right' : 'text-left'">
+                    <p x-show="msg.role === 'advisor'" x-cloak class="mb-0.5 text-[10px] font-semibold text-brand-600">Asesor</p>
                     <span
                         class="inline-block max-w-[85%] whitespace-pre-line rounded-lg px-3 py-2 text-sm"
                         :class="msg.role === 'user' ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'"
@@ -42,6 +48,7 @@
                     ></span>
                 </div>
             </template>
+            <p x-show="liveSupport" x-cloak class="text-xs text-brand-600">Un asesor está atendiendo tu caso — tus mensajes le llegan directo.</p>
             <p x-show="loading" x-cloak class="text-xs text-gray-400">Pensando...</p>
         </div>
 

@@ -165,6 +165,19 @@ class User extends Authenticatable
         return $this->hasMany(Category::class);
     }
 
+    /**
+     * Checked by ChatController before anything else — while this is
+     * non-null, a human is replying live inside this student's own chat
+     * widget, so the AI (and the "hablar con un asesor" detection itself)
+     * must stay out of the way entirely.
+     */
+    public function activeLiveSupportRequest(): ?SupportRequest
+    {
+        return SupportRequest::where('user_id', $this->id)
+            ->where('status', 'en_atencion')
+            ->first();
+    }
+
     public function budgets(): HasMany
     {
         return $this->hasMany(Budget::class);

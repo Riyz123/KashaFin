@@ -12,11 +12,17 @@ class ChatMessage extends Model
         'user_id',
         'role',
         'content',
+        'support_request_id',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function supportRequest(): BelongsTo
+    {
+        return $this->belongsTo(SupportRequest::class);
     }
 
     public function scopeForUser(Builder $query, User $user): Builder

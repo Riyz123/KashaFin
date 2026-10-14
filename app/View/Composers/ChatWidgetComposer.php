@@ -18,5 +18,7 @@ class ChatWidgetComposer
             : collect();
 
         $view->with('recentChatMessages', $messages);
+        $view->with('hasLiveSupport', $user?->activeLiveSupportRequest() !== null);
+        $view->with('lastMessageId', $messages->max('id') ?? 0);
     }
 }

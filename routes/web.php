@@ -19,6 +19,7 @@ use App\Http\Controllers\GoalController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\LiveSupportController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -136,6 +137,7 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::post('asistente/mensaje', [ChatController::class, 'send'])->name('chat.send');
+    Route::get('asistente/soporte-en-vivo', [LiveSupportController::class, 'poll'])->name('live-support.poll');
 });
 
 // Accesible por admin master Y por decanos (acotado a su propia facultad
@@ -156,6 +158,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
 
     Route::get('soporte', [AdminSupportRequestController::class, 'index'])->name('support.index');
     Route::patch('soporte/{supportRequest}/atender', [AdminSupportRequestController::class, 'attend'])->name('support.attend');
+    Route::patch('soporte/{supportRequest}/atender-en-vivo', [AdminSupportRequestController::class, 'startLive'])->name('support.start-live');
+    Route::post('soporte/{supportRequest}/responder', [AdminSupportRequestController::class, 'reply'])->name('support.reply');
+    Route::get('soporte/{supportRequest}/mensajes', [AdminSupportRequestController::class, 'messages'])->name('support.messages');
+    Route::patch('soporte/{supportRequest}/finalizar', [AdminSupportRequestController::class, 'finalize'])->name('support.finalize');
 
     Route::get('categorias', [AdminCategoryController::class, 'index'])->name('categories.index');
     Route::post('categorias', [AdminCategoryController::class, 'store'])->name('categories.store');

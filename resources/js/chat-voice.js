@@ -7,6 +7,9 @@ export function registerChatWidget(Alpine) {
         draft: '',
         messages: [],
         recognition: null,
+        liveSupport: false,
+        lastMessageId: 0,
+        livePollInterval: null,
 
         init() {
             const dataEl = document.getElementById('chat-history');
@@ -17,6 +20,12 @@ export function registerChatWidget(Alpine) {
                 } catch (e) {
                     this.messages = [];
                 }
+            }
+
+            this.lastMessageId = window.lastMessageId || 0;
+
+            if (window.hasLiveSupport) {
+                this.startLivePoll();
             }
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -131,6 +140,55 @@ export function registerChatWidget(Alpine) {
             });
         },
 
+        /**
+         * While a human is replying live (see ChatController/SupportRequest),
+         * the AI never responds — the advisor's messages only ever show up
+         * via this poll, same ~5s cadence as the rest of the app's polling.
+         */
+        startLivePoll() {
+            this.liveSupport = true;
+
+            if (this.livePollInterval) {
+                return;
+            }
+
+            this.pollLiveSupport();
+            this.livePollInterval = setInterval(() => this.pollLiveSupport(), 5000);
+
+            document.addEventListener('turbo:before-cache', () => clearInterval(this.livePollInterval), { once: true });
+        },
+
+        async pollLiveSupport() {
+            try {
+                const response = await fetch(`${window.liveSupportPollUrl}?after_id=${this.lastMessageId}`, {
+                    headers: { Accept: 'application/json' },
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const data = await response.json();
+
+                data.messages.forEach((msg) => {
+                    this.messages.push({ role: 'advisor', content: msg.content });
+                    this.lastMessageId = Math.max(this.lastMessageId, msg.id);
+                });
+
+                if (data.messages.length > 0) {
+                    this.scrollToBottom();
+                }
+
+                if (!data.live) {
+                    this.liveSupport = false;
+                    clearInterval(this.livePollInterval);
+                    this.livePollInterval = null;
+                }
+            } catch (e) {
+                // A failed poll just tries again on the next interval tick.
+            }
+        },
+
         async send() {
             const message = this.draft.trim();
 
@@ -155,10 +213,19 @@ export function registerChatWidget(Alpine) {
                 });
 
                 const data = await response.json();
-                const reply = data.reply || 'Hubo un problema, intenta de nuevo.';
 
-                this.messages.push({ role: 'assistant', content: reply });
-                this.speak(reply);
+                if (data.live) {
+                    // No fake reply here — a human will answer whenever
+                    // they do, picked up by the poll (already running, or
+                    // just starting now if this is the first message of
+                    // the live session).
+                    this.startLivePoll();
+                } else {
+                    const reply = data.reply || 'Hubo un problema, intenta de nuevo.';
+
+                    this.messages.push({ role: 'assistant', content: reply });
+                    this.speak(reply);
+                }
             } catch (e) {
                 this.messages.push({ role: 'assistant', content: 'No pude conectarme. Intenta de nuevo.' });
             } finally {

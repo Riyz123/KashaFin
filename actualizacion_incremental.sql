@@ -7,10 +7,17 @@
 --    que registra cada vez que se crea o se borra un ingreso, gasto,
 --    presupuesto, meta, préstamo o gasto compartido — la "Trazabilidad"
 --    nueva, tanto el recuadro por sección como la página global.
+-- 3) Amplía `support_requests.status` y `chat_messages.role` (eran enums
+--    de 2 valores) a texto libre, para el nuevo estado "en_atencion" y el
+--    nuevo rol "advisor" del soporte en vivo — un admin/decano ya puede
+--    responderle a un estudiante dentro de su mismo chat. Agrega
+--    `chat_messages.support_request_id` para enlazar esos mensajes con la
+--    solicitud de soporte a la que pertenecen.
 --
 -- Verificado localmente contra una copia real de kashafin.sql en
 -- XAMPP/MariaDB antes de entregar esto: no borra ni modifica ningún dato
--- existente, solo agrega una columna y una tabla nueva.
+-- existente, solo agrega columnas/tablas nuevas y amplía el tipo de dos
+-- columnas existentes.
 --
 -- CÓMO USARLO:
 -- 1. En phpMyAdmin: pestaña "Exportar" de tu base de datos completa y
@@ -40,3 +47,16 @@ CREATE TABLE `activity_log` (
   KEY `causer` (`causer_type`,`causer_id`),
   KEY `activity_log_log_name_index` (`log_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `support_requests`
+  MODIFY `status` VARCHAR(30) NOT NULL DEFAULT 'pendiente';
+
+ALTER TABLE `chat_messages`
+  MODIFY `role` VARCHAR(20) NOT NULL;
+
+ALTER TABLE `chat_messages`
+  ADD `support_request_id` BIGINT(20) UNSIGNED DEFAULT NULL AFTER `role`;
+
+ALTER TABLE `chat_messages`
+  ADD KEY `chat_messages_support_request_id_foreign` (`support_request_id`),
+  ADD CONSTRAINT `chat_messages_support_request_id_foreign` FOREIGN KEY (`support_request_id`) REFERENCES `support_requests` (`id`) ON DELETE SET NULL;

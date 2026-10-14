@@ -31,6 +31,21 @@ class ChatController extends Controller
         $user = $request->user();
         $message = trim($data['message']);
 
+        // Checked before anything else: while a human is replying live
+        // (Admin → Soporte → "Atender en vivo"), the AI stays out of it
+        // entirely for this student — just record the message and let the
+        // widget's poll pick up the advisor's reply whenever it comes.
+        if ($liveRequest = $user->activeLiveSupportRequest()) {
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'user',
+                'content' => $message,
+                'support_request_id' => $liveRequest->id,
+            ]);
+
+            return response()->json(['reply' => null, 'live' => true]);
+        }
+
         // Checked first: if a "talk to an advisor" request is in progress,
         // this message is its answer (or a cancellation), not a new intent.
         $intentReply = $advisorIntent->handle($user, $message)
