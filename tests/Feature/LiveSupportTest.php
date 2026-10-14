@@ -6,6 +6,7 @@ use App\Models\ChatMessage;
 use App\Models\Faculty;
 use App\Models\SupportRequest;
 use App\Models\User;
+use App\Notifications\SupportRequestEscalatedNotification;
 use App\Services\SupportRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -187,5 +188,63 @@ class LiveSupportTest extends TestCase
 
         $this->actingAs($admin)->patch(route('admin.support.finalize', $request))->assertRedirect();
         $this->assertSame('atendido', $request->fresh()->status);
+    }
+
+    public function test_the_statuses_endpoint_only_returns_requests_visible_to_the_caller(): void
+    {
+        $facultyA = Faculty::factory()->create();
+        $facultyB = Faculty::factory()->create();
+        $deanA = User::factory()->create(['role' => 'decano', 'faculty_id' => $facultyA->id]);
+        $studentA = User::factory()->create(['faculty_id' => $facultyA->id]);
+        $studentB = User::factory()->create(['faculty_id' => $facultyB->id]);
+        $requestA = (new SupportRequestService)->create($studentA, 'asesor', 'Ayuda A');
+        $requestB = (new SupportRequestService)->create($studentB, 'asesor', 'Ayuda B');
+
+        $response = $this->actingAs($deanA)->getJson(route('admin.support.statuses', ['ids' => "{$requestA->id},{$requestB->id}"]));
+
+        $response->assertOk();
+        $response->assertJsonStructure([(string) $requestA->id => ['status', 'attended_by']]);
+        $response->assertJsonMissingPath((string) $requestB->id);
+    }
+
+    public function test_a_dean_escalating_notifies_every_admin_and_releases_the_request(): void
+    {
+        $faculty = Faculty::factory()->create();
+        $dean = User::factory()->create(['role' => 'decano', 'faculty_id' => $faculty->id]);
+        $otherAdmin = User::factory()->create(['role' => 'admin']);
+        $student = User::factory()->create(['faculty_id' => $faculty->id]);
+        $request = (new SupportRequestService)->create($student, 'asesor', 'Esto se me escapa');
+        $request->startLiveAttention($dean);
+
+        $this->actingAs($dean)->patch(route('admin.support.escalate', $request))->assertRedirect();
+
+        $request->refresh();
+        $this->assertSame('pendiente', $request->status);
+        $this->assertNull($request->attended_by_id);
+        $this->assertSame(1, $otherAdmin->notifications()->where('type', SupportRequestEscalatedNotification::class)->count());
+    }
+
+    public function test_an_admin_escalating_notifies_the_students_dean(): void
+    {
+        $faculty = Faculty::factory()->create();
+        $dean = User::factory()->create(['role' => 'decano', 'faculty_id' => $faculty->id]);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $student = User::factory()->create(['faculty_id' => $faculty->id]);
+        $request = (new SupportRequestService)->create($student, 'incidencia', 'Problema de la facultad');
+
+        $this->actingAs($admin)->patch(route('admin.support.escalate', $request))->assertRedirect();
+
+        $this->assertSame('pendiente', $request->fresh()->status);
+        $this->assertSame(1, $dean->notifications()->where('type', SupportRequestEscalatedNotification::class)->count());
+    }
+
+    public function test_an_admin_cannot_escalate_to_a_faculty_with_no_dean(): void
+    {
+        $faculty = Faculty::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $student = User::factory()->create(['faculty_id' => $faculty->id]);
+        $request = (new SupportRequestService)->create($student, 'incidencia', 'Sin decano asignado');
+
+        $this->actingAs($admin)->patch(route('admin.support.escalate', $request))->assertStatus(422);
     }
 }

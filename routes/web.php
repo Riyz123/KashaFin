@@ -157,11 +157,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::delete('usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
     Route::get('soporte', [AdminSupportRequestController::class, 'index'])->name('support.index');
+    Route::get('soporte/estado', [AdminSupportRequestController::class, 'statuses'])->name('support.statuses');
     Route::patch('soporte/{supportRequest}/atender', [AdminSupportRequestController::class, 'attend'])->name('support.attend');
     Route::patch('soporte/{supportRequest}/atender-en-vivo', [AdminSupportRequestController::class, 'startLive'])->name('support.start-live');
     Route::post('soporte/{supportRequest}/responder', [AdminSupportRequestController::class, 'reply'])->name('support.reply');
     Route::get('soporte/{supportRequest}/mensajes', [AdminSupportRequestController::class, 'messages'])->name('support.messages');
     Route::patch('soporte/{supportRequest}/finalizar', [AdminSupportRequestController::class, 'finalize'])->name('support.finalize');
+    Route::patch('soporte/{supportRequest}/derivar', [AdminSupportRequestController::class, 'escalate'])->name('support.escalate');
 
     Route::get('categorias', [AdminCategoryController::class, 'index'])->name('categories.index');
     Route::post('categorias', [AdminCategoryController::class, 'store'])->name('categories.store');

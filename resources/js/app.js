@@ -16,6 +16,7 @@ import { registerPresencePoll } from './presence-poll';
 import { registerThemeToggle } from './theme-toggle';
 import { registerLoadingSpinner } from './loading-spinner';
 import { registerAdminSupportPoll } from './admin-support-poll';
+import { registerSupportListPoll } from './support-list-poll';
 
 window.Alpine = Alpine;
 
@@ -25,6 +26,7 @@ registerPresencePoll(Alpine);
 registerThemeToggle();
 registerLoadingSpinner();
 registerAdminSupportPoll(Alpine);
+registerSupportListPoll(Alpine);
 
 Alpine.start();
 

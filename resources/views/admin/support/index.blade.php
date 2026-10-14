@@ -5,7 +5,10 @@
         @if ($requests->isEmpty())
             <x-empty-state message="No hay solicitudes de soporte todavía." />
         @else
-            <div class="divide-y divide-gray-100 dark:divide-gray-700">
+            <div
+                x-data="supportListPoll(@js($requests->mapWithKeys(fn ($r) => [$r->id => ['status' => $r->status, 'attended_by' => $r->attendedBy?->name]])), '{{ route('admin.support.statuses') }}')"
+                class="divide-y divide-gray-100 dark:divide-gray-700"
+            >
                 @foreach ($requests as $request)
                     <div class="flex flex-wrap items-start justify-between gap-3 py-4">
                         <div class="max-w-xl">
@@ -48,6 +51,20 @@
                                     <x-secondary-button type="submit">Marcar como atendido</x-secondary-button>
                                 </form>
                             @endif
+
+                            @unless ($request->isClosed())
+                                @if (auth()->user()->isDean())
+                                    <form method="POST" action="{{ route('admin.support.escalate', $request) }}">
+                                        @csrf @method('PATCH')
+                                        <x-secondary-button type="submit">Derivar a administración</x-secondary-button>
+                                    </form>
+                                @elseif ($request->user->faculty?->dean())
+                                    <form method="POST" action="{{ route('admin.support.escalate', $request) }}">
+                                        @csrf @method('PATCH')
+                                        <x-secondary-button type="submit">Derivar al decano</x-secondary-button>
+                                    </form>
+                                @endif
+                            @endunless
                         </div>
                     </div>
 

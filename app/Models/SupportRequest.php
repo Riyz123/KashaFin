@@ -96,6 +96,22 @@ class SupportRequest extends Model
     }
 
     /**
+     * Used when escalating/handing off a case (a decano to administración,
+     * or an admin to the student's decano) — releases it back to
+     * "pendiente" so whoever receives it picks it up fresh via the normal
+     * flow (no new status needed for this). Who gets notified about the
+     * handoff is decided by the caller.
+     */
+    public function releaseBackToPending(): void
+    {
+        $this->update([
+            'status' => 'pendiente',
+            'attended_by_id' => null,
+            'attended_at' => null,
+        ]);
+    }
+
+    /**
      * Visible to the master admin (everything) or a dean (only requests
      * from students in their own faculty) — same shape as
      * User::canManage().
