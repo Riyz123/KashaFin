@@ -77,6 +77,10 @@ class GeminiDriver implements AiDriverInterface
                     ->withRetryAfter($this->retryAfterSeconds($response));
             }
 
+            if ($status === 'UNAVAILABLE' || $response->status() === 503 || $this->looksLikeOverloadError($errorBody)) {
+                throw new \RuntimeException("El modelo \"{$model}\" está saturado ahora mismo en los servidores de Google (alta demanda) — no es un problema de tu configuración, suele resolverse solo en segundos o minutos. Detalle del proveedor: {$errorBody}");
+            }
+
             throw new \RuntimeException("Error del proveedor de IA: {$errorBody}");
         }
 
@@ -119,5 +123,25 @@ class GeminiDriver implements AiDriverInterface
         $header = $response->header('Retry-After');
 
         return is_numeric($header) ? max(1, (int) $header) : null;
+    }
+
+    /**
+     * Google's free-tier models (especially newly released ones) regularly
+     * return a 503 with this wording when the model itself is overloaded —
+     * nothing wrong with the key/config, it's capacity on Google's side.
+     * Distinguishing it lets the admin panel say so plainly instead of
+     * echoing raw English JSON that reads like a broken integration.
+     */
+    private function looksLikeOverloadError(?string $message): bool
+    {
+        if (! $message) {
+            return false;
+        }
+
+        $message = mb_strtolower($message);
+
+        return str_contains($message, 'high demand')
+            || str_contains($message, 'overloaded')
+            || str_contains($message, 'try again later');
     }
 }

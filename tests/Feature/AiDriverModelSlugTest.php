@@ -92,6 +92,45 @@ class AiDriverModelSlugTest extends TestCase
         }
     }
 
+    public function test_gemini_driver_translates_a_high_demand_overload_into_a_clear_spanish_message(): void
+    {
+        // The real incident this guards against: a free-tier Gemini model
+        // returns a 503 "currently experiencing high demand" and the admin
+        // panel used to show that raw English JSON as if it were a config
+        // bug, instead of what it actually is — the model overloaded on
+        // Google's side, unrelated to the key or setup.
+        $provider = $this->makeProvider(['driver' => 'gemini', 'model' => 'gemini-3.8-flash']);
+
+        Http::fake(['*' => Http::response([
+            'error' => ['message' => 'This model is currently experiencing high demand. Please try again later.', 'status' => 'UNAVAILABLE'],
+        ], 503)]);
+
+        try {
+            (new GeminiDriver)->send($provider, [['role' => 'user', 'content' => 'hola']]);
+            $this->fail('Expected an exception.');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('saturado ahora mismo', $e->getMessage());
+            $this->assertStringContainsString('no es un problema de tu configuración', $e->getMessage());
+        }
+    }
+
+    public function test_openai_compatible_driver_translates_an_overload_error_into_a_clear_spanish_message(): void
+    {
+        $provider = $this->makeProvider();
+
+        Http::fake(['fake-ai.test/*' => Http::response(
+            ['error' => ['message' => 'The model is overloaded, try again later']],
+            503,
+        )]);
+
+        try {
+            (new OpenAiCompatibleDriver)->send($provider, [['role' => 'user', 'content' => 'hola']]);
+            $this->fail('Expected an exception.');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('saturado ahora mismo', $e->getMessage());
+        }
+    }
+
     public function test_quota_exceeded_with_a_short_retry_after_does_not_sideline_the_provider_for_the_full_period(): void
     {
         // The real incident this guards against: a provider well under its

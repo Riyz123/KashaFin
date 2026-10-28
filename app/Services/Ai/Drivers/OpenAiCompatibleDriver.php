@@ -47,6 +47,12 @@ class OpenAiCompatibleDriver implements AiDriverInterface
                     ->withRetryAfter($this->retryAfterSeconds($response));
             }
 
+            if ($response->status() === 503 || $this->looksLikeOverloadError($errorBody)) {
+                $model = trim($provider->model);
+
+                throw new \RuntimeException("El modelo \"{$model}\" está saturado ahora mismo en el servidor del proveedor (alta demanda) — no es un problema de tu configuración, suele resolverse solo en segundos o minutos. Detalle del proveedor: {$errorBody}");
+            }
+
             throw new \RuntimeException("Error del proveedor de IA: {$errorBody}");
         }
 
@@ -102,5 +108,24 @@ class OpenAiCompatibleDriver implements AiDriverInterface
             || str_contains($message, 'rate_limit')
             || str_contains($message, 'insufficient_quota')
             || str_contains($message, 'insufficient quota');
+    }
+
+    /**
+     * Same reasoning as the Gemini driver's equivalent: a model overloaded
+     * on the provider's own servers isn't a quota problem or a config bug,
+     * and the admin panel should say so instead of echoing raw JSON.
+     */
+    private function looksLikeOverloadError(?string $message): bool
+    {
+        if (! $message) {
+            return false;
+        }
+
+        $message = mb_strtolower($message);
+
+        return str_contains($message, 'high demand')
+            || str_contains($message, 'overloaded')
+            || str_contains($message, 'try again later')
+            || str_contains($message, 'service unavailable');
     }
 }
