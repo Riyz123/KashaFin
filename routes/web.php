@@ -177,6 +177,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('ia', [AdminAiProviderController::class, 'index'])->name('ai.index');
+    Route::get('ia/estado', [AdminAiProviderController::class, 'status'])->name('ai.status');
     Route::post('ia', [AdminAiProviderController::class, 'store'])->name('ai.store');
     Route::put('ia/{aiProvider}', [AdminAiProviderController::class, 'update'])->name('ai.update');
     Route::patch('ia/{aiProvider}/estado', [AdminAiProviderController::class, 'toggleActive'])->name('ai.toggle-active');

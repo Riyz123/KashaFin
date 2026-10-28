@@ -70,7 +70,7 @@
     @if ($providers->isEmpty())
         <x-empty-state message="Todavía no configuraste ningún proveedor de IA. El chatbot responderá solo con el resumen de datos (sin IA) hasta que agregues uno." />
     @else
-        <div class="space-y-4">
+        <div class="space-y-4" x-data="aiTrafficPoll('{{ route('admin.ai.status') }}')">
             @foreach ($providers as $provider)
                 <x-card x-data="{ editing: false }">
                     <div class="flex flex-wrap items-start justify-between gap-3">
@@ -105,6 +105,41 @@
                             @else
                                 <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Todavía no se ha usado.</p>
                             @endif
+                        </div>
+
+                        <div class="w-full sm:w-56 rounded-lg border border-gray-100 p-3 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Tráfico en tiempo real</p>
+                                <span x-show="!loaded" class="text-xs text-gray-400">Cargando…</span>
+                            </div>
+
+                            <template x-if="loaded && trafficFor({{ $provider->id }})">
+                                <div>
+                                    <span class="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold"
+                                          :class="trafficFor({{ $provider->id }}).is_preferred ? 'text-brand-600 dark:text-brand-400' : (trafficFor({{ $provider->id }}).available ? 'text-gray-500 dark:text-gray-400' : 'text-red-600 dark:text-red-400')">
+                                        <span class="h-2 w-2 rounded-full"
+                                              :class="trafficFor({{ $provider->id }}).is_preferred ? 'bg-brand-500 animate-pulse' : (trafficFor({{ $provider->id }}).available ? 'bg-gray-400' : 'bg-red-500')"></span>
+                                        <span x-text="trafficFor({{ $provider->id }}).is_preferred ? 'Se usaría ahora' : (trafficFor({{ $provider->id }}).available ? 'Disponible (en espera)' : (trafficFor({{ $provider->id }}).is_active ? 'No disponible' : 'Inactivo'))"></span>
+                                    </span>
+
+                                    <ul class="mt-2 space-y-1 max-h-28 overflow-y-auto">
+                                        <template x-if="trafficFor({{ $provider->id }}).recent_logs.length === 0">
+                                            <li class="text-xs text-gray-400 dark:text-gray-500">Sin llamadas registradas todavía.</li>
+                                        </template>
+                                        <template x-for="log in trafficFor({{ $provider->id }}).recent_logs" :key="log.at">
+                                            <li class="flex items-start gap-1.5 text-xs">
+                                                <span class="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                                                      :class="{ 'bg-brand-500': log.status === 'success', 'bg-amber-500': log.status === 'quota_exceeded', 'bg-red-500': log.status === 'error' }"></span>
+                                                <span>
+                                                    <span class="text-gray-400 dark:text-gray-500" x-text="new Date(log.at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })"></span>
+                                                    <span :class="{ 'text-gray-600 dark:text-gray-300': log.status === 'success', 'text-amber-600 dark:text-amber-400': log.status === 'quota_exceeded', 'text-red-600 dark:text-red-400': log.status === 'error' }"
+                                                          x-text="log.status === 'success' ? 'exitoso' : (log.status === 'quota_exceeded' ? 'cuota agotada' : 'error')"></span>
+                                                </span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
                         </div>
 
                         <div class="flex flex-wrap gap-3 text-sm">

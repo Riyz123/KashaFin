@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AiProvider;
 use App\Models\AiSetting;
+use App\Services\Ai\AiProviderRouter;
 use App\Services\Ai\Drivers\GeminiDriver;
 use App\Services\Ai\Drivers\OpenAiCompatibleDriver;
 use Illuminate\Http\Request;
@@ -66,6 +67,50 @@ class AiProviderController extends Controller
         $aiProvider->reactivate();
 
         return back()->with('status', 'Proveedor reactivado: se quitó el estado "agotado" y se reinició su contador de uso.');
+    }
+
+    /**
+     * Polled every ~10s from the Asistente IA page so "tráfico en tiempo
+     * real" updates on its own, the same pattern as presence-poll.js. This
+     * never calls out to an external provider — it only re-reads state
+     * already in our own database (usage logs + quota counters), so
+     * polling it costs nothing against anyone's free-tier quota. The one
+     * provider actually reachable by a real chat message right now (first
+     * active + available, in priority order) is flagged `is_preferred` —
+     * that's the direct answer to "a qué IA está disponible el uso".
+     */
+    public function status(AiProviderRouter $router)
+    {
+        $preferredId = $router->candidates(1)->first()?->id;
+
+        $providers = AiProvider::query()->ordered()->get()->map(function (AiProvider $provider) use ($preferredId) {
+            $available = $provider->isAvailable();
+
+            $recentLogs = $provider->usageLogs()
+                ->latest()
+                ->take(5)
+                ->get(['status', 'error_message', 'created_at'])
+                ->map(fn ($log) => [
+                    'status' => $log->status,
+                    'error_message' => $log->error_message,
+                    'at' => $log->created_at->toIso8601String(),
+                ]);
+
+            return [
+                'id' => $provider->id,
+                'available' => $available,
+                'is_preferred' => $available && $provider->id === $preferredId,
+                'is_exhausted' => $provider->is_exhausted,
+                'is_active' => $provider->is_active,
+                'requests_used' => $provider->requests_used,
+                'quota_limit' => $provider->quota_limit,
+                'usage_percent' => $provider->usage_percent,
+                'period_reset_at' => $provider->period_reset_at?->toIso8601String(),
+                'recent_logs' => $recentLogs,
+            ];
+        });
+
+        return response()->json($providers->keyBy('id'));
     }
 
     /**

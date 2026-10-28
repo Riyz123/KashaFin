@@ -170,4 +170,25 @@ class AiProviderRotationTest extends TestCase
         $latest = $provider->latestUsageLog()->first();
         $this->assertSame('success', $latest->status);
     }
+
+    public function test_the_live_status_endpoint_flags_the_provider_that_would_actually_be_used_right_now(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $preferred = $this->makeProvider(['name' => 'Groq', 'priority' => 1]);
+        $backup = $this->makeProvider(['name' => 'Gemini backup', 'priority' => 2]);
+        $exhausted = $this->makeProvider(['name' => 'Agotado', 'priority' => 0, 'is_exhausted' => true]);
+        $exhausted->usageLogs()->create(['status' => 'quota_exceeded', 'error_message' => 'Límite alcanzado.']);
+        $preferred->usageLogs()->create(['status' => 'success']);
+
+        $response = $this->actingAs($admin)->getJson(route('admin.ai.status'));
+
+        $response->assertOk();
+        $response->assertJsonPath("{$preferred->id}.is_preferred", true);
+        $response->assertJsonPath("{$preferred->id}.recent_logs.0.status", 'success');
+        $response->assertJsonPath("{$backup->id}.is_preferred", false);
+        $response->assertJsonPath("{$backup->id}.available", true);
+        $response->assertJsonPath("{$exhausted->id}.is_preferred", false);
+        $response->assertJsonPath("{$exhausted->id}.available", false);
+        $response->assertJsonPath("{$exhausted->id}.recent_logs.0.status", 'quota_exceeded');
+    }
 }
