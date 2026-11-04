@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLoanAmortizationRequest;
 use App\Http\Requests\StoreLoanRequest;
 use App\Models\Loan;
+use App\Models\LoanAmortization;
 use App\Services\LoanCreationService;
 use Illuminate\Http\Request;
 
@@ -51,11 +53,23 @@ class LoanController extends Controller
             'i_owe' => (float) $loans->where('direction', 'recibido')->where('status', 'pendiente')->sum('amount'),
         ];
 
+        // Amortization requests waiting on ME to accept/decline — I'm the
+        // creditor, so they live on the debtor's loan row, which is MY
+        // "prestado" row's counterpart.
+        $creditorCounterpartIds = $loans->where('direction', 'prestado')->pluck('counterpart_loan_id')->filter();
+        $amortizationRequests = LoanAmortization::query()
+            ->whereIn('loan_id', $creditorCounterpartIds)
+            ->where('status', 'pendiente')
+            ->with('loan.user')
+            ->latest()
+            ->get();
+
         return view('loans.index', [
             'loans' => $loans,
             'totals' => $totals,
             'pendingConfirmations' => $pendingConfirmations,
             'paymentsToConfirm' => $paymentsToConfirm,
+            'amortizationRequests' => $amortizationRequests,
             'search' => $request->string('search')->toString(),
             'direction' => $request->string('direction')->toString(),
             'status' => $request->string('status')->toString(),
@@ -180,6 +194,51 @@ class LoanController extends Controller
         $loan->rejectPaymentConfirmation();
 
         return back()->with('status', 'Se rechazó la confirmación de pago; el préstamo sigue pendiente.');
+    }
+
+    /**
+     * Only the debtor can request an amortization, and only while the debt
+     * is still active — once it's fully paid there's nothing left to send.
+     */
+    public function requestAmortization(StoreLoanAmortizationRequest $request, Loan $loan)
+    {
+        $this->authorizeOwnership($loan);
+        abort_unless($loan->direction === 'recibido', 422, 'Solo puedes amortizar una deuda que debes.');
+        abort_unless($loan->isPending(), 422, 'Esta deuda no está activa.');
+
+        $loan->requestAmortization((float) $request->validated('amount'));
+
+        $status = $loan->person_user_id
+            ? 'Se envió la solicitud de amortización. Se notificó a la otra persona para que la confirme.'
+            : 'Pago parcial registrado correctamente.';
+
+        return back()->with('status', $status);
+    }
+
+    /**
+     * Acted on by the creditor (the counterpart of the debtor's loan the
+     * amortization belongs to), not the debtor who requested it.
+     */
+    public function acceptAmortization(Request $request, LoanAmortization $amortization)
+    {
+        $creditorLoan = $amortization->loan->counterpart;
+        abort_unless($creditorLoan && $creditorLoan->user_id === $request->user()->id, 403);
+        abort_unless($amortization->isPending(), 422, 'Esta solicitud ya fue respondida.');
+
+        $creditorLoan->acceptAmortization($amortization);
+
+        return back()->with('status', 'Amortización confirmada.');
+    }
+
+    public function rejectAmortization(Request $request, LoanAmortization $amortization)
+    {
+        $creditorLoan = $amortization->loan->counterpart;
+        abort_unless($creditorLoan && $creditorLoan->user_id === $request->user()->id, 403);
+        abort_unless($amortization->isPending(), 422, 'Esta solicitud ya fue respondida.');
+
+        $creditorLoan->rejectAmortization($amortization);
+
+        return back()->with('status', 'Amortización rechazada.');
     }
 
     private function authorizeOwnership(Loan $loan): void

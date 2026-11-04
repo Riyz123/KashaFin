@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Notifications\LoanAmortizationRequestedNotification;
+use App\Notifications\LoanAmortizationResolvedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -48,15 +51,17 @@ class Loan extends Model
     }
 
     protected $fillable = [
-        'user_id', 'person_name', 'person_user_id', 'direction', 'amount', 'date', 'due_date', 'status', 'notes', 'counterpart_loan_id',
+        'user_id', 'person_name', 'person_user_id', 'direction', 'amount', 'paid_amount', 'date', 'due_date', 'status', 'notes', 'counterpart_loan_id', 'last_overdue_notified_at',
     ];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'paid_amount' => 'decimal:2',
             'date' => 'date',
             'due_date' => 'date',
+            'last_overdue_notified_at' => 'datetime',
         ];
     }
 
@@ -73,6 +78,30 @@ class Loan extends Model
     public function counterpart(): BelongsTo
     {
         return $this->belongsTo(Loan::class, 'counterpart_loan_id');
+    }
+
+    public function amortizations(): HasMany
+    {
+        return $this->hasMany(LoanAmortization::class);
+    }
+
+    public function getRemainingAmountAttribute(): float
+    {
+        return round((float) $this->amount - (float) $this->paid_amount, 2);
+    }
+
+    /**
+     * Only a "recibido" debt that's still owed, past its due date, counts
+     * as overdue — a "prestado" row (money owed TO the student) is never
+     * something they themselves are late on.
+     */
+    public function isOverdue(): bool
+    {
+        return $this->direction === 'recibido'
+            && $this->due_date !== null
+            && $this->due_date->isPast()
+            && $this->status !== 'pagado'
+            && $this->remaining_amount > 0;
     }
 
     public function isPending(): bool
@@ -151,8 +180,8 @@ class Loan extends Model
 
     public function confirmPayment(): void
     {
-        $this->update(['status' => 'pagado']);
-        $this->counterpart?->update(['status' => 'pagado']);
+        $this->update(['status' => 'pagado', 'paid_amount' => $this->amount]);
+        $this->counterpart?->update(['status' => 'pagado', 'paid_amount' => $this->amount]);
     }
 
     /**
@@ -167,6 +196,84 @@ class Loan extends Model
 
     public function markPaid(): void
     {
-        $this->update(['status' => 'pagado']);
+        $this->update(['status' => 'pagado', 'paid_amount' => $this->amount]);
+    }
+
+    /**
+     * RF: amortización de deuda por plazos. The debtor says how much they
+     * already paid before sending the request. An unlinked (external
+     * person) loan has no one to confirm with, so it applies immediately
+     * — same asymmetry as reportPayment()/markPaid() above. A linked loan
+     * instead creates a pending LoanAmortization and notifies the creditor,
+     * who must accept or decline it (acceptAmortization()/rejectAmortization()).
+     */
+    public function requestAmortization(float $amount): LoanAmortization
+    {
+        if (! $this->person_user_id) {
+            $amortization = $this->amortizations()->create([
+                'amount' => $amount,
+                'status' => 'aceptado',
+                'resolved_at' => now(),
+            ]);
+
+            $this->applyAmortization($amount);
+
+            return $amortization;
+        }
+
+        $amortization = $this->amortizations()->create(['amount' => $amount, 'status' => 'pendiente']);
+
+        $this->counterpart?->user->notify(new LoanAmortizationRequestedNotification($amortization));
+
+        return $amortization;
+    }
+
+    /**
+     * Called on the CREDITOR's loan row (the counterpart of the debtor's
+     * row the amortization belongs to). Confirming is what actually moves
+     * money in the student's own books: it registers an expense for the
+     * debtor, exactly the amount they said they paid.
+     */
+    public function acceptAmortization(LoanAmortization $amortization): void
+    {
+        $debtorLoan = $amortization->loan;
+
+        $amortization->update(['status' => 'aceptado', 'resolved_at' => now()]);
+        $debtorLoan->applyAmortization((float) $amortization->amount);
+        $this->increment('paid_amount', $amortization->amount);
+
+        if ($debtorLoan->fresh()->status === 'pagado') {
+            $this->update(['status' => 'pagado']);
+        }
+
+        $debtorLoan->user->notify(new LoanAmortizationResolvedNotification($amortization, accepted: true));
+    }
+
+    public function rejectAmortization(LoanAmortization $amortization): void
+    {
+        $amortization->update(['status' => 'rechazado', 'resolved_at' => now()]);
+
+        $amortization->loan->user->notify(new LoanAmortizationResolvedNotification($amortization, accepted: false));
+    }
+
+    /**
+     * Shared by both the immediate (unlinked) and confirmed (linked) paths:
+     * bumps paid_amount, flips to "pagado" once the debt is fully covered,
+     * and registers the payment as a real expense for the debtor — this is
+     * the only place a loan ever touches the student's expense history.
+     */
+    private function applyAmortization(float $amount): void
+    {
+        $this->increment('paid_amount', $amount);
+
+        if ($this->remaining_amount <= 0) {
+            $this->update(['status' => 'pagado']);
+        }
+
+        $this->user->expenses()->create([
+            'amount' => $amount,
+            'date' => now()->toDateString(),
+            'description' => "Amortización de deuda a {$this->person_name}",
+        ]);
     }
 }

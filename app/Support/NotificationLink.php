@@ -18,7 +18,11 @@ class NotificationLink
         $kind = $data['kind'] ?? null;
 
         return match (true) {
-            $kind === 'loan_confirmation' || $kind === 'loan_payment_confirmation' => [
+            $kind === 'loan_confirmation'
+                || $kind === 'loan_payment_confirmation'
+                || $kind === 'loan_amortization_requested'
+                || $kind === 'loan_amortization_resolved'
+                || $kind === 'loan_overdue_reminder' => [
                 'section' => 'Préstamos', 'url' => route('loans.index'), 'label' => 'Ir a préstamos',
             ],
             $kind === 'income_confirmation' => [

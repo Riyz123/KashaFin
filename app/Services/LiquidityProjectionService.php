@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Expense;
 use App\Models\Income;
+use App\Models\Loan;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -27,20 +28,44 @@ class LiquidityProjectionService
 {
     private const SMOOTHING_WINDOW_DAYS = 28;
 
+    /**
+     * A "recibido" loan (money the student borrowed) is real cash in hand
+     * the moment it's real — counted the same way an income would be, on
+     * the date it happened. It deliberately only ADDS here: paying it back
+     * never subtracts anything on the loan's own account, because every
+     * amortization payment is already registered as a real Expense (see
+     * Loan::applyAmortization()), which already subtracts through
+     * $expenseTotal below. Excludes 'pendiente_confirmacion' (not yet
+     * confirmed real by the other side) and 'rechazado' (never happened).
+     */
     public function currentBalance(User $user): float
     {
         $startingBalance = (float) $user->settings->starting_balance;
         $today = Carbon::today();
 
+        // whereDate() (not where('date', '<=', ...)) because the 'date'
+        // cast persists a midnight timestamp (e.g. "2026-11-04 00:00:00")
+        // under SQLite — comparing that directly against a bare "Y-m-d"
+        // string as text excludes today's own records, since the longer
+        // string sorts after the shorter one. whereDate() strips the time
+        // component before comparing, so it's correct under both SQLite
+        // (local/tests) and MySQL (production, where the DATE column type
+        // already truncates on write and this was never an issue).
         $incomeTotal = (float) Income::query()->forUser($user)
-            ->where('date', '<=', $today->toDateString())
+            ->whereDate('date', '<=', $today)
             ->sum('amount');
 
         $expenseTotal = (float) $user->expenses()
-            ->where('date', '<=', $today->toDateString())
+            ->whereDate('date', '<=', $today)
             ->sum('amount');
 
-        return $startingBalance + $incomeTotal - $expenseTotal;
+        $loanTotal = (float) $user->loans()
+            ->where('direction', 'recibido')
+            ->whereNotIn('status', ['pendiente_confirmacion', 'rechazado'])
+            ->whereDate('date', '<=', $today)
+            ->sum('amount');
+
+        return $startingBalance + $incomeTotal - $expenseTotal + $loanTotal;
     }
 
     public function dailySeries(User $user, int $days = 15): Collection
@@ -174,6 +199,10 @@ class LiquidityProjectionService
      */
     public function isBelowThreshold(User $user): bool
     {
+        if ($this->hasOverdueDebt($user)) {
+            return true;
+        }
+
         if (! $user->incomes()->exists() && ! $user->expenses()->exists()) {
             return false;
         }
@@ -181,6 +210,23 @@ class LiquidityProjectionService
         $threshold = (float) $user->settings->liquidity_threshold;
 
         return $this->sevenDayProjection($user)->min('balance') < $threshold;
+    }
+
+    /**
+     * An overdue debt forces the liquidity projection to read as "at risk"
+     * even if the projected numbers alone look fine — owing money past its
+     * due date is itself a liquidity risk the projection can't see from
+     * cash flow numbers alone.
+     */
+    public function hasOverdueDebt(User $user): bool
+    {
+        return $user->loans()
+            ->where('direction', 'recibido')
+            ->whereNotIn('status', ['pendiente_confirmacion', 'rechazado', 'pagado'])
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', Carbon::today()->toDateString())
+            ->get()
+            ->contains(fn (Loan $loan) => $loan->isOverdue());
     }
 
     /**

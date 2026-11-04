@@ -54,6 +54,32 @@
         </x-card>
     @endif
 
+    @if ($amortizationRequests->isNotEmpty())
+        <x-card class="mb-6">
+            <h3 class="mb-3 font-semibold text-gray-800 dark:text-gray-100">Amortizaciones por confirmar</h3>
+            <div class="space-y-3">
+                @foreach ($amortizationRequests as $amortization)
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                        <p class="text-sm text-gray-800 dark:text-gray-100">
+                            <strong>{{ $amortization->loan->user->name }}</strong> dice que te pagó
+                            <strong>S/ {{ number_format($amortization->amount, 2) }}</strong> de su deuda.
+                        </p>
+                        <div class="mt-2 flex gap-2">
+                            <form method="POST" action="{{ route('loans.amortizations.accept', $amortization) }}">
+                                @csrf @method('PATCH')
+                                <x-primary-button type="submit">Confirmar</x-primary-button>
+                            </form>
+                            <form method="POST" action="{{ route('loans.amortizations.reject', $amortization) }}">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="text-xs text-red-600 hover:underline">Rechazar</button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </x-card>
+    @endif
+
     @if ($paymentsToConfirm->isNotEmpty())
         <x-card class="mb-6">
             <div class="mb-3 flex items-center justify-between">
@@ -154,10 +180,16 @@
                                         default => 'Pendiente',
                                     } }}
                                 </span>
+                                @if ($loan->isOverdue())
+                                    <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">Vencida</span>
+                                @endif
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                 S/ {{ number_format($loan->amount, 2) }} &middot; {{ $loan->date->format('d/m/Y') }}
                                 @if ($loan->due_date) &middot; vence {{ $loan->due_date->format('d/m/Y') }} @endif
+                                @if ($loan->direction === 'recibido' && $loan->paid_amount > 0 && ! $loan->isPaid())
+                                    &middot; pagado S/ {{ number_format($loan->paid_amount, 2) }}, falta S/ {{ number_format($loan->remaining_amount, 2) }}
+                                @endif
                             </p>
                             @if ($loan->notes)
                                 <p class="text-xs text-gray-400">{{ $loan->notes }}</p>
@@ -170,6 +202,17 @@
                                     @csrf @method('PATCH')
                                     <button type="submit" class="text-brand-600 hover:underline">{{ $loan->person_user_id ? 'Ya pagué' : 'Marcar pagado' }}</button>
                                 </form>
+                            @endif
+                            @if ($loan->isPending() && $loan->direction === 'recibido' && $loan->remaining_amount > 0)
+                                <details class="relative">
+                                    <summary class="cursor-pointer text-brand-600 hover:underline list-none">Amortizar deuda</summary>
+                                    <form method="POST" action="{{ route('loans.amortizations.store', $loan) }}" class="absolute right-0 z-10 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                                        @csrf
+                                        <label class="block text-xs text-gray-600 dark:text-gray-300">¿Cuánto pagaste?</label>
+                                        <input type="number" name="amount" step="0.01" min="0.01" max="{{ $loan->remaining_amount }}" required class="mt-1 block w-full rounded-md border-gray-300 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                                        <button type="submit" class="mt-2 w-full rounded-md bg-brand-600 px-3 py-1 text-xs font-semibold text-white hover:bg-brand-700">Enviar</button>
+                                    </form>
+                                </details>
                             @endif
                             <form method="POST" action="{{ route('loans.destroy', $loan) }}" onsubmit="return confirm('¿Eliminar este préstamo?');">
                                 @csrf @method('DELETE')

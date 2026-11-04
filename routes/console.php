@@ -10,5 +10,6 @@ Artisan::command('inspire', function () {
 
 Schedule::command('incomes:generate-recurring')->daily();
 Schedule::command('expenses:generate-recurring')->daily();
+Schedule::command('loans:notify-overdue')->daily();
 Schedule::command('reminders:inactivity')->daily();
 Schedule::command('reports:send-weekly-summary')->weeklyOn(1, '08:00');

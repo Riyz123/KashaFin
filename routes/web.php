@@ -100,6 +100,9 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
     // bind "aprobar-todas" to {loan} and 404 before reaching this at all.
     Route::patch('prestamos/confirmaciones/aprobar-todas', [LoanController::class, 'approveAll'])->name('loans.approve-all');
     Route::patch('prestamos/pagos/confirmar-todos', [LoanController::class, 'confirmAllPayments'])->name('loans.confirm-all-payments');
+    Route::post('prestamos/{loan}/amortizaciones', [LoanController::class, 'requestAmortization'])->name('loans.amortizations.store');
+    Route::patch('amortizaciones/{amortization}/aceptar', [LoanController::class, 'acceptAmortization'])->name('loans.amortizations.accept');
+    Route::patch('amortizaciones/{amortization}/rechazar', [LoanController::class, 'rejectAmortization'])->name('loans.amortizations.reject');
 
     Route::get('gastos-compartidos', [SharedExpenseController::class, 'index'])->name('shared-expenses.index');
     Route::get('gastos-compartidos/nuevo', [SharedExpenseController::class, 'create'])->name('shared-expenses.create');
