@@ -3,6 +3,7 @@
 namespace App\Services\Ai;
 
 use App\Models\ChatState;
+use App\Models\FeatureFlag;
 use App\Models\SavingsGoal;
 use App\Models\User;
 
@@ -31,10 +32,20 @@ class SavingsGoalChatIntent
         $state = ChatState::firstOrCreate(['user_id' => $user->id]);
 
         if ($state->pending_intent === 'create_goal') {
+            if ($disabled = FeatureFlag::requireEnabled('savings_goals')) {
+                $state->clear();
+
+                return $disabled;
+            }
+
             return $this->continueGoal($user, $state, $message);
         }
 
         if ($this->looksLikeTrigger($message)) {
+            if ($disabled = FeatureFlag::requireEnabled('savings_goals')) {
+                return $disabled;
+            }
+
             $state->update(['pending_intent' => 'create_goal', 'pending_data' => []]);
 
             return '¿Cómo quieres llamar a la meta?';
@@ -92,6 +103,10 @@ class SavingsGoalChatIntent
      */
     public function createFromToolCall(User $user, array $arguments): string
     {
+        if ($disabled = FeatureFlag::requireEnabled('savings_goals')) {
+            return $disabled;
+        }
+
         $name = is_string($arguments['name'] ?? null) ? trim($arguments['name']) : '';
 
         if ($name === '') {

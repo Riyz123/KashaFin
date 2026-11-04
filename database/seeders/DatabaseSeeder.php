@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(CategorySeeder::class);
         $this->call(FacultySeeder::class);
+        $this->call(FeatureFlagSeeder::class);
 
         $faculty = \App\Models\Faculty::first();
 

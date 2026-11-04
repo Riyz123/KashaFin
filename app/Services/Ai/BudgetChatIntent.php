@@ -5,6 +5,7 @@ namespace App\Services\Ai;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\ChatState;
+use App\Models\FeatureFlag;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
@@ -30,10 +31,20 @@ class BudgetChatIntent
         $state = ChatState::firstOrCreate(['user_id' => $user->id]);
 
         if ($state->pending_intent === 'create_budget') {
+            if ($disabled = FeatureFlag::requireEnabled('budgets')) {
+                $state->clear();
+
+                return $disabled;
+            }
+
             return $this->continueBudget($user, $state, $message);
         }
 
         if ($this->looksLikeTrigger($message)) {
+            if ($disabled = FeatureFlag::requireEnabled('budgets')) {
+                return $disabled;
+            }
+
             $categories = Category::query()->forUser($user)->orderBy('name')->pluck('name')->implode(', ');
             $state->update(['pending_intent' => 'create_budget', 'pending_data' => []]);
 
@@ -96,6 +107,10 @@ class BudgetChatIntent
      */
     public function createFromToolCall(User $user, array $arguments): string
     {
+        if ($disabled = FeatureFlag::requireEnabled('budgets')) {
+            return $disabled;
+        }
+
         $amount = $this->coerceAmount($arguments['amount'] ?? null);
 
         if ($amount === null) {

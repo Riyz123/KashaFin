@@ -3,6 +3,7 @@
 namespace App\Services\Ai;
 
 use App\Models\ChatState;
+use App\Models\FeatureFlag;
 use App\Models\Income;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -31,10 +32,20 @@ class IncomeChatIntent
         $state = ChatState::firstOrCreate(['user_id' => $user->id]);
 
         if ($state->pending_intent === 'create_income') {
+            if ($disabled = FeatureFlag::requireEnabled('incomes')) {
+                $state->clear();
+
+                return $disabled;
+            }
+
             return $this->continueIncome($user, $state, $message);
         }
 
         if ($this->looksLikeTrigger($message)) {
+            if ($disabled = FeatureFlag::requireEnabled('incomes')) {
+                return $disabled;
+            }
+
             $state->update(['pending_intent' => 'create_income', 'pending_data' => []]);
 
             return '¿De cuánto fue el ingreso?';
@@ -134,6 +145,10 @@ class IncomeChatIntent
      */
     public function createFromToolCall(User $user, array $arguments): string
     {
+        if ($disabled = FeatureFlag::requireEnabled('incomes')) {
+            return $disabled;
+        }
+
         $amount = $this->coerceAmount($arguments['amount'] ?? null);
 
         if ($amount === null) {

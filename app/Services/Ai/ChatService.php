@@ -6,6 +6,7 @@ use App\Models\AiProvider;
 use App\Models\AiSetting;
 use App\Models\Category;
 use App\Models\ChatMessage;
+use App\Models\FeatureFlag;
 use App\Models\User;
 use App\Services\Ai\Drivers\AiDriverInterface;
 use App\Services\Ai\Drivers\GeminiDriver;
@@ -45,8 +46,8 @@ class ChatService
     {
         ChatMessage::create(['user_id' => $user->id, 'role' => 'user', 'content' => $userMessage]);
 
-        $messages = $this->buildMessages($user, $userMessage);
         $tools = $this->toolSchemas($user);
+        $messages = $this->buildMessages($user, $userMessage, $tools);
 
         $reply = $this->tryProviders($user, $messages, $tools) ?? $this->fallbackSummary($user);
 
@@ -102,11 +103,28 @@ class ChatService
      * names means a compliant model can only ever return an exact match —
      * no fuzzy/substring matching needed on the receiving end.
      */
+    /**
+     * Maps each tool name to the FeatureFlag key that gates it, so a
+     * disabled section's tool is never even offered to the model — not
+     * just rejected after the fact in executeTool(). Defense in depth:
+     * executeTool() checks again (via each intent's createFromToolCall()),
+     * since a provider could still return a tool call from an earlier
+     * turn in history.
+     */
+    private const TOOL_FLAGS = [
+        'add_expense' => 'expenses',
+        'add_budget' => 'budgets',
+        'add_income' => 'incomes',
+        'add_goal' => 'savings_goals',
+        'add_loan' => 'loans',
+        'add_shared_expense' => 'shared_expenses',
+    ];
+
     private function toolSchemas(User $user): array
     {
         $categoryNames = Category::query()->forUser($user)->orderBy('name')->pluck('name')->values()->all();
 
-        return [
+        $schemas = [
             [
                 'name' => 'add_expense',
                 'description' => 'Registra un gasto nuevo cuando el estudiante diga que gastó dinero o pida anotar/agregar un gasto, en cualquier forma en que lo exprese.',
@@ -261,15 +279,20 @@ class ChatService
                 ],
             ],
         ];
+
+        return array_values(array_filter(
+            $schemas,
+            fn (array $schema) => FeatureFlag::isEnabled(self::TOOL_FLAGS[$schema['name']] ?? '')
+        ));
     }
 
     /**
      * @return array<int, array{role: string, content: string}>
      */
-    private function buildMessages(User $user, string $userMessage): array
+    private function buildMessages(User $user, string $userMessage, array $tools): array
     {
         $messages = [
-            ['role' => 'system', 'content' => $this->systemPrompt($user)],
+            ['role' => 'system', 'content' => $this->systemPrompt($user, $tools)],
         ];
 
         $history = ChatMessage::query()->forUser($user)
@@ -293,7 +316,54 @@ class ChatService
      * personalized. This is NOT model fine-tuning — free third-party APIs
      * don't expose that — it's a compact summary rebuilt on each message.
      */
-    private function systemPrompt(User $user): string
+    /**
+     * Built from the SAME $tools array actually sent to the provider (not
+     * a static list) so the model is never told it has a tool that a
+     * disabled section just filtered out of toolSchemas() — telling it
+     * about a tool it can't actually call would just make it try and fail.
+     */
+    private function toolsIntroLine(array $tools): string
+    {
+        $hints = [
+            'add_expense' => ['registrar un gasto', '"me gasté 20 en..."'],
+            'add_budget' => ['definir un presupuesto', '"quiero poner un tope de..."'],
+            'add_income' => ['anotar un ingreso', '"me depositaron...", "recibí mi beca..."'],
+            'add_goal' => ['crear una meta de ahorro', '"quiero ahorrar para...", "ponme una meta de..."'],
+            'add_loan' => ['registrar que prestó o le prestaron dinero', '"le presté a Ana 50", "Luis me debe 30"'],
+            'add_shared_expense' => ['dividir un gasto con compañeros', '"dividamos la pizza con..."'],
+        ];
+
+        $names = array_column($tools, 'name');
+
+        if (empty($names)) {
+            return "No tienes ninguna herramienta de acción disponible en este momento (todas están deshabilitadas ".
+                "por un administrador) — si el estudiante te pide registrar algo, explícale con naturalidad que esa ".
+                "acción no está disponible por ahora y que puede seguir usando los formularios normales de la app ".
+                "si esa sección sigue activa.\n\n";
+        }
+
+        $actions = implode(', ', array_map(fn ($name) => $hints[$name][0] ?? $name, $names));
+        $examples = implode(', ', array_map(fn ($name) => $hints[$name][1] ?? '', $names));
+        $count = count($names) === 1 ? 'una herramienta' : count($names).' herramientas';
+
+        $extra = '';
+        if (in_array('add_income', $names, true)) {
+            $extra .= 'Para add_income necesitas saber si es fijo (se repite) o variable (ocasional), y si es '.
+                'fijo, cada cuánto se repite — pregúntalo si no está claro. ';
+        }
+        if (in_array('add_shared_expense', $names, true)) {
+            $extra .= 'Para add_shared_expense necesitas el nombre de cada persona con la que se divide y cuánto '.
+                'le corresponde a cada una, y la suma de todo (incluida la parte del propio estudiante) debe dar '.
+                'el total — pregunta lo que falte antes de invocarla. ';
+        }
+
+        return "Tienes {$count} disponible(s): ".implode(', ', $names).". Úsalas cuando el estudiante quiera ".
+            "{$actions}, sin importar cómo lo exprese ({$examples}, etc.). Usa siempre el monto exacto que haya ".
+            "dado — nunca inventes ni redondees un número. {$extra}Si falta cualquier dato obligatorio, no ".
+            "invoques la herramienta todavía: pregúntale primero en texto normal y espera su respuesta.\n\n";
+    }
+
+    private function systemPrompt(User $user, array $tools): string
     {
         $language = $user->settings->languageName();
         $firstName = Str::of($user->name)->before(' ')->toString();
@@ -302,19 +372,7 @@ class ChatService
             "El estudiante se llama {$firstName}.\n\n".
             "Entiendes español, inglés y quechua. El estudiante configuró {$language} como su idioma preferido ".
             "en sus ajustes — responde siempre en {$language}, sin importar en qué idioma te escriba él.\n\n".
-            "Tienes seis herramientas disponibles: add_expense, add_budget, add_income, add_goal, add_loan y ".
-            "add_shared_expense. Úsalas cuando el estudiante quiera registrar un gasto, definir un presupuesto, ".
-            "anotar un ingreso, crear una meta de ahorro, registrar que prestó o le prestaron dinero, o dividir ".
-            "un gasto con compañeros, sin importar cómo lo exprese (\"me gasté 20 en \", \"anota que pagué...\", ".
-            "\"quiero poner un tope de...\", \"me depositaron...\", \"recibí mi beca...\", \"quiero ahorrar ".
-            "para...\", \"ponme una meta de...\", \"le presté a Ana 50\", \"Luis me debe 30\", \"dividamos la ".
-            "pizza con...\", etc.). Usa siempre el monto exacto que haya dado — nunca inventes ni redondees un ".
-            "número. Para add_income necesitas saber si es fijo (se repite) o variable (ocasional), y si es ".
-            "fijo, cada cuánto se repite — pregúntalo si no está claro. Para add_shared_expense necesitas el ".
-            "nombre de cada persona con la que se divide y cuánto le corresponde a cada una, y la suma de todo ".
-            "(incluida la parte del propio estudiante) debe dar el total — pregunta lo que falte antes de ".
-            "invocarla. Si falta cualquier dato obligatorio, no invoques la herramienta todavía: pregúntale ".
-            "primero en texto normal y espera su respuesta.\n\n".
+            $this->toolsIntroLine($tools).
             "Si el estudiante te habla de algo que no tiene que ver con finanzas personales (un videojuego, ".
             "deportes, tareas, lo que sea), entiende igual de qué se trata — no finjas no entender — pero ".
             "acláralo con naturalidad: dile que tu enfoque es ayudarlo con sus finanzas en KashaFin, y conecta ".

@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'student-app' => \App\Http\Middleware\EnsureUserIsStudentApp::class,
             'active' => \App\Http\Middleware\EnsureAccountIsActive::class,
             'password-fresh' => \App\Http\Middleware\EnsurePasswordIsFresh::class,
+            'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

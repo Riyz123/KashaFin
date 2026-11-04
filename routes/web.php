@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AiPromptController as AdminAiPromptController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FacultyController as AdminFacultyController;
+use App\Http\Controllers\Admin\FeatureFlagController as AdminFeatureFlagController;
 use App\Http\Controllers\Admin\SupportRequestController as AdminSupportRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BudgetController;
@@ -59,60 +60,72 @@ Route::middleware(['auth', 'active', 'password-fresh'])->group(function () {
 Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('ingresos', IncomeController::class)
-        ->parameters(['ingresos' => 'income'])
-        ->names('incomes')
-        ->except(['show']);
+    Route::middleware('feature:incomes')->group(function () {
+        Route::resource('ingresos', IncomeController::class)
+            ->parameters(['ingresos' => 'income'])
+            ->names('incomes')
+            ->except(['show']);
+    });
 
-    Route::resource('gastos', ExpenseController::class)
-        ->parameters(['gastos' => 'expense'])
-        ->names('expenses')
-        ->except(['show']);
-    Route::post('gastos-categorias', [CategoryController::class, 'store'])->name('categories.store');
-    Route::delete('gastos-categorias/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::middleware('feature:expenses')->group(function () {
+        Route::resource('gastos', ExpenseController::class)
+            ->parameters(['gastos' => 'expense'])
+            ->names('expenses')
+            ->except(['show']);
+        Route::post('gastos-categorias', [CategoryController::class, 'store'])->name('categories.store');
+        Route::delete('gastos-categorias/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    });
 
-    Route::resource('presupuesto', BudgetController::class)
-        ->parameters(['presupuesto' => 'budget'])
-        ->names('budgets')
-        ->except(['show']);
+    Route::middleware('feature:budgets')->group(function () {
+        Route::resource('presupuesto', BudgetController::class)
+            ->parameters(['presupuesto' => 'budget'])
+            ->names('budgets')
+            ->except(['show']);
+    });
 
     Route::get('proyecciones', [ProjectionController::class, 'index'])->name('projections.index');
 
-    Route::resource('metas', GoalController::class)
-        ->parameters(['metas' => 'goal'])
-        ->names('goals')
-        ->except(['show']);
-    Route::get('metas-historial', [GoalController::class, 'history'])->name('goals.history');
-    Route::post('metas/{goal}/aportes', [GoalContributionController::class, 'store'])->name('goals.contributions.store');
+    Route::middleware('feature:savings_goals')->group(function () {
+        Route::resource('metas', GoalController::class)
+            ->parameters(['metas' => 'goal'])
+            ->names('goals')
+            ->except(['show']);
+        Route::get('metas-historial', [GoalController::class, 'history'])->name('goals.history');
+        Route::post('metas/{goal}/aportes', [GoalContributionController::class, 'store'])->name('goals.contributions.store');
+    });
 
-    Route::resource('prestamos', LoanController::class)
-        ->parameters(['prestamos' => 'loan'])
-        ->names('loans')
-        ->except(['show', 'edit', 'update']);
-    Route::patch('prestamos/{loan}/pagado', [LoanController::class, 'markPaid'])->name('loans.mark-paid');
-    Route::patch('prestamos/{loan}/aprobar', [LoanController::class, 'approve'])->name('loans.approve');
-    Route::patch('prestamos/{loan}/rechazar', [LoanController::class, 'reject'])->name('loans.reject');
-    Route::patch('prestamos/{loan}/confirmar-pago', [LoanController::class, 'confirmPayment'])->name('loans.confirm-payment');
-    Route::patch('prestamos/{loan}/rechazar-pago', [LoanController::class, 'rejectPaymentConfirmation'])->name('loans.reject-payment');
-    // Two path segments after "prestamos" (not one) so these never collide
-    // with the resource's PATCH prestamos/{loan} (update), regardless of
-    // registration order — a one-segment "prestamos/aprobar-todas" would
-    // bind "aprobar-todas" to {loan} and 404 before reaching this at all.
-    Route::patch('prestamos/confirmaciones/aprobar-todas', [LoanController::class, 'approveAll'])->name('loans.approve-all');
-    Route::patch('prestamos/pagos/confirmar-todos', [LoanController::class, 'confirmAllPayments'])->name('loans.confirm-all-payments');
-    Route::post('prestamos/{loan}/amortizaciones', [LoanController::class, 'requestAmortization'])->name('loans.amortizations.store');
-    Route::patch('amortizaciones/{amortization}/aceptar', [LoanController::class, 'acceptAmortization'])->name('loans.amortizations.accept');
-    Route::patch('amortizaciones/{amortization}/rechazar', [LoanController::class, 'rejectAmortization'])->name('loans.amortizations.reject');
+    Route::middleware('feature:loans')->group(function () {
+        Route::resource('prestamos', LoanController::class)
+            ->parameters(['prestamos' => 'loan'])
+            ->names('loans')
+            ->except(['show', 'edit', 'update']);
+        Route::patch('prestamos/{loan}/pagado', [LoanController::class, 'markPaid'])->name('loans.mark-paid');
+        Route::patch('prestamos/{loan}/aprobar', [LoanController::class, 'approve'])->name('loans.approve');
+        Route::patch('prestamos/{loan}/rechazar', [LoanController::class, 'reject'])->name('loans.reject');
+        Route::patch('prestamos/{loan}/confirmar-pago', [LoanController::class, 'confirmPayment'])->name('loans.confirm-payment');
+        Route::patch('prestamos/{loan}/rechazar-pago', [LoanController::class, 'rejectPaymentConfirmation'])->name('loans.reject-payment');
+        // Two path segments after "prestamos" (not one) so these never collide
+        // with the resource's PATCH prestamos/{loan} (update), regardless of
+        // registration order — a one-segment "prestamos/aprobar-todas" would
+        // bind "aprobar-todas" to {loan} and 404 before reaching this at all.
+        Route::patch('prestamos/confirmaciones/aprobar-todas', [LoanController::class, 'approveAll'])->name('loans.approve-all');
+        Route::patch('prestamos/pagos/confirmar-todos', [LoanController::class, 'confirmAllPayments'])->name('loans.confirm-all-payments');
+        Route::post('prestamos/{loan}/amortizaciones', [LoanController::class, 'requestAmortization'])->name('loans.amortizations.store');
+        Route::patch('amortizaciones/{amortization}/aceptar', [LoanController::class, 'acceptAmortization'])->name('loans.amortizations.accept');
+        Route::patch('amortizaciones/{amortization}/rechazar', [LoanController::class, 'rejectAmortization'])->name('loans.amortizations.reject');
+    });
 
-    Route::get('gastos-compartidos', [SharedExpenseController::class, 'index'])->name('shared-expenses.index');
-    Route::get('gastos-compartidos/nuevo', [SharedExpenseController::class, 'create'])->name('shared-expenses.create');
-    Route::get('gastos-compartidos/buscar-usuarios', [SharedExpenseController::class, 'searchUsers'])->name('shared-expenses.search-users');
-    Route::post('gastos-compartidos', [SharedExpenseController::class, 'store'])->name('shared-expenses.store');
-    Route::delete('gastos-compartidos/{sharedExpense}', [SharedExpenseController::class, 'destroy'])->name('shared-expenses.destroy');
-    Route::patch('gastos-compartidos-participantes/{participant}/aceptar', [SharedExpenseController::class, 'accept'])->name('shared-expenses.accept');
-    Route::patch('gastos-compartidos-participantes/{participant}/rechazar', [SharedExpenseController::class, 'reject'])->name('shared-expenses.reject');
-    Route::patch('gastos-compartidos-participantes/invitaciones/aceptar-todas', [SharedExpenseController::class, 'acceptAll'])->name('shared-expenses.accept-all');
-    Route::post('gastos-compartidos-participantes/{participant}/aportes', [SharedExpenseController::class, 'storeContribution'])->name('shared-expenses.contributions.store');
+    Route::middleware('feature:shared_expenses')->group(function () {
+        Route::get('gastos-compartidos', [SharedExpenseController::class, 'index'])->name('shared-expenses.index');
+        Route::get('gastos-compartidos/nuevo', [SharedExpenseController::class, 'create'])->name('shared-expenses.create');
+        Route::get('gastos-compartidos/buscar-usuarios', [SharedExpenseController::class, 'searchUsers'])->name('shared-expenses.search-users');
+        Route::post('gastos-compartidos', [SharedExpenseController::class, 'store'])->name('shared-expenses.store');
+        Route::delete('gastos-compartidos/{sharedExpense}', [SharedExpenseController::class, 'destroy'])->name('shared-expenses.destroy');
+        Route::patch('gastos-compartidos-participantes/{participant}/aceptar', [SharedExpenseController::class, 'accept'])->name('shared-expenses.accept');
+        Route::patch('gastos-compartidos-participantes/{participant}/rechazar', [SharedExpenseController::class, 'reject'])->name('shared-expenses.reject');
+        Route::patch('gastos-compartidos-participantes/invitaciones/aceptar-todas', [SharedExpenseController::class, 'acceptAll'])->name('shared-expenses.accept-all');
+        Route::post('gastos-compartidos-participantes/{participant}/aportes', [SharedExpenseController::class, 'storeContribution'])->name('shared-expenses.contributions.store');
+    });
 
     Route::get('reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reportes/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
@@ -189,6 +202,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::delete('ia/{aiProvider}', [AdminAiProviderController::class, 'destroy'])->name('ai.destroy');
     Route::put('ia-prompt', [AdminAiPromptController::class, 'update'])->name('ai.prompt.update');
     Route::delete('ia-prompt', [AdminAiPromptController::class, 'reset'])->name('ai.prompt.reset');
+
+    Route::get('apartados', [AdminFeatureFlagController::class, 'index'])->name('feature-flags.index');
+    Route::patch('apartados/{featureFlag}', [AdminFeatureFlagController::class, 'toggle'])->name('feature-flags.toggle');
 
     Route::get('decanos', [AdminFacultyController::class, 'index'])->name('faculties.index');
     Route::post('decanos', [AdminFacultyController::class, 'store'])->name('faculties.store');

@@ -3,6 +3,7 @@
 namespace App\Services\Ai;
 
 use App\Models\ChatState;
+use App\Models\FeatureFlag;
 use App\Models\Loan;
 use App\Models\User;
 use App\Services\LoanCreationService;
@@ -42,6 +43,10 @@ class LoanChatIntent
      */
     public function createFromToolCall(User $user, array $arguments): string
     {
+        if ($disabled = FeatureFlag::requireEnabled('loans')) {
+            return $disabled;
+        }
+
         $direction = $arguments['direction'] ?? null;
 
         if (! in_array($direction, ['prestado', 'recibido'], true)) {

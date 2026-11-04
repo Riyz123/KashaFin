@@ -2,13 +2,13 @@
 $pendingSharedExpenseInvites = auth()->user()->sharedExpenseParticipations()->where('status', 'pendiente')->count();
 $navItems = [
     ['route' => 'dashboard', 'label' => 'Inicio', 'icon' => 'home'],
-    ['route' => 'incomes.index', 'label' => 'Ingresos', 'icon' => 'income'],
-    ['route' => 'expenses.index', 'label' => 'Gastos', 'icon' => 'expense'],
-    ['route' => 'budgets.index', 'label' => 'Presupuesto', 'icon' => 'wallet'],
+    ['route' => 'incomes.index', 'label' => 'Ingresos', 'icon' => 'income', 'feature' => 'incomes'],
+    ['route' => 'expenses.index', 'label' => 'Gastos', 'icon' => 'expense', 'feature' => 'expenses'],
+    ['route' => 'budgets.index', 'label' => 'Presupuesto', 'icon' => 'wallet', 'feature' => 'budgets'],
     ['route' => 'projections.index', 'label' => 'Proyecciones', 'icon' => 'chart'],
-    ['route' => 'goals.index', 'label' => 'Metas', 'icon' => 'flag'],
-    ['route' => 'loans.index', 'label' => 'Préstamos', 'icon' => 'swap'],
-    ['route' => 'shared-expenses.index', 'label' => 'Gastos compartidos', 'icon' => 'users', 'badge' => $pendingSharedExpenseInvites],
+    ['route' => 'goals.index', 'label' => 'Metas', 'icon' => 'flag', 'feature' => 'savings_goals'],
+    ['route' => 'loans.index', 'label' => 'Préstamos', 'icon' => 'swap', 'feature' => 'loans'],
+    ['route' => 'shared-expenses.index', 'label' => 'Gastos compartidos', 'icon' => 'users', 'badge' => $pendingSharedExpenseInvites, 'feature' => 'shared_expenses'],
     ['route' => 'reports.index', 'label' => 'Reportes', 'icon' => 'document'],
     ['route' => 'history.index', 'label' => 'Historial', 'icon' => 'search'],
     ['route' => 'activity.index', 'label' => 'Trazabilidad', 'icon' => 'document'],
@@ -33,16 +33,22 @@ $navItems = [
 
     <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
         @foreach ($navItems as $item)
+            @php($disabled = ! empty($item['feature']) && ! \App\Models\FeatureFlag::isEnabled($item['feature']))
             <a
                 href="{{ $item['route'] === 'notifications.index' ? route('notifications.index', ['panel' => 'student']) : route($item['route']) }}"
                 @click="open = false"
-                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition {{ request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route']))
-                    ? 'bg-brand-600 text-white'
-                    : 'text-brand-light/90 hover:bg-white/10 hover:text-white' }}"
+                title="{{ $disabled ? 'Deshabilitado por el momento' : '' }}"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition {{ $disabled
+                    ? 'text-brand-light/50 opacity-60 hover:bg-white/5 hover:text-brand-light/70'
+                    : ((request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route'])))
+                        ? 'bg-brand-600 text-white'
+                        : 'text-brand-light/90 hover:bg-white/10 hover:text-white') }}"
             >
                 <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
                 <span class="flex-1">{{ $item['label'] }}</span>
-                @if ($item['route'] === 'notifications.index')
+                @if ($disabled)
+                    <span class="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-brand-light/70">Deshabilitado</span>
+                @elseif ($item['route'] === 'notifications.index')
                     <span x-data="notificationsBadge('{{ route('notifications.unread') }}')" x-show="count > 0" x-cloak x-text="count" class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white"></span>
                 @elseif (! empty($item['badge']))
                     <span class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">{{ $item['badge'] }}</span>

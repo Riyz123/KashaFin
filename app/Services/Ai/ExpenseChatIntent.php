@@ -5,6 +5,7 @@ namespace App\Services\Ai;
 use App\Models\Category;
 use App\Models\ChatState;
 use App\Models\Expense;
+use App\Models\FeatureFlag;
 use App\Models\User;
 
 /**
@@ -33,10 +34,20 @@ class ExpenseChatIntent
         $state = ChatState::firstOrCreate(['user_id' => $user->id]);
 
         if ($state->pending_intent === 'create_expense') {
+            if ($disabled = FeatureFlag::requireEnabled('expenses')) {
+                $state->clear();
+
+                return $disabled;
+            }
+
             return $this->continueExpense($user, $state, $message);
         }
 
         if ($this->looksLikeTrigger($message)) {
+            if ($disabled = FeatureFlag::requireEnabled('expenses')) {
+                return $disabled;
+            }
+
             $state->update(['pending_intent' => 'create_expense', 'pending_data' => []]);
 
             return '¿De cuánto fue el gasto?';
@@ -101,6 +112,10 @@ class ExpenseChatIntent
      */
     public function createFromToolCall(User $user, array $arguments): string
     {
+        if ($disabled = FeatureFlag::requireEnabled('expenses')) {
+            return $disabled;
+        }
+
         $amount = $this->coerceAmount($arguments['amount'] ?? null);
 
         if ($amount === null) {

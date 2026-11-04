@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
+use App\Models\FeatureFlag;
 use App\Services\Ai\AdvisorChatIntent;
 use App\Services\Ai\BudgetChatIntent;
 use App\Services\Ai\ChatService;
@@ -30,6 +31,10 @@ class ChatController extends Controller
 
         $user = $request->user();
         $message = trim($data['message']);
+
+        if (! FeatureFlag::isEnabled('ai_chat')) {
+            return response()->json(['reply' => FeatureFlag::disabledMessage('ai_chat')]);
+        }
 
         // Checked before anything else: while a human is replying live
         // (Admin → Soporte → "Atender en vivo"), the AI stays out of it

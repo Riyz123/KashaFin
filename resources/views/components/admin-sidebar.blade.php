@@ -9,6 +9,7 @@ $navItems = [
     ['route' => 'admin.categories.index', 'label' => 'Categorías globales', 'icon' => 'wallet'],
     ...($isMasterAdmin ? [
         ['route' => 'admin.ai.index', 'label' => 'Asistente IA', 'icon' => 'chat'],
+        ['route' => 'admin.feature-flags.index', 'label' => 'Apartados', 'icon' => 'lock'],
         ['route' => 'admin.faculties.index', 'label' => 'Facultades y decanos', 'icon' => 'user'],
     ] : []),
 ];

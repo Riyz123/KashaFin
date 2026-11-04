@@ -2,6 +2,7 @@
 
 namespace App\Services\Ai;
 
+use App\Models\FeatureFlag;
 use App\Models\User;
 use App\Services\PersonSearchService;
 use App\Services\SharedExpenseCreationService;
@@ -28,6 +29,10 @@ class SharedExpenseChatIntent
 
     public function createFromToolCall(User $user, array $arguments): string
     {
+        if ($disabled = FeatureFlag::requireEnabled('shared_expenses')) {
+            return $disabled;
+        }
+
         $description = is_string($arguments['description'] ?? null) ? trim($arguments['description']) : '';
 
         if ($description === '') {
