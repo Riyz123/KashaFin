@@ -84,6 +84,16 @@
                 <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-400/50 blur-[150px] dark:bg-brand-500/45 dark:mix-blend-screen"></div>
                 <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-emerald-200/45 blur-[130px] dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
 
+                {{-- Curtains: three tall bands that sway and have their
+                     own bright streak sliding up and down inside them —
+                     this is the part that actually reads as "real aurora
+                     movement" rather than a glow drifting around (see
+                     .aurora-curtain / aurora-sway-* / aurora-flow in
+                     app.css). Dark-mode only, that's where it belongs. --}}
+                <div class="aurora-curtain aurora-curtain-1 hidden left-[8%] text-emerald-400 opacity-40 blur-xl mix-blend-screen dark:block"></div>
+                <div class="aurora-curtain aurora-curtain-2 hidden left-[38%] text-teal-300 opacity-35 blur-xl mix-blend-screen dark:block"></div>
+                <div class="aurora-curtain aurora-curtain-3 hidden left-[64%] text-cyan-300 opacity-30 blur-xl mix-blend-screen dark:block"></div>
+
                 @foreach ($auroraSparks as [$top, $left, $size, $delay])
                     <span
                         class="aurora-spark absolute rounded-full bg-brand-700/80 shadow-[0_0_6px_rgba(21,128,61,0.6)] dark:bg-white dark:shadow-[0_0_8px_rgba(255,255,255,0.9)]"

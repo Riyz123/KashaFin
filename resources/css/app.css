@@ -177,6 +177,67 @@
     50% { opacity: .9; }
 }
 
+/* Real aurora reads as moving because it's light CURTAINS rippling like
+   fabric in the wind, not just a glow drifting around — the blobs above
+   give the ambient color wash, these add that actual ripple on top.
+   Dark-mode only (see dark:block in the markup): against the light
+   panel these would just look like stray color bars, not northern
+   lights, the same reason mix-blend-screen is dark:-only above. Each
+   curtain sways on `transform` (skew + horizontal drift + a breathing
+   scaleY, several keyframe stops instead of one there-and-back so the
+   motion doesn't feel like a metronome) while a second, independent
+   animation slides a bright band up and down INSIDE it via
+   background-position — that inner slide is what sells "light flowing
+   through the curtain" rather than "stripe swaying as one rigid piece". */
+.aurora-curtain {
+    position: absolute;
+    inset-block: -15% -15%;
+    width: 14rem;
+    background-image: linear-gradient(180deg, transparent 0%, currentColor 45%, transparent 100%);
+    background-size: 100% 260%;
+    will-change: transform, background-position;
+}
+
+.aurora-curtain-1 {
+    animation: aurora-sway-1 13s ease-in-out infinite, aurora-flow 4.5s linear infinite;
+}
+
+.aurora-curtain-2 {
+    animation: aurora-sway-2 17s ease-in-out infinite, aurora-flow 6s linear infinite reverse;
+}
+
+.aurora-curtain-3 {
+    animation: aurora-sway-3 21s ease-in-out infinite, aurora-flow 5.2s linear infinite;
+}
+
+@keyframes aurora-sway-1 {
+    0% { transform: skewX(-10deg) translateX(-6%) scaleY(1); }
+    30% { transform: skewX(6deg) translateX(4%) scaleY(1.1); }
+    55% { transform: skewX(-4deg) translateX(-3%) scaleY(0.94); }
+    80% { transform: skewX(12deg) translateX(6%) scaleY(1.06); }
+    100% { transform: skewX(-10deg) translateX(-6%) scaleY(1); }
+}
+
+@keyframes aurora-sway-2 {
+    0% { transform: skewX(8deg) translateX(5%) scaleY(1.05); }
+    35% { transform: skewX(-9deg) translateX(-5%) scaleY(0.92); }
+    60% { transform: skewX(3deg) translateX(2%) scaleY(1.12); }
+    85% { transform: skewX(-6deg) translateX(-4%) scaleY(1); }
+    100% { transform: skewX(8deg) translateX(5%) scaleY(1.05); }
+}
+
+@keyframes aurora-sway-3 {
+    0% { transform: skewX(-5deg) translateX(-3%) scaleY(0.96); }
+    40% { transform: skewX(11deg) translateX(7%) scaleY(1.1); }
+    70% { transform: skewX(-8deg) translateX(-5%) scaleY(1.02); }
+    100% { transform: skewX(-5deg) translateX(-3%) scaleY(0.96); }
+}
+
+@keyframes aurora-flow {
+    0% { background-position: 0 -80%; }
+    100% { background-position: 0 80%; }
+}
+
 /* RF: configurable text size, independent of the browser/OS zoom. */
 html.text-scale-large {
     font-size: 112.5%;
