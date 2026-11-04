@@ -123,44 +123,10 @@
     36%, 60% { filter: drop-shadow(0 0 16px rgba(110, 231, 183, 0.55)) drop-shadow(0 0 42px rgba(16, 185, 129, 0.35)); }
 }
 
-/* Aureolas: 3 giant CSS blur blobs — pure CSS, no library, no canvas.
-   Each one's `transform` drifts and rescales on a very slow loop
-   (18–26s) so it reads as slow-moving smoke/northern-lights instead of
-   a visible pulse; the keyframes never touch `filter` (blur stays a
-   static Tailwind class), which is what keeps blur and movement from
-   fighting each other — an earlier draft of this hit that exact bug
-   trying to animate both at once. mix-blend-mode is set per-theme in
-   the markup (screen in dark, so overlapping neon green brightens into
-   itself; multiply in light, so it pools into deeper green instead of
-   just washing the panel white). */
-.aurora-blob {
-    position: absolute;
-    border-radius: 9999px;
-    will-change: transform;
-}
-
-.aurora-blob-a { animation: aurora-float-a 22s ease-in-out infinite; }
-.aurora-blob-b { animation: aurora-float-b 26s ease-in-out infinite; }
-.aurora-blob-c { animation: aurora-float-c 19s ease-in-out infinite; }
-
-@keyframes aurora-float-a {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(10%, 14%) scale(1.25); }
-}
-
-@keyframes aurora-float-b {
-    0%, 100% { transform: translate(0, 0) scale(1.1); }
-    50% { transform: translate(-12%, -8%) scale(0.85); }
-}
-
-@keyframes aurora-float-c {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(8%, -12%) scale(1.2); }
-}
-
 /* Twinkling spark dots scattered over the brand panel (see $auroraSparks
-   in layouts/guest.blade.php) — simulates a starry sky, cheap ambient
-   dust layered above the aureola blobs. */
+   in layouts/guest.blade.php) — simple, cheap, nothing else going on
+   behind them (no blobs, no particles, no equalizer — all of that got
+   pulled back out; the panel is back to just the gradient + these). */
 .aurora-spark {
     animation: aurora-twinkle 3.5s ease-in-out infinite;
 }
