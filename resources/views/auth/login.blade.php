@@ -1,7 +1,10 @@
 <x-guest-layout>
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Bienvenido de nuevo</h2>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Por favor, ingresa tus datos para continuar.</p>
 
-    <form method="POST" action="{{ route('login') }}">
+    <x-auth-session-status class="mt-4" :status="session('status')" />
+
+    <form method="POST" action="{{ route('login') }}" class="mt-6">
         @csrf
 
         <div>
