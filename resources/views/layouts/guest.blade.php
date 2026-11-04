@@ -74,13 +74,13 @@
                     ></span>
                 @endforeach
 
-                <div class="relative z-10 flex max-w-sm flex-col items-center gap-3 text-center">
-                    <img src="{{ asset('images/logo-dark.png') }}" alt="KashaFin" class="h-16 w-16 object-contain dark:hidden">
-                    <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="hidden h-16 w-16 object-contain dark:block">
-                    <h1 class="text-4xl font-extrabold">
+                <div class="relative z-10 flex max-w-sm flex-col items-center gap-4 text-center">
+                    <img src="{{ asset('images/logo-dark.png') }}" alt="KashaFin" class="h-24 w-24 object-contain dark:hidden">
+                    <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="hidden h-24 w-24 object-contain dark:block">
+                    <h1 class="text-5xl font-extrabold">
                         <span class="text-brand-dark dark:text-white">Kasha</span><span class="text-brand-600 dark:text-brand-light">Fin</span>
                     </h1>
-                    <p class="text-gray-600 dark:text-gray-400">Tu libertad financiera, hoy.</p>
+                    <p class="text-lg text-gray-600 dark:text-gray-400">Tu libertad financiera, hoy.</p>
                 </div>
             </div>
 
