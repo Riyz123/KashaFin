@@ -46,9 +46,10 @@
             // on every page load, just spread a bit unevenly like real
             // stars instead of a grid. [top%, left%, size px, delay s]
             $auroraSparks = [
-                [12, 18, 3, 0], [22, 70, 2, 1.1], [34, 42, 2, 2.3], [48, 85, 3, 0.6],
-                [58, 12, 2, 1.8], [66, 60, 3, 2.9], [76, 30, 2, 0.3], [84, 75, 2, 1.5],
-                [18, 55, 2, 2.6], [90, 45, 3, 0.9],
+                [12, 18, 3, 0], [22, 70, 3, 1.1], [34, 42, 2, 2.3], [48, 85, 3, 0.6],
+                [58, 12, 3, 1.8], [66, 60, 4, 2.9], [76, 30, 2, 0.3], [84, 75, 3, 1.5],
+                [18, 55, 2, 2.6], [90, 45, 3, 0.9], [8, 88, 2, 1.4], [40, 8, 3, 2.1],
+                [70, 90, 2, 0.5], [95, 20, 2, 2.0],
             ];
         @endphp
 
@@ -63,19 +64,29 @@
                  toggling the theme updates this whole panel instantly,
                  automatically, together with the rest of the page. --}}
             <div class="auth-brand-panel pointer-events-none fixed inset-y-0 left-0 z-10 hidden overflow-hidden lg:flex lg:w-[calc(42%+4rem)] xl:w-[calc(38%+4rem)] flex-col items-center justify-center gap-4 bg-gradient-to-br from-brand-100 via-brand-200 to-brand-300 p-12 dark:from-black dark:via-gray-950 dark:to-emerald-950">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.300/60%),transparent_60%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/25%),transparent_60%)]"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.300/75%),transparent_60%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
 
-                {{-- Aurora: three blurred, slow-drifting color blobs behind
-                     the logo — a "northern lights" feel built with pure
-                     CSS (see aurora-drift-* in app.css), no video/image
-                     asset to ship. --}}
-                <div class="aurora-blob aurora-blob-a -left-10 top-10 h-72 w-72 bg-brand-300/50 blur-3xl dark:bg-emerald-400/30"></div>
-                <div class="aurora-blob aurora-blob-b -right-16 top-1/3 h-80 w-80 bg-emerald-200/50 blur-3xl dark:bg-teal-400/25"></div>
-                <div class="aurora-blob aurora-blob-c bottom-0 left-1/4 h-64 w-64 bg-brand-400/40 blur-3xl dark:bg-brand-500/30"></div>
+                {{-- Aurora: four wide, heavily-blurred, slow-drifting/
+                     recoloring color bands behind the logo — a "northern
+                     lights" feel built with pure CSS (see aurora-drift-*
+                     in app.css), no video/image asset to ship. Wide +
+                     short + rotated reads as a drifting ribbon of light
+                     instead of a lava-lamp bubble; the heavy blur (more
+                     than Tailwind's built-in blur-3xl gives) is what
+                     keeps it soft and misty even at this size instead of
+                     a solid-edged disc. Screen blend in dark mode is what
+                     makes overlapping colors brighten into each other
+                     instead of just looking like flat tinted shapes; it's
+                     dark:-only because on the light panel it would wash
+                     everything out to white instead. --}}
+                <div class="aurora-blob aurora-blob-a -left-24 top-10 h-40 w-[34rem] -rotate-[18deg] bg-brand-300/60 blur-[150px] dark:bg-emerald-400/50 dark:mix-blend-screen"></div>
+                <div class="aurora-blob aurora-blob-b -right-24 top-1/4 h-36 w-[30rem] rotate-[22deg] bg-emerald-300/55 blur-[150px] dark:bg-teal-400/45 dark:mix-blend-screen"></div>
+                <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-400/50 blur-[150px] dark:bg-brand-500/45 dark:mix-blend-screen"></div>
+                <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-emerald-200/45 blur-[130px] dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
 
                 @foreach ($auroraSparks as [$top, $left, $size, $delay])
                     <span
-                        class="aurora-spark absolute rounded-full bg-brand-700/70 dark:bg-white/80"
+                        class="aurora-spark absolute rounded-full bg-brand-700/80 shadow-[0_0_6px_rgba(21,128,61,0.6)] dark:bg-white dark:shadow-[0_0_8px_rgba(255,255,255,0.9)]"
                         style="top: {{ $top }}%; left: {{ $left }}%; width: {{ $size }}px; height: {{ $size }}px; animation-delay: {{ $delay }}s"
                     ></span>
                 @endforeach
