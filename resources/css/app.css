@@ -87,12 +87,18 @@
    instead of sitting still, like a neon sign that doesn't quite hold
    steady — two quick stutters per cycle (8–14% and 30–36%) rather than
    one smooth breathing fade, so it reads as flickering, not just a glow
-   that dims in and out. The panel itself is always the same dark theme
-   regardless of the site's light/dark toggle — only the form side
-   reacts to that — so there's only ever one version of this glow. */
+   that dims in and out. Colors/opacity here are tuned for the dark
+   theme's version; .dark below swaps in a softer light-theme glow since
+   the panel itself goes back to following the site's light/dark toggle
+   (both logo variants, both background tones) rather than staying fixed
+   dark like an earlier draft of this did. */
 .auth-brand-panel {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 60% 100%, 50% calc(100% - 3rem), 40% 100%, 0 100%);
-    animation: auth-rayo-flicker 5s ease-in-out infinite;
+    animation: auth-rayo-flicker-light 5s ease-in-out infinite;
+}
+
+.dark .auth-brand-panel {
+    animation-name: auth-rayo-flicker-dark;
 }
 
 @media (min-width: 1024px) {
@@ -101,7 +107,15 @@
     }
 }
 
-@keyframes auth-rayo-flicker {
+@keyframes auth-rayo-flicker-light {
+    0%, 100% { filter: drop-shadow(0 0 12px rgba(22, 101, 52, 0.4)) drop-shadow(0 0 30px rgba(21, 128, 61, 0.2)); }
+    8% { filter: drop-shadow(0 0 24px rgba(22, 163, 74, 0.7)) drop-shadow(0 0 55px rgba(21, 128, 61, 0.4)); }
+    14% { filter: drop-shadow(0 0 14px rgba(22, 101, 52, 0.45)) drop-shadow(0 0 32px rgba(21, 128, 61, 0.22)); }
+    30% { filter: drop-shadow(0 0 28px rgba(22, 163, 74, 0.75)) drop-shadow(0 0 60px rgba(21, 128, 61, 0.45)); }
+    36%, 60% { filter: drop-shadow(0 0 12px rgba(22, 101, 52, 0.4)) drop-shadow(0 0 30px rgba(21, 128, 61, 0.2)); }
+}
+
+@keyframes auth-rayo-flicker-dark {
     0%, 100% { filter: drop-shadow(0 0 16px rgba(110, 231, 183, 0.55)) drop-shadow(0 0 42px rgba(16, 185, 129, 0.35)); }
     8% { filter: drop-shadow(0 0 34px rgba(167, 243, 208, 0.95)) drop-shadow(0 0 85px rgba(45, 212, 191, 0.65)); }
     14% { filter: drop-shadow(0 0 18px rgba(110, 231, 183, 0.6)) drop-shadow(0 0 46px rgba(16, 185, 129, 0.4)); }
@@ -109,9 +123,44 @@
     36%, 60% { filter: drop-shadow(0 0 16px rgba(110, 231, 183, 0.55)) drop-shadow(0 0 42px rgba(16, 185, 129, 0.35)); }
 }
 
+/* Aureolas: 3 giant CSS blur blobs — pure CSS, no library, no canvas.
+   Each one's `transform` drifts and rescales on a very slow loop
+   (18–26s) so it reads as slow-moving smoke/northern-lights instead of
+   a visible pulse; the keyframes never touch `filter` (blur stays a
+   static Tailwind class), which is what keeps blur and movement from
+   fighting each other — an earlier draft of this hit that exact bug
+   trying to animate both at once. mix-blend-mode is set per-theme in
+   the markup (screen in dark, so overlapping neon green brightens into
+   itself; multiply in light, so it pools into deeper green instead of
+   just washing the panel white). */
+.aurora-blob {
+    position: absolute;
+    border-radius: 9999px;
+    will-change: transform;
+}
+
+.aurora-blob-a { animation: aurora-float-a 22s ease-in-out infinite; }
+.aurora-blob-b { animation: aurora-float-b 26s ease-in-out infinite; }
+.aurora-blob-c { animation: aurora-float-c 19s ease-in-out infinite; }
+
+@keyframes aurora-float-a {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(10%, 14%) scale(1.25); }
+}
+
+@keyframes aurora-float-b {
+    0%, 100% { transform: translate(0, 0) scale(1.1); }
+    50% { transform: translate(-12%, -8%) scale(0.85); }
+}
+
+@keyframes aurora-float-c {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(8%, -12%) scale(1.2); }
+}
+
 /* Twinkling spark dots scattered over the brand panel (see $auroraSparks
-   in layouts/guest.blade.php) — cheap ambient dust layered above the
-   Vanta.FOG background (aurora-vanta.js). */
+   in layouts/guest.blade.php) — simulates a starry sky, cheap ambient
+   dust layered above the aureola blobs. */
 .aurora-spark {
     animation: aurora-twinkle 3.5s ease-in-out infinite;
 }

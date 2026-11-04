@@ -40,11 +40,4 @@ Alpine.start();
 document.addEventListener('turbo:load', () => {
     mountLiquidityChart();
     mountReportCharts();
-
-    // Vanta.js + three.js are only needed on login/register — dynamic
-    // import() makes Vite split them into their own chunk, fetched only
-    // when that container is actually on the page, never anywhere else.
-    if (document.getElementById('vanta-bg')) {
-        import('./aurora-vanta').then(({ registerAuroraVanta }) => registerAuroraVanta());
-    }
 });

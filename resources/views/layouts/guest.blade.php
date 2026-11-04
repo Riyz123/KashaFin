@@ -10,9 +10,8 @@
                 whatever was remembered in localStorage from a previous visit —
                 or the OS preference the first time — avoiding a flash of the
                 wrong theme. toggleGuestThemeAnimated() in theme-toggle.js
-                writes to the same key. This only affects the FORM side of the
-                page — the brand panel below is always the same dark theme on
-                purpose, it doesn't follow this toggle.
+                writes to the same key. Both the form AND the brand panel
+                react to this — the whole page shares one theme.
             --}}
             <script>
                 (function () {
@@ -67,57 +66,67 @@
         @endphp
 
         <div class="min-h-screen lg:flex">
-            {{-- Brand panel — always visible now, on every breakpoint
-                 (earlier drafts hid it below `lg` and showed a plain
-                 compact logo bar instead; this one stacks a shorter
-                 version of the real panel above the form on mobile).
-                 `lg:fixed` on desktop lets it extend past the width the
-                 form panel reserves for it (`lg:ml-*` below), so the
-                 jagged .auth-brand-panel edge can overlap and poke into
-                 the form panel instead of just butting up against it —
-                 that trick only applies once it's actually fixed, so
-                 mobile (plain flow) doesn't need or get it.
+            {{-- Brand panel — always visible, on every breakpoint (a
+                 shorter version of the real panel stacks above the form
+                 on mobile, not a plain compact logo bar). `lg:fixed` on
+                 desktop lets it extend past the 55% width the form panel
+                 reserves for it (`lg:ml-*` below), so the jagged
+                 .auth-brand-panel edge can overlap and poke into the
+                 form panel instead of just butting up against it.
 
-                 This panel is ALWAYS the same dark theme, independent of
-                 the light/dark toggle in the form panel below/beside it
-                 — a deliberate choice (the brand side is a fixed brand
-                 moment, not a themed UI surface), not an oversight. --}}
-            <div class="auth-brand-panel pointer-events-none relative flex h-[42vh] min-h-[320px] w-full flex-col items-center justify-center gap-4 overflow-hidden bg-[#020a07] p-8 lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:min-h-0 lg:w-[calc(42%+4rem)] lg:p-12 xl:w-[calc(38%+4rem)]">
-                {{-- The animated aureola: Vanta.js's FOG effect (built on
-                     three.js), see resources/js/aurora-vanta.js —
-                     registerAuroraVanta, loaded via a dynamic import in
-                     app.js so the library only downloads on this page.
-                     `#020a07` above is the same dark base Vanta.FOG
-                     clears to, so there's no flash of a different color
-                     in the instant before it finishes initializing. --}}
-                <div id="vanta-bg" class="absolute inset-0"></div>
+                 Back to following the site's light/dark toggle like the
+                 rest of the page (an earlier draft pinned this panel
+                 permanently dark; both logo files and both background
+                 tones are back in use here, swapped by theme). --}}
+            <div class="auth-brand-panel pointer-events-none relative flex h-[46vh] min-h-[340px] w-full flex-col items-center justify-center gap-5 overflow-hidden bg-gradient-to-br from-white via-brand-100 to-brand-300 p-8 dark:from-black dark:via-gray-950 dark:to-[#031a10] lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:min-h-0 lg:w-[calc(55%+4rem)] lg:p-16">
+                {{-- Aureolas: 3 giant CSS blur blobs (no canvas, no
+                     library — see .aurora-blob / aurora-float-* in
+                     app.css), drifting and rescaling on a slow loop to
+                     read as slow-moving smoke/northern lights. Neon
+                     green/mint + mix-blend-screen in dark (overlapping
+                     light brightens into itself); deeper, more saturated
+                     tones + mix-blend-multiply in light (screen on a
+                     pale background would just bleach it white). --}}
+                <div class="aurora-blob aurora-blob-a -left-32 -top-20 h-[380px] w-[380px] bg-emerald-400 mix-blend-multiply blur-[140px] dark:bg-[#00ff88] dark:mix-blend-screen lg:h-[600px] lg:w-[600px]"></div>
+                <div class="aurora-blob aurora-blob-b -right-24 top-1/4 h-[340px] w-[340px] bg-teal-400 mix-blend-multiply blur-[140px] dark:bg-[#00cc66] dark:mix-blend-screen lg:h-[600px] lg:w-[600px]"></div>
+                <div class="aurora-blob aurora-blob-c -bottom-24 left-1/4 h-[320px] w-[320px] bg-brand-500 mix-blend-multiply blur-[140px] dark:bg-[#00ff88] dark:mix-blend-screen lg:h-[600px] lg:w-[600px]"></div>
 
-                {{-- Faint candlestick chart in the background — fits a
-                     finance app's branding. Static, just ambient texture. --}}
-                <div class="pointer-events-none absolute right-6 top-6 flex items-end gap-1 opacity-20 lg:right-8 lg:top-10" style="height: 5rem">
-                    @foreach ($auroraCandles as [$height, $isUp])
-                        <span class="w-1 rounded-sm lg:w-1.5 {{ $isUp ? 'bg-emerald-400' : 'bg-brand-700' }}" style="height: {{ $height }}%"></span>
-                    @endforeach
-                </div>
-
+                {{-- "Estrellas": tiny white dots at scattered opacity —
+                     see $auroraSparks above. --}}
                 @foreach ($auroraSparks as [$top, $left, $size, $delay])
                     <span
-                        class="aurora-spark absolute rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]"
+                        class="aurora-spark absolute rounded-full bg-brand-800 shadow-[0_0_6px_rgba(6,78,59,0.5)] dark:bg-white dark:shadow-[0_0_8px_rgba(255,255,255,0.9)]"
                         style="top: {{ $top }}%; left: {{ $left }}%; width: {{ $size }}px; height: {{ $size }}px; animation-delay: {{ $delay }}s"
                     ></span>
                 @endforeach
 
-                <div class="relative z-10 flex max-w-sm flex-col items-center gap-2 text-center lg:gap-3">
-                    <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="h-12 w-12 object-contain lg:h-16 lg:w-16">
-                    <h1 class="text-3xl font-extrabold lg:text-4xl">
-                        <span class="text-white">Kasha</span><span class="text-brand-light">Fin</span>
+                {{-- Ecualizador / gráfico financiero de fondo — barras
+                     verticales muy tenues en la esquina superior derecha. --}}
+                <div class="pointer-events-none absolute right-6 top-6 flex items-end gap-1 opacity-10 dark:opacity-20 lg:right-10 lg:top-12" style="height: 6rem">
+                    @foreach ($auroraCandles as [$height, $isUp])
+                        <span class="w-1 rounded-sm lg:w-1.5 {{ $isUp ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-brand-700' }}" style="height: {{ $height }}%"></span>
+                    @endforeach
+                </div>
+
+                {{-- drop-shadow (not a plain Tailwind color, since the
+                     giant blobs drift behind this text and can get
+                     bright enough right here to eat the contrast of
+                     whatever's on top of them) keeps the wordmark and
+                     tagline readable at every point in the loop, not
+                     just the frame these screenshots happened to land
+                     on. --}}
+                <div class="relative z-10 flex max-w-lg flex-col items-center gap-3 text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] lg:gap-5">
+                    <img src="{{ asset('images/logo-dark.png') }}" alt="KashaFin" class="h-20 w-20 object-contain dark:hidden lg:h-32 lg:w-32">
+                    <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="hidden h-20 w-20 object-contain dark:block lg:h-32 lg:w-32">
+                    <h1 class="text-5xl font-bold lg:text-7xl">
+                        <span class="text-brand-dark dark:text-white">Kasha</span><span class="text-brand-600 dark:text-brand-light">Fin</span>
                     </h1>
-                    <p class="text-sm text-gray-400 lg:text-base">Tu libertad financiera, hoy.</p>
+                    <p class="text-lg text-gray-600 dark:text-gray-300 lg:text-2xl">Tu libertad financiera, hoy.</p>
                 </div>
             </div>
 
             {{-- Form panel --}}
-            <div class="flex min-h-screen flex-1 flex-col bg-white dark:bg-gray-900 lg:ml-[42%] xl:ml-[38%]">
+            <div class="flex min-h-screen flex-1 flex-col bg-white dark:bg-[#0f172a] lg:ml-[55%]">
                 <div class="flex items-center justify-end px-6 py-4">
                     <button
                         type="button"
