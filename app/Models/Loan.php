@@ -7,6 +7,7 @@ use App\Notifications\LoanAmortizationResolvedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -94,12 +95,18 @@ class Loan extends Model
      * Only a "recibido" debt that's still owed, past its due date, counts
      * as overdue — a "prestado" row (money owed TO the student) is never
      * something they themselves are late on.
+     *
+     * "Past its due date" means the day AFTER due_date, not due_date itself
+     * — due_date is cast to midnight, so the old `->isPast()` check turned
+     * this true from the very start of the due date, marking a debt as
+     * overdue on the day it was still due. Comparing against the start of
+     * today instead gives the debtor the whole due date to pay.
      */
     public function isOverdue(): bool
     {
         return $this->direction === 'recibido'
             && $this->due_date !== null
-            && $this->due_date->isPast()
+            && $this->due_date->lt(now()->startOfDay())
             && $this->status !== 'pagado'
             && $this->remaining_amount > 0;
     }
@@ -206,26 +213,38 @@ class Loan extends Model
      * — same asymmetry as reportPayment()/markPaid() above. A linked loan
      * instead creates a pending LoanAmortization and notifies the creditor,
      * who must accept or decline it (acceptAmortization()/rejectAmortization()).
+     *
+     * Wrapped in a transaction with a row lock on this loan: the request
+     * form already checked `amount <= remaining_amount` before submitting,
+     * but that check isn't atomic — locking and re-checking here is what
+     * actually stops two concurrent requests from together amortizing more
+     * than the debt, which a finance feature can't allow.
      */
     public function requestAmortization(float $amount): LoanAmortization
     {
-        if (! $this->person_user_id) {
-            $amortization = $this->amortizations()->create([
-                'amount' => $amount,
-                'status' => 'aceptado',
-                'resolved_at' => now(),
-            ]);
+        return DB::transaction(function () use ($amount) {
+            $debtorLoan = self::whereKey($this->id)->lockForUpdate()->firstOrFail();
 
-            $this->applyAmortization($amount);
+            abort_if($amount > $debtorLoan->remaining_amount, 422, 'No puedes pagar más de lo que falta de la deuda.');
+
+            if (! $debtorLoan->person_user_id) {
+                $amortization = $debtorLoan->amortizations()->create([
+                    'amount' => $amount,
+                    'status' => 'aceptado',
+                    'resolved_at' => now(),
+                ]);
+
+                $debtorLoan->applyAmortization($amount);
+
+                return $amortization;
+            }
+
+            $amortization = $debtorLoan->amortizations()->create(['amount' => $amount, 'status' => 'pendiente']);
+
+            $debtorLoan->counterpart?->user->notify(new LoanAmortizationRequestedNotification($amortization));
 
             return $amortization;
-        }
-
-        $amortization = $this->amortizations()->create(['amount' => $amount, 'status' => 'pendiente']);
-
-        $this->counterpart?->user->notify(new LoanAmortizationRequestedNotification($amortization));
-
-        return $amortization;
+        });
     }
 
     /**
@@ -233,27 +252,51 @@ class Loan extends Model
      * row the amortization belongs to). Confirming is what actually moves
      * money in the student's own books: it registers an expense for the
      * debtor, exactly the amount they said they paid.
+     *
+     * Everything here runs locked inside one transaction — the amortization,
+     * the debtor's loan and this creditor loan are all re-fetched with
+     * `lockForUpdate()` instead of trusting the instances the caller already
+     * had in memory. That's what makes "accept" atomic and final: a second
+     * accept/reject racing against this one blocks until this transaction
+     * commits, then sees the amortization already resolved and is rejected
+     * by the `isPending()` check below — so it can never be double-applied,
+     * and whoever gets paid sees the updated amount immediately, not after
+     * some delay. The amortization's own activity log entry (via
+     * LoanAmortization's LogsActivity) is written inside this same
+     * transaction, so the fact that this amount was paid stays in the
+     * traceability even if either loan is deleted afterward.
      */
     public function acceptAmortization(LoanAmortization $amortization): void
     {
-        $debtorLoan = $amortization->loan;
+        DB::transaction(function () use ($amortization) {
+            $amortization = LoanAmortization::whereKey($amortization->id)->lockForUpdate()->firstOrFail();
+            abort_unless($amortization->isPending(), 422, 'Esta solicitud ya fue respondida.');
 
-        $amortization->update(['status' => 'aceptado', 'resolved_at' => now()]);
-        $debtorLoan->applyAmortization((float) $amortization->amount);
-        $this->increment('paid_amount', $amortization->amount);
+            $debtorLoan = self::whereKey($amortization->loan_id)->lockForUpdate()->firstOrFail();
+            $creditorLoan = self::whereKey($this->id)->lockForUpdate()->firstOrFail();
 
-        if ($debtorLoan->fresh()->status === 'pagado') {
-            $this->update(['status' => 'pagado']);
-        }
+            $amortization->update(['status' => 'aceptado', 'resolved_at' => now()]);
+            $debtorLoan->applyAmortization((float) $amortization->amount);
+            $creditorLoan->increment('paid_amount', $amortization->amount);
 
-        $debtorLoan->user->notify(new LoanAmortizationResolvedNotification($amortization, accepted: true));
+            if ($debtorLoan->fresh()->status === 'pagado') {
+                $creditorLoan->update(['status' => 'pagado']);
+            }
+
+            $debtorLoan->user->notify(new LoanAmortizationResolvedNotification($amortization, accepted: true));
+        });
     }
 
     public function rejectAmortization(LoanAmortization $amortization): void
     {
-        $amortization->update(['status' => 'rechazado', 'resolved_at' => now()]);
+        DB::transaction(function () use ($amortization) {
+            $amortization = LoanAmortization::whereKey($amortization->id)->lockForUpdate()->firstOrFail();
+            abort_unless($amortization->isPending(), 422, 'Esta solicitud ya fue respondida.');
 
-        $amortization->loan->user->notify(new LoanAmortizationResolvedNotification($amortization, accepted: false));
+            $amortization->update(['status' => 'rechazado', 'resolved_at' => now()]);
+
+            $amortization->loan->user->notify(new LoanAmortizationResolvedNotification($amortization, accepted: false));
+        });
     }
 
     /**

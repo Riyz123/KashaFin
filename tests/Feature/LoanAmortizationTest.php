@@ -140,6 +140,53 @@ class LoanAmortizationTest extends TestCase
         $this->assertSame(0, (int) $loan->fresh()->paid_amount);
     }
 
+    public function test_an_already_resolved_amortization_cannot_be_accepted_again(): void
+    {
+        $debtor = User::factory()->create();
+        $creditor = User::factory()->create();
+        [$debtorLoan, $creditorLoan] = $this->makeLinkedPair($debtor, $creditor);
+
+        $amortization = $debtorLoan->requestAmortization(10);
+        $this->actingAs($creditor)->patch(route('loans.amortizations.accept', $amortization))->assertRedirect();
+
+        // Simulates a second accept racing in right behind the first one —
+        // by the time it runs, the amortization is no longer pending, so it
+        // must be rejected instead of applying the payment twice.
+        $this->actingAs($creditor)->patch(route('loans.amortizations.accept', $amortization))
+            ->assertStatus(422);
+
+        $this->assertEqualsWithDelta(10.0, (float) $debtorLoan->fresh()->paid_amount, 0.01);
+        $this->assertEqualsWithDelta(10.0, (float) $creditorLoan->fresh()->paid_amount, 0.01);
+        $this->assertSame(1, Expense::where('user_id', $debtor->id)->count());
+    }
+
+    public function test_an_accepted_amortizations_traceability_survives_even_if_the_loan_is_later_deleted(): void
+    {
+        $debtor = User::factory()->create();
+        $creditor = User::factory()->create();
+        [$debtorLoan, $creditorLoan] = $this->makeLinkedPair($debtor, $creditor);
+
+        $amortization = $debtorLoan->requestAmortization(10);
+        $creditorLoan->acceptAmortization($amortization);
+
+        // The debtor deletes their own loan row afterward (cascades and
+        // removes the loan_amortizations row with it) — the creditor's own
+        // paid_amount was already committed independently, and the fact
+        // that this payment happened must still be readable in the
+        // activity log, which has no foreign key back to the loan.
+        $debtorLoan->fresh()->delete();
+
+        $this->assertNull(\App\Models\LoanAmortization::find($amortization->id));
+        $this->assertEqualsWithDelta(10.0, (float) $creditorLoan->fresh()->paid_amount, 0.01);
+
+        $log = \Spatie\Activitylog\Models\Activity::where('log_name', 'loan_amortization')
+            ->where('subject_id', $amortization->id)
+            ->where('description', 'like', '%aceptó el pago%')
+            ->first();
+
+        $this->assertNotNull($log, 'the accepted amortization must leave a trace even after the loan is deleted');
+    }
+
     public function test_only_the_creditor_can_accept_or_reject_an_amortization(): void
     {
         $debtor = User::factory()->create();

@@ -73,6 +73,28 @@ class LoanBalanceAndOverdueTest extends TestCase
         $this->assertTrue($loan->isOverdue());
     }
 
+    public function test_a_loan_due_today_is_not_yet_overdue(): void
+    {
+        $student = User::factory()->create();
+        $loan = Loan::create([
+            'user_id' => $student->id, 'person_name' => 'Tienda', 'direction' => 'recibido',
+            'amount' => 20, 'date' => now()->subDays(5), 'due_date' => now()->toDateString(), 'status' => 'pendiente',
+        ]);
+
+        $this->assertFalse($loan->isOverdue());
+    }
+
+    public function test_a_loan_becomes_overdue_the_day_after_its_due_date(): void
+    {
+        $student = User::factory()->create();
+        $loan = Loan::create([
+            'user_id' => $student->id, 'person_name' => 'Tienda', 'direction' => 'recibido',
+            'amount' => 20, 'date' => now()->subDays(5), 'due_date' => now()->subDay()->toDateString(), 'status' => 'pendiente',
+        ]);
+
+        $this->assertTrue($loan->isOverdue());
+    }
+
     public function test_a_loan_already_fully_paid_is_never_overdue_even_past_its_due_date(): void
     {
         $student = User::factory()->create();
