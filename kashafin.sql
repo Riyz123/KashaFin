@@ -1,3 +1,8 @@
+-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
+--
+-- Host: localhost    Database: kashafin_fresh
+-- ------------------------------------------------------
+-- Server version	10.4.32-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -9,6 +14,11 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `activity_log`
+--
+
 DROP TABLE IF EXISTS `activity_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -32,11 +42,20 @@ CREATE TABLE `activity_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `activity_log`
+--
+
 LOCK TABLES `activity_log` WRITE;
 /*!40000 ALTER TABLE `activity_log` DISABLE KEYS */;
-INSERT INTO `activity_log` VALUES (1,'income','Registró un ingreso de S/ 850.00 (fijo)','App\\Models\\Income','created',1,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,'income','Registró un ingreso de S/ 150.00 (variable)','App\\Models\\Income','created',2,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,'income','Registró un ingreso de S/ 90.00 (variable)','App\\Models\\Income','created',3,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(4,'income','Registró un ingreso de S/ 120.00 (variable)','App\\Models\\Income','created',4,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(5,'income','Registró un ingreso de S/ 60.00 (variable)','App\\Models\\Income','created',5,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(6,'income','Registró un ingreso de S/ 100.00 (variable)','App\\Models\\Income','created',6,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(7,'expense','Registró un gasto de S/ 3.44 en Transporte','App\\Models\\Expense','created',1,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(8,'expense','Registró un gasto de S/ 4.15 en Transporte','App\\Models\\Expense','created',2,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(9,'expense','Registró un gasto de S/ 10.98 en Transporte','App\\Models\\Expense','created',3,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(10,'expense','Registró un gasto de S/ 5.58 en Transporte','App\\Models\\Expense','created',4,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(11,'expense','Registró un gasto de S/ 7.17 en Transporte','App\\Models\\Expense','created',5,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(12,'expense','Registró un gasto de S/ 5.55 en Transporte','App\\Models\\Expense','created',6,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(13,'expense','Registró un gasto de S/ 9.23 en Transporte','App\\Models\\Expense','created',7,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(14,'expense','Registró un gasto de S/ 5.99 en Transporte','App\\Models\\Expense','created',8,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(15,'expense','Registró un gasto de S/ 9.39 en Transporte','App\\Models\\Expense','created',9,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(16,'expense','Registró un gasto de S/ 5.41 en Transporte','App\\Models\\Expense','created',10,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(17,'expense','Registró un gasto de S/ 22.11 en Alimentación','App\\Models\\Expense','created',11,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(18,'expense','Registró un gasto de S/ 20.65 en Alimentación','App\\Models\\Expense','created',12,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(19,'expense','Registró un gasto de S/ 24.32 en Alimentación','App\\Models\\Expense','created',13,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(20,'expense','Registró un gasto de S/ 18.11 en Alimentación','App\\Models\\Expense','created',14,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(21,'expense','Registró un gasto de S/ 16.29 en Alimentación','App\\Models\\Expense','created',15,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(22,'expense','Registró un gasto de S/ 19.57 en Alimentación','App\\Models\\Expense','created',16,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(23,'expense','Registró un gasto de S/ 15.53 en Alimentación','App\\Models\\Expense','created',17,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(24,'expense','Registró un gasto de S/ 14.04 en Alimentación','App\\Models\\Expense','created',18,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(25,'expense','Registró un gasto de S/ 12.53 en Alimentación','App\\Models\\Expense','created',19,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(26,'expense','Registró un gasto de S/ 11.64 en Alimentación','App\\Models\\Expense','created',20,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(27,'expense','Registró un gasto de S/ 17.04 en Alimentación','App\\Models\\Expense','created',21,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(28,'expense','Registró un gasto de S/ 16.41 en Alimentación','App\\Models\\Expense','created',22,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(29,'expense','Registró un gasto de S/ 21.97 en Materiales de estudio','App\\Models\\Expense','created',23,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(30,'expense','Registró un gasto de S/ 16.00 en Materiales de estudio','App\\Models\\Expense','created',24,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(31,'expense','Registró un gasto de S/ 74.08 en Materiales de estudio','App\\Models\\Expense','created',25,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(32,'expense','Registró un gasto de S/ 26.11 en Materiales de estudio','App\\Models\\Expense','created',26,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(33,'expense','Registró un gasto de S/ 54.21 en Materiales de estudio','App\\Models\\Expense','created',27,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(34,'expense','Registró un gasto de S/ 48.79 en Entretenimiento','App\\Models\\Expense','created',28,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(35,'expense','Registró un gasto de S/ 52.43 en Entretenimiento','App\\Models\\Expense','created',29,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(36,'expense','Registró un gasto de S/ 37.58 en Entretenimiento','App\\Models\\Expense','created',30,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(37,'expense','Registró un gasto de S/ 57.51 en Entretenimiento','App\\Models\\Expense','created',31,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(38,'expense','Registró un gasto de S/ 20.40 en Otros','App\\Models\\Expense','created',32,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(39,'expense','Registró un gasto de S/ 21.61 en Otros','App\\Models\\Expense','created',33,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(40,'expense','Registró un gasto de S/ 23.42 en Otros','App\\Models\\Expense','created',34,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(41,'expense','Registró un gasto de S/ 23.66 en Otros','App\\Models\\Expense','created',35,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(42,'expense','Registró un gasto de S/ 45.00 en Suscripciones','App\\Models\\Expense','created',36,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(43,'budget','Definió un presupuesto de S/ 100.00 para Transporte (10/2026)','App\\Models\\Budget','created',1,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(44,'budget','Definió un presupuesto de S/ 200.00 para Alimentación (10/2026)','App\\Models\\Budget','created',2,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(45,'budget','Definió un presupuesto de S/ 100.00 para Entretenimiento (10/2026)','App\\Models\\Budget','created',3,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(46,'budget','Definió un presupuesto de S/ 50.00 para Suscripciones (10/2026)','App\\Models\\Budget','created',4,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(47,'goal','Creó la meta \"Nueva laptop\" por S/ 2,400.00','App\\Models\\SavingsGoal','created',1,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(48,'goal','Creó la meta \"Viaje de graduación\" por S/ 2,000.00','App\\Models\\SavingsGoal','created',2,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(49,'goal','Creó la meta \"Fondo de emergencia\" por S/ 500.00','App\\Models\\SavingsGoal','created',3,NULL,NULL,'[]',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `activity_log` VALUES (1,'income','Registró un ingreso de S/ 850.00 (fijo)','App\\Models\\Income','created',1,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,'income','Registró un ingreso de S/ 150.00 (variable)','App\\Models\\Income','created',2,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,'income','Registró un ingreso de S/ 90.00 (variable)','App\\Models\\Income','created',3,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(4,'income','Registró un ingreso de S/ 120.00 (variable)','App\\Models\\Income','created',4,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(5,'income','Registró un ingreso de S/ 60.00 (variable)','App\\Models\\Income','created',5,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(6,'income','Registró un ingreso de S/ 100.00 (variable)','App\\Models\\Income','created',6,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(7,'expense','Registró un gasto de S/ 11.94 en Transporte','App\\Models\\Expense','created',1,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(8,'expense','Registró un gasto de S/ 7.55 en Transporte','App\\Models\\Expense','created',2,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(9,'expense','Registró un gasto de S/ 4.35 en Transporte','App\\Models\\Expense','created',3,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(10,'expense','Registró un gasto de S/ 7.69 en Transporte','App\\Models\\Expense','created',4,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(11,'expense','Registró un gasto de S/ 7.71 en Transporte','App\\Models\\Expense','created',5,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(12,'expense','Registró un gasto de S/ 6.54 en Transporte','App\\Models\\Expense','created',6,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(13,'expense','Registró un gasto de S/ 3.78 en Transporte','App\\Models\\Expense','created',7,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(14,'expense','Registró un gasto de S/ 7.44 en Transporte','App\\Models\\Expense','created',8,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(15,'expense','Registró un gasto de S/ 5.48 en Transporte','App\\Models\\Expense','created',9,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(16,'expense','Registró un gasto de S/ 5.23 en Transporte','App\\Models\\Expense','created',10,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(17,'expense','Registró un gasto de S/ 14.95 en Alimentación','App\\Models\\Expense','created',11,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(18,'expense','Registró un gasto de S/ 12.00 en Alimentación','App\\Models\\Expense','created',12,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(19,'expense','Registró un gasto de S/ 18.58 en Alimentación','App\\Models\\Expense','created',13,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(20,'expense','Registró un gasto de S/ 11.90 en Alimentación','App\\Models\\Expense','created',14,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(21,'expense','Registró un gasto de S/ 24.50 en Alimentación','App\\Models\\Expense','created',15,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(22,'expense','Registró un gasto de S/ 13.09 en Alimentación','App\\Models\\Expense','created',16,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(23,'expense','Registró un gasto de S/ 17.64 en Alimentación','App\\Models\\Expense','created',17,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(24,'expense','Registró un gasto de S/ 24.36 en Alimentación','App\\Models\\Expense','created',18,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(25,'expense','Registró un gasto de S/ 24.45 en Alimentación','App\\Models\\Expense','created',19,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(26,'expense','Registró un gasto de S/ 23.25 en Alimentación','App\\Models\\Expense','created',20,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(27,'expense','Registró un gasto de S/ 24.47 en Alimentación','App\\Models\\Expense','created',21,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(28,'expense','Registró un gasto de S/ 18.80 en Alimentación','App\\Models\\Expense','created',22,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(29,'expense','Registró un gasto de S/ 24.66 en Materiales de estudio','App\\Models\\Expense','created',23,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(30,'expense','Registró un gasto de S/ 29.11 en Materiales de estudio','App\\Models\\Expense','created',24,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(31,'expense','Registró un gasto de S/ 21.59 en Materiales de estudio','App\\Models\\Expense','created',25,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(32,'expense','Registró un gasto de S/ 35.65 en Materiales de estudio','App\\Models\\Expense','created',26,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(33,'expense','Registró un gasto de S/ 25.39 en Materiales de estudio','App\\Models\\Expense','created',27,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(34,'expense','Registró un gasto de S/ 58.43 en Entretenimiento','App\\Models\\Expense','created',28,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(35,'expense','Registró un gasto de S/ 57.05 en Entretenimiento','App\\Models\\Expense','created',29,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(36,'expense','Registró un gasto de S/ 36.69 en Entretenimiento','App\\Models\\Expense','created',30,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(37,'expense','Registró un gasto de S/ 38.66 en Entretenimiento','App\\Models\\Expense','created',31,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(38,'expense','Registró un gasto de S/ 34.36 en Otros','App\\Models\\Expense','created',32,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(39,'expense','Registró un gasto de S/ 16.02 en Otros','App\\Models\\Expense','created',33,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(40,'expense','Registró un gasto de S/ 32.46 en Otros','App\\Models\\Expense','created',34,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(41,'expense','Registró un gasto de S/ 10.37 en Otros','App\\Models\\Expense','created',35,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(42,'expense','Registró un gasto de S/ 45.00 en Suscripciones','App\\Models\\Expense','created',36,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(43,'budget','Definió un presupuesto de S/ 100.00 para Transporte (11/2026)','App\\Models\\Budget','created',1,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(44,'budget','Definió un presupuesto de S/ 200.00 para Alimentación (11/2026)','App\\Models\\Budget','created',2,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(45,'budget','Definió un presupuesto de S/ 100.00 para Entretenimiento (11/2026)','App\\Models\\Budget','created',3,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(46,'budget','Definió un presupuesto de S/ 50.00 para Suscripciones (11/2026)','App\\Models\\Budget','created',4,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(47,'goal','Creó la meta \"Nueva laptop\" por S/ 2,400.00','App\\Models\\SavingsGoal','created',1,NULL,NULL,'[]',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(48,'goal','Creó la meta \"Viaje de graduación\" por S/ 2,000.00','App\\Models\\SavingsGoal','created',2,NULL,NULL,'[]',NULL,'2026-11-04 08:29:33','2026-11-04 08:29:33'),(49,'goal','Creó la meta \"Fondo de emergencia\" por S/ 500.00','App\\Models\\SavingsGoal','created',3,NULL,NULL,'[]',NULL,'2026-11-04 08:29:33','2026-11-04 08:29:33');
 /*!40000 ALTER TABLE `activity_log` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `ai_providers`
+--
+
 DROP TABLE IF EXISTS `ai_providers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -60,10 +79,19 @@ CREATE TABLE `ai_providers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `ai_providers`
+--
+
 LOCK TABLES `ai_providers` WRITE;
 /*!40000 ALTER TABLE `ai_providers` DISABLE KEYS */;
 /*!40000 ALTER TABLE `ai_providers` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `ai_settings`
+--
+
 DROP TABLE IF EXISTS `ai_settings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -76,10 +104,19 @@ CREATE TABLE `ai_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `ai_settings`
+--
+
 LOCK TABLES `ai_settings` WRITE;
 /*!40000 ALTER TABLE `ai_settings` DISABLE KEYS */;
 /*!40000 ALTER TABLE `ai_settings` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `ai_usage_logs`
+--
+
 DROP TABLE IF EXISTS `ai_usage_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -99,10 +136,19 @@ CREATE TABLE `ai_usage_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `ai_usage_logs`
+--
+
 LOCK TABLES `ai_usage_logs` WRITE;
 /*!40000 ALTER TABLE `ai_usage_logs` DISABLE KEYS */;
 /*!40000 ALTER TABLE `ai_usage_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `budgets`
+--
+
 DROP TABLE IF EXISTS `budgets`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -122,11 +168,20 @@ CREATE TABLE `budgets` (
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `budgets`
+--
+
 LOCK TABLES `budgets` WRITE;
 /*!40000 ALTER TABLE `budgets` DISABLE KEYS */;
-INSERT INTO `budgets` VALUES (1,3,1,'2026-10-01',100.00,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,3,2,'2026-10-01',200.00,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,3,4,'2026-10-01',100.00,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(4,3,6,'2026-10-01',50.00,'2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `budgets` VALUES (1,3,1,'2026-11-01',100.00,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,3,2,'2026-11-01',200.00,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,3,4,'2026-11-01',100.00,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(4,3,6,'2026-11-01',50.00,'2026-11-04 08:29:32','2026-11-04 08:29:32');
 /*!40000 ALTER TABLE `budgets` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `cache`
+--
+
 DROP TABLE IF EXISTS `cache`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -139,10 +194,19 @@ CREATE TABLE `cache` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `cache`
+--
+
 LOCK TABLES `cache` WRITE;
 /*!40000 ALTER TABLE `cache` DISABLE KEYS */;
 /*!40000 ALTER TABLE `cache` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `cache_locks`
+--
+
 DROP TABLE IF EXISTS `cache_locks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -155,10 +219,19 @@ CREATE TABLE `cache_locks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `cache_locks`
+--
+
 LOCK TABLES `cache_locks` WRITE;
 /*!40000 ALTER TABLE `cache_locks` DISABLE KEYS */;
 /*!40000 ALTER TABLE `cache_locks` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `categories`
+--
+
 DROP TABLE IF EXISTS `categories`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -177,11 +250,20 @@ CREATE TABLE `categories` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `categories`
+--
+
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (1,NULL,'Transporte','expense',1,1,'2026-10-14 07:53:45','2026-10-14 07:53:45'),(2,NULL,'Alimentación','expense',1,1,'2026-10-14 07:53:45','2026-10-14 07:53:45'),(3,NULL,'Materiales de estudio','document',1,1,'2026-10-14 07:53:45','2026-10-14 07:53:45'),(4,NULL,'Entretenimiento','flag',1,1,'2026-10-14 07:53:45','2026-10-14 07:53:45'),(5,NULL,'Otros','wallet',1,1,'2026-10-14 07:53:45','2026-10-14 07:53:45'),(6,3,'Suscripciones',NULL,0,1,'2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `categories` VALUES (1,NULL,'Transporte','expense',1,1,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,NULL,'Alimentación','expense',1,1,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,NULL,'Materiales de estudio','document',1,1,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(4,NULL,'Entretenimiento','flag',1,1,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(5,NULL,'Otros','wallet',1,1,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(6,3,'Suscripciones',NULL,0,1,'2026-11-04 08:29:32','2026-11-04 08:29:32');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `chat_messages`
+--
+
 DROP TABLE IF EXISTS `chat_messages`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -201,10 +283,19 @@ CREATE TABLE `chat_messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `chat_messages`
+--
+
 LOCK TABLES `chat_messages` WRITE;
 /*!40000 ALTER TABLE `chat_messages` DISABLE KEYS */;
 /*!40000 ALTER TABLE `chat_messages` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `chat_states`
+--
+
 DROP TABLE IF EXISTS `chat_states`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -221,10 +312,19 @@ CREATE TABLE `chat_states` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `chat_states`
+--
+
 LOCK TABLES `chat_states` WRITE;
 /*!40000 ALTER TABLE `chat_states` DISABLE KEYS */;
 /*!40000 ALTER TABLE `chat_states` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `expenses`
+--
+
 DROP TABLE IF EXISTS `expenses`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -232,7 +332,11 @@ CREATE TABLE `expenses` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint(20) unsigned NOT NULL,
   `category_id` bigint(20) unsigned DEFAULT NULL,
+  `parent_expense_id` bigint(20) unsigned DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
+  `type` enum('fijo','variable') NOT NULL DEFAULT 'variable',
+  `frequency` enum('semanal','quincenal','mensual') DEFAULT NULL,
+  `next_occurrence_date` date DEFAULT NULL,
   `date` date NOT NULL,
   `description` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -241,16 +345,28 @@ CREATE TABLE `expenses` (
   KEY `expenses_category_id_foreign` (`category_id`),
   KEY `expenses_user_id_date_index` (`user_id`,`date`),
   KEY `expenses_user_id_category_id_index` (`user_id`,`category_id`),
+  KEY `expenses_parent_expense_id_foreign` (`parent_expense_id`),
+  KEY `expenses_type_next_occurrence_date_index` (`type`,`next_occurrence_date`),
   CONSTRAINT `expenses_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `expenses_parent_expense_id_foreign` FOREIGN KEY (`parent_expense_id`) REFERENCES `expenses` (`id`) ON DELETE SET NULL,
   CONSTRAINT `expenses_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `expenses`
+--
+
 LOCK TABLES `expenses` WRITE;
 /*!40000 ALTER TABLE `expenses` DISABLE KEYS */;
-INSERT INTO `expenses` VALUES (1,3,1,3.44,'2026-09-20','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,3,1,4.15,'2026-08-27','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,3,1,10.98,'2026-09-29','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(4,3,1,5.58,'2026-08-31','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(5,3,1,7.17,'2026-08-26','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(6,3,1,5.55,'2026-10-02','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(7,3,1,9.23,'2026-10-07','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(8,3,1,5.99,'2026-08-19','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(9,3,1,9.39,'2026-09-29','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(10,3,1,5.41,'2026-08-20','Pasaje','2026-10-14 07:53:46','2026-10-14 07:53:46'),(11,3,2,22.11,'2026-09-10','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(12,3,2,20.65,'2026-09-12','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(13,3,2,24.32,'2026-09-15','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(14,3,2,18.11,'2026-09-24','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(15,3,2,16.29,'2026-09-19','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(16,3,2,19.57,'2026-08-20','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(17,3,2,15.53,'2026-08-19','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(18,3,2,14.04,'2026-09-14','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(19,3,2,12.53,'2026-10-10','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(20,3,2,11.64,'2026-10-09','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(21,3,2,17.04,'2026-08-19','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(22,3,2,16.41,'2026-09-04','Almuerzo','2026-10-14 07:53:46','2026-10-14 07:53:46'),(23,3,3,21.97,'2026-10-01','Fotocopias / útiles','2026-10-14 07:53:46','2026-10-14 07:53:46'),(24,3,3,16.00,'2026-10-09','Fotocopias / útiles','2026-10-14 07:53:46','2026-10-14 07:53:46'),(25,3,3,74.08,'2026-10-07','Fotocopias / útiles','2026-10-14 07:53:46','2026-10-14 07:53:46'),(26,3,3,26.11,'2026-09-04','Fotocopias / útiles','2026-10-14 07:53:46','2026-10-14 07:53:46'),(27,3,3,54.21,'2026-09-27','Fotocopias / útiles','2026-10-14 07:53:46','2026-10-14 07:53:46'),(28,3,4,48.79,'2026-09-19','Salida con amigos','2026-10-14 07:53:46','2026-10-14 07:53:46'),(29,3,4,52.43,'2026-09-11','Salida con amigos','2026-10-14 07:53:46','2026-10-14 07:53:46'),(30,3,4,37.58,'2026-08-26','Salida con amigos','2026-10-14 07:53:46','2026-10-14 07:53:46'),(31,3,4,57.51,'2026-09-18','Salida con amigos','2026-10-14 07:53:46','2026-10-14 07:53:46'),(32,3,5,20.40,'2026-09-10','Gasto varios','2026-10-14 07:53:46','2026-10-14 07:53:46'),(33,3,5,21.61,'2026-09-19','Gasto varios','2026-10-14 07:53:46','2026-10-14 07:53:46'),(34,3,5,23.42,'2026-10-12','Gasto varios','2026-10-14 07:53:46','2026-10-14 07:53:46'),(35,3,5,23.66,'2026-08-18','Gasto varios','2026-10-14 07:53:46','2026-10-14 07:53:46'),(36,3,6,45.00,'2026-10-03','Streaming de música','2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `expenses` VALUES (1,3,1,NULL,11.94,'variable',NULL,NULL,'2026-10-30','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,3,1,NULL,7.55,'variable',NULL,NULL,'2026-09-07','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,3,1,NULL,4.35,'variable',NULL,NULL,'2026-09-19','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(4,3,1,NULL,7.69,'variable',NULL,NULL,'2026-09-07','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(5,3,1,NULL,7.71,'variable',NULL,NULL,'2026-10-22','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(6,3,1,NULL,6.54,'variable',NULL,NULL,'2026-10-26','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(7,3,1,NULL,3.78,'variable',NULL,NULL,'2026-10-23','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(8,3,1,NULL,7.44,'variable',NULL,NULL,'2026-10-31','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(9,3,1,NULL,5.48,'variable',NULL,NULL,'2026-10-17','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(10,3,1,NULL,5.23,'variable',NULL,NULL,'2026-10-20','Pasaje','2026-11-04 08:29:32','2026-11-04 08:29:32'),(11,3,2,NULL,14.95,'variable',NULL,NULL,'2026-10-17','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(12,3,2,NULL,12.00,'variable',NULL,NULL,'2026-10-16','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(13,3,2,NULL,18.58,'variable',NULL,NULL,'2026-10-27','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(14,3,2,NULL,11.90,'variable',NULL,NULL,'2026-11-02','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(15,3,2,NULL,24.50,'variable',NULL,NULL,'2026-10-17','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(16,3,2,NULL,13.09,'variable',NULL,NULL,'2026-10-07','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(17,3,2,NULL,17.64,'variable',NULL,NULL,'2026-10-28','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(18,3,2,NULL,24.36,'variable',NULL,NULL,'2026-09-17','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(19,3,2,NULL,24.45,'variable',NULL,NULL,'2026-10-05','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(20,3,2,NULL,23.25,'variable',NULL,NULL,'2026-09-09','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(21,3,2,NULL,24.47,'variable',NULL,NULL,'2026-10-02','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(22,3,2,NULL,18.80,'variable',NULL,NULL,'2026-10-02','Almuerzo','2026-11-04 08:29:32','2026-11-04 08:29:32'),(23,3,3,NULL,24.66,'variable',NULL,NULL,'2026-09-16','Fotocopias / útiles','2026-11-04 08:29:32','2026-11-04 08:29:32'),(24,3,3,NULL,29.11,'variable',NULL,NULL,'2026-09-10','Fotocopias / útiles','2026-11-04 08:29:32','2026-11-04 08:29:32'),(25,3,3,NULL,21.59,'variable',NULL,NULL,'2026-10-16','Fotocopias / útiles','2026-11-04 08:29:32','2026-11-04 08:29:32'),(26,3,3,NULL,35.65,'variable',NULL,NULL,'2026-11-03','Fotocopias / útiles','2026-11-04 08:29:32','2026-11-04 08:29:32'),(27,3,3,NULL,25.39,'variable',NULL,NULL,'2026-09-18','Fotocopias / útiles','2026-11-04 08:29:32','2026-11-04 08:29:32'),(28,3,4,NULL,58.43,'variable',NULL,NULL,'2026-10-18','Salida con amigos','2026-11-04 08:29:32','2026-11-04 08:29:32'),(29,3,4,NULL,57.05,'variable',NULL,NULL,'2026-10-11','Salida con amigos','2026-11-04 08:29:32','2026-11-04 08:29:32'),(30,3,4,NULL,36.69,'variable',NULL,NULL,'2026-10-01','Salida con amigos','2026-11-04 08:29:32','2026-11-04 08:29:32'),(31,3,4,NULL,38.66,'variable',NULL,NULL,'2026-09-09','Salida con amigos','2026-11-04 08:29:32','2026-11-04 08:29:32'),(32,3,5,NULL,34.36,'variable',NULL,NULL,'2026-11-04','Gasto varios','2026-11-04 08:29:32','2026-11-04 08:29:32'),(33,3,5,NULL,16.02,'variable',NULL,NULL,'2026-10-20','Gasto varios','2026-11-04 08:29:32','2026-11-04 08:29:32'),(34,3,5,NULL,32.46,'variable',NULL,NULL,'2026-09-16','Gasto varios','2026-11-04 08:29:32','2026-11-04 08:29:32'),(35,3,5,NULL,10.37,'variable',NULL,NULL,'2026-09-17','Gasto varios','2026-11-04 08:29:32','2026-11-04 08:29:32'),(36,3,6,NULL,45.00,'variable',NULL,NULL,'2026-11-03','Streaming de música','2026-11-04 08:29:32','2026-11-04 08:29:32');
 /*!40000 ALTER TABLE `expenses` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `faculties`
+--
+
 DROP TABLE IF EXISTS `faculties`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -263,11 +379,20 @@ CREATE TABLE `faculties` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `faculties`
+--
+
 LOCK TABLES `faculties` WRITE;
 /*!40000 ALTER TABLE `faculties` DISABLE KEYS */;
-INSERT INTO `faculties` VALUES (1,'Ingeniería','2026-10-14 07:53:45','2026-10-14 07:53:45'),(2,'Ciencias de la Salud','2026-10-14 07:53:45','2026-10-14 07:53:45'),(3,'Negocios','2026-10-14 07:53:45','2026-10-14 07:53:45'),(4,'Comunicaciones','2026-10-14 07:53:45','2026-10-14 07:53:45'),(5,'Derecho','2026-10-14 07:53:45','2026-10-14 07:53:45'),(6,'Arquitectura','2026-10-14 07:53:45','2026-10-14 07:53:45');
+INSERT INTO `faculties` VALUES (1,'Ingeniería','2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,'Ciencias de la Salud','2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,'Negocios','2026-11-04 08:29:32','2026-11-04 08:29:32'),(4,'Comunicaciones','2026-11-04 08:29:32','2026-11-04 08:29:32'),(5,'Derecho','2026-11-04 08:29:32','2026-11-04 08:29:32'),(6,'Arquitectura','2026-11-04 08:29:32','2026-11-04 08:29:32');
 /*!40000 ALTER TABLE `faculties` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `failed_jobs`
+--
+
 DROP TABLE IF EXISTS `failed_jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -284,10 +409,53 @@ CREATE TABLE `failed_jobs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `failed_jobs`
+--
+
 LOCK TABLES `failed_jobs` WRITE;
 /*!40000 ALTER TABLE `failed_jobs` DISABLE KEYS */;
 /*!40000 ALTER TABLE `failed_jobs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `feature_flags`
+--
+
+DROP TABLE IF EXISTS `feature_flags`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feature_flags` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(255) NOT NULL,
+  `label` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `disabled_at` timestamp NULL DEFAULT NULL,
+  `disabled_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `feature_flags_key_unique` (`key`),
+  KEY `feature_flags_disabled_by_foreign` (`disabled_by`),
+  CONSTRAINT `feature_flags_disabled_by_foreign` FOREIGN KEY (`disabled_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `feature_flags`
+--
+
+LOCK TABLES `feature_flags` WRITE;
+/*!40000 ALTER TABLE `feature_flags` DISABLE KEYS */;
+INSERT INTO `feature_flags` VALUES (1,'incomes','Ingresos','Registrar y ver ingresos (fijos y variables).',1,NULL,NULL,'2026-11-04 08:28:53','2026-11-04 08:28:53'),(2,'expenses','Gastos','Registrar y ver gastos (fijos y variables).',1,NULL,NULL,'2026-11-04 08:28:53','2026-11-04 08:28:53'),(3,'budgets','Presupuesto','Definir y ver presupuestos por categoría.',1,NULL,NULL,'2026-11-04 08:28:53','2026-11-04 08:28:53'),(4,'savings_goals','Metas','Crear metas de ahorro y registrar aportes.',1,NULL,NULL,'2026-11-04 08:28:53','2026-11-04 08:28:53'),(5,'loans','Préstamos','Registrar préstamos, confirmaciones y amortizaciones de deuda.',1,NULL,NULL,'2026-11-04 08:28:53','2026-11-04 08:28:53'),(6,'shared_expenses','Gastos compartidos','Dividir gastos con otros estudiantes.',1,NULL,NULL,'2026-11-04 08:28:53','2026-11-04 08:28:53'),(7,'ai_chat','Asistente IA','El chat/voz con IA (incluye todas sus acciones: agregar gasto, ingreso, préstamo, etc. por chat).',1,NULL,NULL,'2026-11-04 08:28:53','2026-11-04 08:28:53');
+/*!40000 ALTER TABLE `feature_flags` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `goal_contributions`
+--
+
 DROP TABLE IF EXISTS `goal_contributions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -308,11 +476,20 @@ CREATE TABLE `goal_contributions` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `goal_contributions`
+--
+
 LOCK TABLES `goal_contributions` WRITE;
 /*!40000 ALTER TABLE `goal_contributions` DISABLE KEYS */;
-INSERT INTO `goal_contributions` VALUES (1,1,3,1000.00,'2026-09-24','Ahorro inicial','2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,1,3,600.00,'2026-10-08','Aporte de freelance','2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,3,3,500.00,'2026-09-04','Meta alcanzada','2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `goal_contributions` VALUES (1,1,3,1000.00,'2026-10-15','Ahorro inicial','2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,1,3,600.00,'2026-10-29','Aporte de freelance','2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,3,3,500.00,'2026-09-25','Meta alcanzada','2026-11-04 08:29:33','2026-11-04 08:29:33');
 /*!40000 ALTER TABLE `goal_contributions` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `incomes`
+--
+
 DROP TABLE IF EXISTS `incomes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -337,11 +514,20 @@ CREATE TABLE `incomes` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `incomes`
+--
+
 LOCK TABLES `incomes` WRITE;
 /*!40000 ALTER TABLE `incomes` DISABLE KEYS */;
-INSERT INTO `incomes` VALUES (1,3,NULL,850.00,'2026-10-05','Beca universitaria','fijo','mensual','2026-11-05','2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,3,NULL,150.00,'2026-09-19','Trabajo freelance','variable',NULL,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,3,NULL,90.00,'2026-09-26','Venta de apuntes','variable',NULL,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(4,3,NULL,120.00,'2026-10-02','Trabajo freelance','variable',NULL,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(5,3,NULL,60.00,'2026-10-09','Venta ocasional','variable',NULL,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(6,3,NULL,100.00,'2026-10-12','Trabajo freelance','variable',NULL,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `incomes` VALUES (1,3,NULL,850.00,'2026-11-05','Beca universitaria','fijo','mensual','2026-11-05','2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,3,NULL,150.00,'2026-10-10','Trabajo freelance','variable',NULL,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,3,NULL,90.00,'2026-10-17','Venta de apuntes','variable',NULL,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(4,3,NULL,120.00,'2026-10-23','Trabajo freelance','variable',NULL,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(5,3,NULL,60.00,'2026-10-30','Venta ocasional','variable',NULL,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(6,3,NULL,100.00,'2026-11-02','Trabajo freelance','variable',NULL,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32');
 /*!40000 ALTER TABLE `incomes` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `job_batches`
+--
+
 DROP TABLE IF EXISTS `job_batches`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -360,10 +546,19 @@ CREATE TABLE `job_batches` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `job_batches`
+--
+
 LOCK TABLES `job_batches` WRITE;
 /*!40000 ALTER TABLE `job_batches` DISABLE KEYS */;
 /*!40000 ALTER TABLE `job_batches` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `jobs`
+--
+
 DROP TABLE IF EXISTS `jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -380,10 +575,19 @@ CREATE TABLE `jobs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `jobs`
+--
+
 LOCK TABLES `jobs` WRITE;
 /*!40000 ALTER TABLE `jobs` DISABLE KEYS */;
 /*!40000 ALTER TABLE `jobs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `liquidity_alerts`
+--
+
 DROP TABLE IF EXISTS `liquidity_alerts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -402,11 +606,50 @@ CREATE TABLE `liquidity_alerts` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `liquidity_alerts`
+--
+
 LOCK TABLES `liquidity_alerts` WRITE;
 /*!40000 ALTER TABLE `liquidity_alerts` DISABLE KEYS */;
-INSERT INTO `liquidity_alerts` VALUES (1,3,80.00,150.00,'dashboard','2026-10-11 07:53:46','2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `liquidity_alerts` VALUES (1,3,80.00,150.00,'dashboard','2026-11-01 08:29:33','2026-11-04 08:29:33','2026-11-04 08:29:33');
 /*!40000 ALTER TABLE `liquidity_alerts` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `loan_amortizations`
+--
+
+DROP TABLE IF EXISTS `loan_amortizations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `loan_amortizations` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `loan_id` bigint(20) unsigned NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` enum('pendiente','aceptado','rechazado') NOT NULL DEFAULT 'pendiente',
+  `resolved_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `loan_amortizations_loan_id_foreign` (`loan_id`),
+  CONSTRAINT `loan_amortizations_loan_id_foreign` FOREIGN KEY (`loan_id`) REFERENCES `loans` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `loan_amortizations`
+--
+
+LOCK TABLES `loan_amortizations` WRITE;
+/*!40000 ALTER TABLE `loan_amortizations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `loan_amortizations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `loans`
+--
+
 DROP TABLE IF EXISTS `loans`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -417,8 +660,10 @@ CREATE TABLE `loans` (
   `person_user_id` bigint(20) unsigned DEFAULT NULL,
   `direction` enum('prestado','recibido') NOT NULL,
   `amount` decimal(10,2) NOT NULL,
+  `paid_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `date` date NOT NULL,
   `due_date` date DEFAULT NULL,
+  `last_overdue_notified_at` timestamp NULL DEFAULT NULL,
   `status` varchar(30) NOT NULL DEFAULT 'pendiente',
   `counterpart_loan_id` bigint(20) unsigned DEFAULT NULL,
   `notes` text DEFAULT NULL,
@@ -434,10 +679,19 @@ CREATE TABLE `loans` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `loans`
+--
+
 LOCK TABLES `loans` WRITE;
 /*!40000 ALTER TABLE `loans` DISABLE KEYS */;
 /*!40000 ALTER TABLE `loans` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `migrations`
+--
+
 DROP TABLE IF EXISTS `migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -446,14 +700,23 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `migrations`
+--
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_09_23_035500_create_user_settings_table',1),(5,'2026_09_23_035501_create_categories_table',1),(6,'2026_09_23_035501_create_expenses_table',1),(7,'2026_09_23_035501_create_incomes_table',1),(8,'2026_09_23_035502_create_budgets_table',1),(9,'2026_09_23_035502_create_savings_goals_table',1),(10,'2026_09_23_035503_create_goal_contributions_table',1),(11,'2026_09_23_035503_create_liquidity_alerts_table',1),(12,'2026_10_07_163045_add_role_and_is_active_to_users_table',1),(13,'2026_10_07_163046_add_is_active_to_categories_table',1),(14,'2026_10_07_173755_create_ai_providers_table',1),(15,'2026_10_07_173755_create_ai_usage_logs_table',1),(16,'2026_10_07_173755_create_chat_messages_table',1),(17,'2026_10_07_173756_create_chat_states_table',1),(18,'2026_10_07_211430_create_ai_settings_table',1),(19,'2026_10_07_211616_add_language_to_user_settings_table',1),(20,'2026_10_07_211921_create_faculties_table',1),(21,'2026_10_07_211922_add_faculty_id_to_users_table',1),(22,'2026_10_07_215156_add_approval_fields_to_users_table',1),(23,'2026_10_12_000001_create_support_requests_table',1),(24,'2026_10_12_000002_create_notifications_table',1),(25,'2026_10_12_000003_add_reminder_toggles_to_user_settings_table',1),(26,'2026_10_12_000004_add_weekly_summary_toggle_to_user_settings_table',1),(27,'2026_10_12_000005_create_loans_table',1),(28,'2026_10_12_000006_create_shared_expenses_table',1),(29,'2026_10_12_000007_add_onboarding_completed_at_to_user_settings_table',1),(30,'2026_10_12_000008_add_font_size_to_user_settings_table',1),(31,'2026_10_13_000001_redesign_shared_expense_participants',1),(32,'2026_10_13_000002_add_person_user_id_to_loans_table',1),(33,'2026_10_13_150933_add_confirmation_workflow_to_loans_table',1),(34,'2026_10_13_192218_add_last_seen_at_to_users_table',1),(35,'2026_10_13_214733_add_live_support_to_requests_and_messages',1),(36,'2026_10_14_023648_create_activity_log_table',1),(37,'2026_10_14_023649_add_event_column_to_activity_log_table',1),(38,'2026_10_14_023650_add_batch_uuid_column_to_activity_log_table',1);
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_09_23_035500_create_user_settings_table',1),(5,'2026_09_23_035501_create_categories_table',1),(6,'2026_09_23_035501_create_expenses_table',1),(7,'2026_09_23_035501_create_incomes_table',1),(8,'2026_09_23_035502_create_budgets_table',1),(9,'2026_09_23_035502_create_savings_goals_table',1),(10,'2026_09_23_035503_create_goal_contributions_table',1),(11,'2026_09_23_035503_create_liquidity_alerts_table',1),(12,'2026_10_07_163045_add_role_and_is_active_to_users_table',1),(13,'2026_10_07_163046_add_is_active_to_categories_table',1),(14,'2026_10_07_173755_create_ai_providers_table',1),(15,'2026_10_07_173755_create_ai_usage_logs_table',1),(16,'2026_10_07_173755_create_chat_messages_table',1),(17,'2026_10_07_173756_create_chat_states_table',1),(18,'2026_10_07_211430_create_ai_settings_table',1),(19,'2026_10_07_211616_add_language_to_user_settings_table',1),(20,'2026_10_07_211921_create_faculties_table',1),(21,'2026_10_07_211922_add_faculty_id_to_users_table',1),(22,'2026_10_07_215156_add_approval_fields_to_users_table',1),(23,'2026_10_12_000001_create_support_requests_table',1),(24,'2026_10_12_000002_create_notifications_table',1),(25,'2026_10_12_000003_add_reminder_toggles_to_user_settings_table',1),(26,'2026_10_12_000004_add_weekly_summary_toggle_to_user_settings_table',1),(27,'2026_10_12_000005_create_loans_table',1),(28,'2026_10_12_000006_create_shared_expenses_table',1),(29,'2026_10_12_000007_add_onboarding_completed_at_to_user_settings_table',1),(30,'2026_10_12_000008_add_font_size_to_user_settings_table',1),(31,'2026_10_13_000001_redesign_shared_expense_participants',1),(32,'2026_10_13_000002_add_person_user_id_to_loans_table',1),(33,'2026_10_13_150933_add_confirmation_workflow_to_loans_table',1),(34,'2026_10_13_192218_add_last_seen_at_to_users_table',1),(35,'2026_10_13_214733_add_live_support_to_requests_and_messages',1),(36,'2026_10_14_023648_create_activity_log_table',1),(37,'2026_10_14_023649_add_event_column_to_activity_log_table',1),(38,'2026_10_14_023650_add_batch_uuid_column_to_activity_log_table',1),(39,'2026_11_03_000001_add_recurrence_to_expenses_table',1),(40,'2026_11_03_000002_add_amortization_to_loans_table',1),(41,'2026_11_03_000003_create_loan_amortizations_table',1),(42,'2026_11_04_000001_create_feature_flags_table',1);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
 DROP TABLE IF EXISTS `notifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -471,10 +734,19 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `notifications`
+--
+
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `password_reset_tokens`
+--
+
 DROP TABLE IF EXISTS `password_reset_tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -486,10 +758,19 @@ CREATE TABLE `password_reset_tokens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `password_reset_tokens`
+--
+
 LOCK TABLES `password_reset_tokens` WRITE;
 /*!40000 ALTER TABLE `password_reset_tokens` DISABLE KEYS */;
 /*!40000 ALTER TABLE `password_reset_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `savings_goals`
+--
+
 DROP TABLE IF EXISTS `savings_goals`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -510,11 +791,20 @@ CREATE TABLE `savings_goals` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `savings_goals`
+--
+
 LOCK TABLES `savings_goals` WRITE;
 /*!40000 ALTER TABLE `savings_goals` DISABLE KEYS */;
-INSERT INTO `savings_goals` VALUES (1,3,'Nueva laptop',2400.00,'2027-03-14',1600.00,'active',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,3,'Viaje de graduación',2000.00,'2027-07-14',600.00,'active',NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,3,'Fondo de emergencia',500.00,NULL,500.00,'completed','2026-10-14 07:53:46','2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `savings_goals` VALUES (1,3,'Nueva laptop',2400.00,'2027-04-04',1600.00,'active',NULL,'2026-11-04 08:29:32','2026-11-04 08:29:33'),(2,3,'Viaje de graduación',2000.00,'2027-08-04',600.00,'active',NULL,'2026-11-04 08:29:33','2026-11-04 08:29:33'),(3,3,'Fondo de emergencia',500.00,NULL,500.00,'completed','2026-11-04 08:29:33','2026-11-04 08:29:33','2026-11-04 08:29:33');
 /*!40000 ALTER TABLE `savings_goals` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `sessions`
+--
+
 DROP TABLE IF EXISTS `sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -531,10 +821,19 @@ CREATE TABLE `sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `sessions`
+--
+
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `shared_expense_contributions`
+--
+
 DROP TABLE IF EXISTS `shared_expense_contributions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -552,10 +851,19 @@ CREATE TABLE `shared_expense_contributions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `shared_expense_contributions`
+--
+
 LOCK TABLES `shared_expense_contributions` WRITE;
 /*!40000 ALTER TABLE `shared_expense_contributions` DISABLE KEYS */;
 /*!40000 ALTER TABLE `shared_expense_contributions` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `shared_expense_participants`
+--
+
 DROP TABLE IF EXISTS `shared_expense_participants`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -578,10 +886,19 @@ CREATE TABLE `shared_expense_participants` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `shared_expense_participants`
+--
+
 LOCK TABLES `shared_expense_participants` WRITE;
 /*!40000 ALTER TABLE `shared_expense_participants` DISABLE KEYS */;
 /*!40000 ALTER TABLE `shared_expense_participants` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `shared_expenses`
+--
+
 DROP TABLE IF EXISTS `shared_expenses`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -606,10 +923,19 @@ CREATE TABLE `shared_expenses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `shared_expenses`
+--
+
 LOCK TABLES `shared_expenses` WRITE;
 /*!40000 ALTER TABLE `shared_expenses` DISABLE KEYS */;
 /*!40000 ALTER TABLE `shared_expenses` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `support_requests`
+--
+
 DROP TABLE IF EXISTS `support_requests`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -631,10 +957,19 @@ CREATE TABLE `support_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `support_requests`
+--
+
 LOCK TABLES `support_requests` WRITE;
 /*!40000 ALTER TABLE `support_requests` DISABLE KEYS */;
 /*!40000 ALTER TABLE `support_requests` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `user_settings`
+--
+
 DROP TABLE IF EXISTS `user_settings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -661,11 +996,20 @@ CREATE TABLE `user_settings` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `user_settings`
+--
+
 LOCK TABLES `user_settings` WRITE;
 /*!40000 ALTER TABLE `user_settings` DISABLE KEYS */;
-INSERT INTO `user_settings` VALUES (1,1,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,2,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,3,'PEN','light','normal','es',1,150.00,1,1,1,1,500.00,NULL,'2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `user_settings` VALUES (1,1,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,2,'PEN','light','normal','es',1,100.00,1,1,1,1,0.00,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,3,'PEN','light','normal','es',1,150.00,1,1,1,1,500.00,NULL,'2026-11-04 08:29:32','2026-11-04 08:29:32');
 /*!40000 ALTER TABLE `user_settings` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
 DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -691,9 +1035,13 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `users`
+--
+
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Administrador KashaFin','admin@kashafin.test','2026-10-14 07:53:45','$2y$12$nVK1X46Gg/TA4R5iFWzS8eWbxYRbYvDGlDOYnV9Hk5lTKsk2Fccme','admin',NULL,'2026-10-14 07:53:46',NULL,0,1,'lRIv7jjMTG','2026-10-14 07:53:46','2026-10-14 07:53:46'),(2,'Decano Demo','decano@kashafin.test','2026-10-14 07:53:46','$2y$12$nVK1X46Gg/TA4R5iFWzS8eWbxYRbYvDGlDOYnV9Hk5lTKsk2Fccme','decano',1,'2026-10-14 07:53:46',NULL,0,1,'taReRWxTwB','2026-10-14 07:53:46','2026-10-14 07:53:46'),(3,'Estudiante Demo','demo@kashafin.test','2026-10-14 07:53:46','$2y$12$nVK1X46Gg/TA4R5iFWzS8eWbxYRbYvDGlDOYnV9Hk5lTKsk2Fccme','estudiante',1,'2026-10-14 07:53:46',NULL,0,1,'XBg2CgYRUf','2026-10-14 07:53:46','2026-10-14 07:53:46');
+INSERT INTO `users` VALUES (1,'Administrador KashaFin','admin@kashafin.test','2026-11-04 08:29:32','$2y$12$x3BRlr19V8JoAqszHT/PguUxEShdmno3/0kOYMp90j644TXwP2eiO','admin',NULL,'2026-11-04 08:29:32',NULL,0,1,'pqVFZwyZK0','2026-11-04 08:29:32','2026-11-04 08:29:32'),(2,'Decano Demo','decano@kashafin.test','2026-11-04 08:29:32','$2y$12$x3BRlr19V8JoAqszHT/PguUxEShdmno3/0kOYMp90j644TXwP2eiO','decano',1,'2026-11-04 08:29:32',NULL,0,1,'wJ5H4iyLFW','2026-11-04 08:29:32','2026-11-04 08:29:32'),(3,'Estudiante Demo','demo@kashafin.test','2026-11-04 08:29:32','$2y$12$x3BRlr19V8JoAqszHT/PguUxEShdmno3/0kOYMp90j644TXwP2eiO','estudiante',1,'2026-11-04 08:29:32',NULL,0,1,'oLn1LWIpDU','2026-11-04 08:29:32','2026-11-04 08:29:32');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -706,3 +1054,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+-- Dump completed on 2026-11-03 22:29:45
