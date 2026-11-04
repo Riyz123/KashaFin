@@ -49,7 +49,42 @@
                 [12, 18, 3, 0], [22, 70, 3, 1.1], [34, 42, 2, 2.3], [48, 85, 3, 0.6],
                 [58, 12, 3, 1.8], [66, 60, 4, 2.9], [76, 30, 2, 0.3], [84, 75, 3, 1.5],
                 [18, 55, 2, 2.6], [90, 45, 3, 0.9], [8, 88, 2, 1.4], [40, 8, 3, 2.1],
-                [70, 90, 2, 0.5], [95, 20, 2, 2.0],
+                [70, 90, 2, 0.5], [95, 20, 2, 2.0], [5, 35, 2, 0.8], [28, 92, 2, 1.7],
+                [44, 25, 3, 2.4], [52, 65, 2, 0.4], [62, 38, 2, 1.9], [78, 55, 3, 0.2],
+                [88, 15, 2, 2.7], [15, 48, 2, 1.3], [97, 60, 2, 0.7], [36, 78, 2, 2.2],
+            ];
+
+            // The reference video's "aurora" isn't a single curved line, it's
+            // several thin strands woven together like a ribbon (close to a
+            // DNA-helix look) undulating through full waves, not one gentle
+            // arc. This builds that wave as repeated cubic-bezier bumps
+            // alternating up/down from a baseline — not a mathematically
+            // exact sine curve, but indistinguishable from one at this
+            // scale, and far easier to tune by eye than hardcoding every
+            // curve point by hand.
+            $auroraWave = function (float $baseline, float $amplitude, float $step, bool $startUp, float $xStart = -60, float $xEnd = 660) {
+                $amp = $amplitude * 1.3;
+                $dir = $startUp ? -1 : 1;
+                $d = sprintf('M %.0f %.0f', $xStart, $baseline);
+                $x = $xStart;
+                while ($x < $xEnd) {
+                    $nextX = $x + $step;
+                    $midY = $baseline + $dir * $amp;
+                    $d .= sprintf(' C %.0f %.0f, %.0f %.0f, %.0f %.0f', $x + $step * 0.33, $midY, $x + $step * 0.67, $midY, $nextX, $baseline);
+                    $dir *= -1;
+                    $x = $nextX;
+                }
+
+                return $d;
+            };
+
+            // Faint candlestick-chart bars in the background, like the
+            // reference video has — an upward trend, fitting "libertad
+            // financiera". [height %, is the bar an "up" candle]
+            $auroraCandles = [
+                [25, true], [40, false], [22, true], [55, true], [35, false], [65, true],
+                [48, false], [75, true], [58, false], [85, true], [68, false], [55, true],
+                [80, true], [62, false], [92, true], [72, false],
             ];
         @endphp
 
@@ -85,30 +120,43 @@
                 <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-500/55 blur-[150px] mix-blend-multiply dark:bg-brand-500/45 dark:mix-blend-screen"></div>
                 <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-teal-300/55 blur-[130px] mix-blend-multiply dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
 
-                {{-- Thin curved line strokes, like the reference image —
-                     not filled shapes. Two groups of curves, each its own
-                     <g> so it can drift as one piece; the two groups are
-                     given opposite drift directions (aurora-lines-1 moves
-                     up-right, aurora-lines-2 moves down-left — see
-                     app.css) so the lines visibly move independently of
-                     each other instead of everything sliding the same
-                     way. currentColor + Tailwind's text-*/dark: classes
-                     color each group without needing a second dark-mode
-                     copy of the SVG. --}}
+                {{-- Woven ribbon strands, like the reference video — each
+                     "ribbon" is 3 parallel wave strands (not 1 line) with
+                     offset baselines/amplitudes so they cross over each
+                     other, braided/helix-like, instead of just one curve.
+                     Two groups, each its own <g> so it drifts as one
+                     piece; the two groups get opposite drift directions
+                     (aurora-lines-1 up-right, aurora-lines-2 down-left —
+                     see app.css) so they visibly move independently
+                     instead of the whole picture sliding one way.
+                     currentColor + Tailwind's text-*/dark: classes color
+                     each group without a second dark-mode copy of the
+                     SVG. --}}
                 <svg class="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 600 700" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
                     <g class="aurora-lines-1 text-brand-800/70 dark:text-emerald-400/70">
-                        <path d="M -50 90 C 130 20, 260 170, 420 60 C 500 5, 560 55, 650 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        <path d="M -50 180 C 160 90, 300 260, 470 130 C 540 80, 590 120, 650 90" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                        <path d="M -50 10 C 180 -40, 320 80, 650 -60" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                        <path d="{{ $auroraWave(120, 55, 140, true) }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="{{ $auroraWave(155, 45, 140, false) }}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
+                        <path d="{{ $auroraWave(95, 30, 140, true) }}" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.6" />
                     </g>
                     <g class="aurora-lines-2 text-brand-dark/60 dark:text-teal-300/60">
-                        <path d="M -50 540 C 130 460, 270 610, 440 500 C 520 450, 580 495, 650 455" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        <path d="M -50 630 C 160 560, 300 690, 470 580" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        <path d="{{ $auroraWave(520, 55, 150, true) }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="{{ $auroraWave(558, 45, 150, false) }}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
+                        <path d="{{ $auroraWave(488, 28, 150, true) }}" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.6" />
                     </g>
                     <g class="aurora-lines-2 text-red-500/35 dark:text-red-400/25" style="animation-delay: -4s">
-                        <path d="M -50 470 C 120 410, 240 520, 400 440" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                        <path d="{{ $auroraWave(440, 35, 160, false) }}" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
                     </g>
                 </svg>
+
+                {{-- Faint candlestick chart in the background — a detail
+                     the reference video also has, and it fits a finance
+                     app's branding. Static (not part of the aurora
+                     motion), just ambient texture. --}}
+                <div class="pointer-events-none absolute right-8 top-10 flex items-end gap-1 opacity-[0.15] dark:opacity-20" style="height: 9rem">
+                    @foreach ($auroraCandles as [$height, $isUp])
+                        <span class="w-1.5 rounded-sm {{ $isUp ? 'bg-emerald-400' : 'bg-brand-700' }}" style="height: {{ $height }}%"></span>
+                    @endforeach
+                </div>
 
                 @foreach ($auroraSparks as [$top, $left, $size, $delay])
                     <span
