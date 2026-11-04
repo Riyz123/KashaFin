@@ -31,17 +31,30 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         {{--
             Unlike layouts/app.blade.php and layouts/admin.blade.php, this
-            layout deliberately does NOT opt into the browser's native
-            View Transitions crossfade between pages. The brand panel is
-            `fixed` (see below) so it can cover the full screen on mobile
-            — fixed/absolute elements get their own transition "group" by
-            default, which during a real cross-page navigation (e.g.
-            tapping "¿Olvidaste tu contraseña?") can render as a garbled
-            frame where the old and new page's fixed layers and text
-            don't line up for a moment before settling. Turbo's plain
-            instant swap avoids that entirely; a login flow doesn't need
-            the animated crossfade other pages get.
+            layout opts OUT of Turbo Drive's soft (fetch-based) navigation
+            entirely — `turbo-visit-control: reload` makes every visit TO
+            a guest-layout page (tapping "¿Olvidaste tu contraseña?",
+            "Regístrate aquí", browser back/forward, anything) a plain
+            full browser navigation instead. Found the hard way: on the
+            real InfinityFree deployment (reproducible on production,
+            Chrome, not reproducible against local dev in any browser
+            tested here), tapping between login/register/forgot-password
+            sometimes left a blank white page that only a manual reload
+            fixed. That's the signature of Turbo's own safety check —
+            when a soft-fetched page's <head> doesn't byte-for-byte match
+            what Turbo expected (stale HTML from InfinityFree's or the
+            phone's own caching serving an old build's asset hashes
+            instead of the current one), Turbo aborts the soft swap and
+            is supposed to fall back to a reload on its own, but with
+            InfinityFree's caching stacked on top that fallback can still
+            land on another stale/inconsistent response. A plain reload
+            on every visit sidesteps that whole class of problem instead
+            of depending on Turbo's cache-matching logic working — at the
+            cost of the instant SPA-like transition, which these specific
+            pages don't need anyway (nobody's rapidly hopping between
+            login and register).
         --}}
+        <meta name="turbo-visit-control" content="reload">
 
         <title>{{ config('app.name', 'KashaFin') }}</title>
 
