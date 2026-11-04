@@ -84,15 +84,30 @@
                 <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-400/50 blur-[150px] dark:bg-brand-500/45 dark:mix-blend-screen"></div>
                 <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-emerald-200/45 blur-[130px] dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
 
-                {{-- Curtains: three tall bands that sway and have their
-                     own bright streak sliding up and down inside them —
-                     this is the part that actually reads as "real aurora
-                     movement" rather than a glow drifting around (see
-                     .aurora-curtain / aurora-sway-* / aurora-flow in
-                     app.css). Dark-mode only, that's where it belongs. --}}
-                <div class="aurora-curtain aurora-curtain-1 hidden left-[8%] text-emerald-400 opacity-40 blur-xl mix-blend-screen dark:block"></div>
-                <div class="aurora-curtain aurora-curtain-2 hidden left-[38%] text-teal-300 opacity-35 blur-xl mix-blend-screen dark:block"></div>
-                <div class="aurora-curtain aurora-curtain-3 hidden left-[64%] text-cyan-300 opacity-30 blur-xl mix-blend-screen dark:block"></div>
+                {{-- Thin curved line strokes, like the reference image —
+                     not filled shapes. Two groups of curves, each its own
+                     <g> so it can drift as one piece; the two groups are
+                     given opposite drift directions (aurora-lines-1 moves
+                     up-right, aurora-lines-2 moves down-left — see
+                     app.css) so the lines visibly move independently of
+                     each other instead of everything sliding the same
+                     way. currentColor + Tailwind's text-*/dark: classes
+                     color each group without needing a second dark-mode
+                     copy of the SVG. --}}
+                <svg class="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 600 700" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
+                    <g class="aurora-lines-1 text-brand-500/60 dark:text-emerald-400/70">
+                        <path d="M -50 90 C 130 20, 260 170, 420 60 C 500 5, 560 55, 650 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="M -50 180 C 160 90, 300 260, 470 130 C 540 80, 590 120, 650 90" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        <path d="M -50 10 C 180 -40, 320 80, 650 -60" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                    </g>
+                    <g class="aurora-lines-2 text-emerald-600/50 dark:text-teal-300/60">
+                        <path d="M -50 540 C 130 460, 270 610, 440 500 C 520 450, 580 495, 650 455" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="M -50 630 C 160 560, 300 690, 470 580" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </g>
+                    <g class="aurora-lines-2 text-red-400/30 dark:text-red-400/25" style="animation-delay: -4s">
+                        <path d="M -50 470 C 120 410, 240 520, 400 440" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                    </g>
+                </svg>
 
                 @foreach ($auroraSparks as [$top, $left, $size, $delay])
                     <span
