@@ -75,12 +75,11 @@
 }
 
 /* Auth screens (login/register, see layouts/guest.blade.php): the jagged
-   "rayo" notch on the brand panel. Mobile-first: the base clip-path cuts
-   a single sharp V into the BOTTOM edge (branding is stacked on top of
-   the form there), and `lg:` replaces it with a notch on the RIGHT edge
-   instead (branding is a side-by-side column on desktop) — a plain CSS
-   media query here since Tailwind has no arbitrary-clip-path variant
-   that's worth the line length for something this shape-specific.
+   "rayo" notch on the brand panel's right edge — desktop only now. On
+   mobile the panel is a full-screen fixed background behind a floating
+   card (see guest.blade.php), not a stacked block with an edge to notch
+   into, so it stays a plain rectangle there; `lg:` is what adds the
+   clip-path once the panel goes back to being a side-by-side column.
    drop-shadow (not box-shadow, which can't follow a clip-path) traces a
    glow around the whole clipped shape, brightest right at the notch
    since that's the sharpest point of the cut. It pulses on a loop
@@ -93,7 +92,6 @@
    (both logo variants, both background tones) rather than staying fixed
    dark like an earlier draft of this did. */
 .auth-brand-panel {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 60% 100%, 50% calc(100% - 3rem), 40% 100%, 0 100%);
     animation: auth-rayo-flicker-light 5s ease-in-out infinite;
 }
 

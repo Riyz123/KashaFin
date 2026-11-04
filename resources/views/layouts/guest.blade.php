@@ -29,7 +29,19 @@
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="view-transition" content="same-origin">
+        {{--
+            Unlike layouts/app.blade.php and layouts/admin.blade.php, this
+            layout deliberately does NOT opt into the browser's native
+            View Transitions crossfade between pages. The brand panel is
+            `fixed` (see below) so it can cover the full screen on mobile
+            — fixed/absolute elements get their own transition "group" by
+            default, which during a real cross-page navigation (e.g.
+            tapping "¿Olvidaste tu contraseña?") can render as a garbled
+            frame where the old and new page's fixed layers and text
+            don't line up for a moment before settling. Turbo's plain
+            instant swap avoids that entirely; a login flow doesn't need
+            the animated crossfade other pages get.
+        --}}
 
         <title>{{ config('app.name', 'KashaFin') }}</title>
 
@@ -54,16 +66,18 @@
         @endphp
 
         <div class="min-h-screen lg:flex">
-            {{-- Brand panel — a shorter version stacks above the form on
-                 mobile, side-by-side on desktop. `lg:fixed` on desktop
-                 lets it extend past the 42% width the form panel
-                 reserves for it (`lg:ml-*` below), so the jagged
-                 .auth-brand-panel edge can overlap and poke into the
-                 form panel instead of just butting up against it.
+            {{-- Brand panel. On mobile it's `fixed inset-0` — the full
+                 screen, behind everything else, so the glow/sparks cover
+                 the whole viewport instead of just a strip up top; the
+                 actual form floats centered on top of it in its own card
+                 (below). On desktop (`lg:`) it goes back to being the
+                 fixed LEFT column it always was, same width the form
+                 panel reserves for it (`lg:ml-*` below) so the jagged
+                 .auth-brand-panel edge can overlap into the form panel.
                  Follows the site's light/dark toggle, like the rest of
                  the page — both logo files and both background tones
                  swap by theme. --}}
-            <div class="auth-brand-panel pointer-events-none relative flex h-[42vh] min-h-[320px] w-full flex-col items-center justify-center gap-4 overflow-hidden bg-gradient-to-br from-white via-brand-100 to-brand-400 p-8 dark:from-black dark:via-gray-950 dark:to-emerald-950 lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:min-h-0 lg:w-[calc(42%+4rem)] lg:p-12 xl:w-[calc(38%+4rem)]">
+            <div class="auth-brand-panel pointer-events-none fixed inset-0 z-0 overflow-hidden bg-gradient-to-br from-white via-brand-100 to-brand-400 dark:from-black dark:via-gray-950 dark:to-emerald-950 lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-[calc(42%+4rem)] lg:items-center lg:justify-center lg:p-12 xl:w-[calc(38%+4rem)]">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.white/80%),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
 
                 {{-- A few twinkling dots — see $auroraSparks above. --}}
@@ -74,7 +88,15 @@
                     ></span>
                 @endforeach
 
-                <div class="relative z-10 flex max-w-sm flex-col items-center gap-4 text-center">
+                {{-- Desktop-only: the big centered logo/title/tagline,
+                     since this panel is its own side column there and has
+                     the room to center something in. On mobile the panel
+                     is just the full-screen glow background — the logo
+                     lives in the form panel's own normal document flow
+                     instead (below), so it can never overlap the card the
+                     way centering both independently in the same fixed
+                     viewport used to. --}}
+                <div class="relative z-10 hidden max-w-sm flex-col items-center gap-4 text-center lg:flex">
                     <img src="{{ asset('images/logo-dark.png') }}" alt="KashaFin" class="h-24 w-24 object-contain dark:hidden">
                     <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="hidden h-24 w-24 object-contain dark:block">
                     <h1 class="text-5xl font-extrabold">
@@ -84,14 +106,23 @@
                 </div>
             </div>
 
-            {{-- Form panel --}}
-            <div class="flex min-h-screen flex-1 flex-col bg-white dark:bg-gray-900 lg:ml-[42%] xl:ml-[38%]">
+            {{-- Form panel. On mobile this is a transparent overlay sitting
+                 ON TOP of the full-screen brand panel (`z-10`) — the logo
+                 and the card both live in its own normal flow (next),
+                 stacked one after another instead of each independently
+                 centered in the full viewport, which is what overlapped
+                 them before. On desktop it goes back to being an opaque
+                 side-by-side column (lg:bg-white/lg:dark:bg-gray-900 on
+                 the outer div), and the mobile logo block/card framing
+                 both disappear since the desktop brand panel already has
+                 its own centered logo and the form needs no frame there. --}}
+            <div class="relative z-10 flex min-h-screen flex-1 flex-col lg:bg-white lg:dark:bg-gray-900 lg:ml-[42%] xl:ml-[38%]">
                 <div class="flex items-center justify-end px-6 py-4">
                     <button
                         type="button"
                         x-data="{ dark: document.documentElement.classList.contains('dark') }"
                         @click="dark = !dark; window.toggleGuestThemeAnimated(dark, $event)"
-                        class="rounded-md p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        class="rounded-md bg-white/70 p-2 text-gray-700 backdrop-blur-sm hover:bg-white dark:bg-gray-900/60 dark:text-gray-200 dark:hover:bg-gray-900/80 lg:bg-transparent lg:text-gray-500 lg:backdrop-blur-none lg:hover:bg-gray-100 lg:dark:bg-transparent lg:dark:text-gray-300 lg:dark:hover:bg-gray-700"
                         title="Cambiar tema"
                         aria-label="Cambiar entre tema claro y oscuro"
                     >
@@ -100,8 +131,24 @@
                     </button>
                 </div>
 
-                <div class="flex flex-1 items-center justify-center px-6 pb-12">
-                    <div class="w-full max-w-md">
+                <div class="flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-12">
+                    {{-- Mobile-only logo block, in normal flow right above
+                         the card — see the comment above for why this
+                         isn't just reused from inside the fixed panel. --}}
+                    <div class="flex flex-col items-center gap-2 text-center lg:hidden">
+                        <img src="{{ asset('images/logo-dark.png') }}" alt="KashaFin" class="h-16 w-16 object-contain dark:hidden">
+                        <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="hidden h-16 w-16 object-contain dark:block">
+                        <h1 class="text-3xl font-extrabold">
+                            <span class="text-brand-dark dark:text-white">Kasha</span><span class="text-brand-600 dark:text-brand-light">Fin</span>
+                        </h1>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Tu libertad financiera, hoy.</p>
+                    </div>
+
+                    {{-- The "frame": a white/dark card on mobile (where it's
+                         floating over the full-bleed glow), reset back to
+                         plain unboxed content on desktop (where the form
+                         panel itself already has that solid background). --}}
+                    <div class="w-full max-w-md rounded-2xl bg-white/95 p-6 shadow-2xl backdrop-blur-sm dark:bg-gray-900/95 sm:p-8 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none lg:dark:bg-transparent">
                         {{ $slot }}
                     </div>
                 </div>
