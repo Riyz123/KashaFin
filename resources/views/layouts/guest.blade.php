@@ -65,19 +65,31 @@
             ];
         @endphp
 
-        <div class="min-h-screen lg:flex">
-            {{-- Brand panel. On mobile it's `fixed inset-0` — the full
-                 screen, behind everything else, so the glow/sparks cover
-                 the whole viewport instead of just a strip up top; the
-                 actual form floats centered on top of it in its own card
-                 (below). On desktop (`lg:`) it goes back to being the
-                 fixed LEFT column it always was, same width the form
-                 panel reserves for it (`lg:ml-*` below) so the jagged
-                 .auth-brand-panel edge can overlap into the form panel.
+        <div class="relative min-h-screen lg:flex">
+            {{-- Brand panel. On mobile it's `absolute inset-0` against this
+                 OUTER `relative` wrapper — not `fixed` — so it stretches to
+                 the wrapper's actual full height, which grows with however
+                 tall the page's real content is (register's form is much
+                 taller than login's, forgot-password's shorter still).
+                 `fixed` was the earlier choice here, and it's exactly what
+                 caused the bug where switching between login/register/
+                 forgot-password on mobile looked broken: a `fixed` element
+                 only ever covers ONE viewport's worth of height, so on any
+                 page taller than that the glow just stopped partway down
+                 and the plain body background showed below it — a visible
+                 seam, different on every page depending on its height,
+                 which is exactly what reads as "se buguea" when flipping
+                 between these three. `absolute` has no such limit; it
+                 simply matches its positioned ancestor's real height,
+                 covering the whole page every time, however long that is.
+
+                 On desktop (`lg:`) it goes back to `fixed` — there the
+                 panel is a column next to a form that scrolls on its own,
+                 and staying pinned while that happens is the whole point.
                  Follows the site's light/dark toggle, like the rest of
                  the page — both logo files and both background tones
                  swap by theme. --}}
-            <div class="auth-brand-panel pointer-events-none fixed inset-0 z-0 overflow-hidden bg-gradient-to-br from-white via-brand-100 to-brand-400 dark:from-black dark:via-gray-950 dark:to-emerald-950 lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-[calc(42%+4rem)] lg:items-center lg:justify-center lg:p-12 xl:w-[calc(38%+4rem)]">
+            <div class="auth-brand-panel pointer-events-none absolute inset-0 z-0 overflow-hidden bg-gradient-to-br from-white via-brand-100 to-brand-400 dark:from-black dark:via-gray-950 dark:to-emerald-950 lg:fixed lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-[calc(42%+4rem)] lg:items-center lg:justify-center lg:p-12 xl:w-[calc(38%+4rem)]">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.white/80%),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
 
                 {{-- A few twinkling dots — see $auroraSparks above. --}}
