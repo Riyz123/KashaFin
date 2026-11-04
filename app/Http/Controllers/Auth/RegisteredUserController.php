@@ -3,21 +3,30 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Mail\RegistrationCodeMail;
 use App\Models\Faculty;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * registro-simple branch: self-registration is instant here — no code
+ * emailed to confirm the inbox, no dean/admin approval queue. Any
+ * @upn.pe address the student types is trusted as-is and the account is
+ * born active and approved, same as one a dean creates directly. This is
+ * deliberately a SEPARATE branch from main, which keeps the full
+ * verify-then-approve flow (RegistrationVerificationController,
+ * NewPendingStudentNotification, etc.) — don't port this simplification
+ * back to main.
+ */
 class RegisteredUserController extends Controller
 {
-    public const CODE_TTL_MINUTES = 15;
-
     /**
      * Display the registration view.
      */
@@ -27,12 +36,6 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * First step of self-registration: validates the data and emails a
-     * 6-digit code to confirm the student actually controls that inbox —
-     * the account itself isn't created yet (see
-     * RegistrationVerificationController::verify()), so a typo'd or fake
-     * email never reaches the dean's pending queue.
-     *
      * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
@@ -49,28 +52,25 @@ class RegisteredUserController extends Controller
                 'ends_with:@upn.pe',
             ],
             'faculty_id' => ['required', 'exists:faculties,id'],
+            'password' => ['required', Password::defaults(), 'confirmed'],
         ], [
             'email.ends_with' => 'Debes registrarte con tu correo institucional (@upn.pe).',
         ]);
 
-        $code = (string) random_int(100000, 999999);
-
-        Cache::put(self::cacheKey($data['email']), [
+        $user = User::create([
             'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
             'faculty_id' => $data['faculty_id'],
-            'code' => $code,
-            'attempts' => 0,
-        ], now()->addMinutes(self::CODE_TTL_MINUTES));
+            'role' => 'estudiante',
+            'is_active' => true,
+            'approved_at' => now(),
+        ]);
 
-        Mail::to($data['email'])->send(new RegistrationCodeMail($data['name'], $code));
+        event(new Registered($user));
 
-        $request->session()->put('registration_email', $data['email']);
+        Auth::login($user);
 
-        return redirect()->route('register.verify');
-    }
-
-    public static function cacheKey(string $email): string
-    {
-        return 'registration_code:'.$email;
+        return redirect()->route('dashboard');
     }
 }

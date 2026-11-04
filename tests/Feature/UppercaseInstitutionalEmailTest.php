@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Mail\RegistrationCodeMail;
 use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,11 +26,13 @@ class UppercaseInstitutionalEmailTest extends TestCase
             'name' => 'Estudiante Real',
             'email' => 'N00321428@upn.pe',
             'faculty_id' => $faculty->id,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
         ]);
 
         $response->assertSessionDoesntHaveErrors('email');
-        $response->assertRedirect(route('register.verify'));
-        Mail::assertSent(RegistrationCodeMail::class, fn ($mail) => $mail->hasTo('n00321428@upn.pe'));
+        $response->assertRedirect(route('dashboard'));
+        $this->assertDatabaseHas('users', ['email' => 'n00321428@upn.pe']);
     }
 
     public function test_admin_manual_add_accepts_and_normalizes_an_uppercase_institutional_email(): void

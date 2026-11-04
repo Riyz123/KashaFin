@@ -27,6 +27,12 @@ class User extends Authenticatable
         'role',
         'is_active',
         'faculty_id',
+        // registro-simple only: self-registration sets this directly to
+        // skip the approval queue main still has (see
+        // RegisteredUserController). Nothing on main ever mass-assigns
+        // this — the dean-approval flow sets it via a plain ->update()
+        // call that doesn't go through $fillable at all.
+        'approved_at',
     ];
 
     /**
