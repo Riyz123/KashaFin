@@ -10,7 +10,9 @@
                 whatever was remembered in localStorage from a previous visit —
                 or the OS preference the first time — avoiding a flash of the
                 wrong theme. toggleGuestThemeAnimated() in theme-toggle.js
-                writes to the same key.
+                writes to the same key. This only affects the FORM side of the
+                page — the brand panel below is always the same dark theme on
+                purpose, it doesn't follow this toggle.
             --}}
             <script>
                 (function () {
@@ -65,73 +67,66 @@
         @endphp
 
         <div class="min-h-screen lg:flex">
-            {{-- Brand panel — desktop only (the form needs the full width
-                 on mobile). `lg:fixed` lets it extend past the width the
+            {{-- Brand panel — always visible now, on every breakpoint
+                 (earlier drafts hid it below `lg` and showed a plain
+                 compact logo bar instead; this one stacks a shorter
+                 version of the real panel above the form on mobile).
+                 `lg:fixed` on desktop lets it extend past the width the
                  form panel reserves for it (`lg:ml-*` below), so the
                  jagged .auth-brand-panel edge can overlap and poke into
-                 the form panel instead of just butting up against it.
-                 Every color here — the gradient, the glow, the aurora
-                 blobs, the logo mark itself — has a dark: variant, so
-                 toggling the theme updates this whole panel instantly,
-                 automatically, together with the rest of the page. --}}
-            <div class="auth-brand-panel pointer-events-none fixed inset-y-0 left-0 z-10 hidden overflow-hidden lg:flex lg:w-[calc(42%+4rem)] xl:w-[calc(38%+4rem)] flex-col items-center justify-center gap-4 bg-gradient-to-br from-white via-brand-100 to-brand-400 p-12 dark:from-black dark:via-gray-950 dark:to-emerald-950">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.white/80%),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
+                 the form panel instead of just butting up against it —
+                 that trick only applies once it's actually fixed, so
+                 mobile (plain flow) doesn't need or get it.
 
-                {{-- The actual moving aurora: a real WebGL scene
-                     (three.js, see resources/js/aurora-three.js —
-                     registerAuroraThree, wired up in app.js on
-                     turbo:load via a dynamic import so the ~900kb
-                     three.js chunk only loads on this page). Two
-                     translucent ribbons, glossy gradient fill plus a
-                     fine wireframe mesh over the same geometry, rippling
-                     from 3D simplex noise every frame and lit with real
-                     bloom post-processing — not a flat 2D line drawing.
-                     It runs in both themes: only the color palette and
-                     blend mode change (additive in dark so overlapping
-                     light brightens like real light; normal blending in
-                     light, where additive would just bleach everything
-                     to white), reacting instantly to the
-                     kashafin:theme-change event theme-toggle.js fires.
-                     It resizes itself to the panel on every resize —
-                     genuinely responsive, not just "looks fine at
-                     common widths" — and respects prefers-reduced-motion
-                     by rendering one static frame instead of looping. --}}
-                <canvas id="aurora-canvas" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+                 This panel is ALWAYS the same dark theme, independent of
+                 the light/dark toggle in the form panel below/beside it
+                 — a deliberate choice (the brand side is a fixed brand
+                 moment, not a themed UI surface), not an oversight. --}}
+            <div class="auth-brand-panel pointer-events-none relative flex h-[42vh] min-h-[320px] w-full flex-col items-center justify-center gap-4 overflow-hidden bg-gradient-to-br from-black via-gray-950 to-emerald-950 p-8 lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:min-h-0 lg:w-[calc(42%+4rem)] lg:p-12 xl:w-[calc(38%+4rem)]">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
+
+                {{-- Aureolas: plain CSS blur blobs that float and rescale
+                     on a slow loop (see .aurora-blob / aurora-float-* in
+                     app.css) — no canvas, no WebGL, no library. --}}
+                <div class="aurora-blob aurora-blob-a -left-16 top-4 h-56 w-56 bg-emerald-500/50 blur-[100px] lg:h-72 lg:w-72"></div>
+                <div class="aurora-blob aurora-blob-b -right-12 top-1/3 h-52 w-52 bg-brand-400/45 blur-[100px] lg:h-64 lg:w-64"></div>
+                <div class="aurora-blob aurora-blob-c -bottom-10 left-1/4 h-48 w-48 bg-teal-400/40 blur-[100px] lg:h-60 lg:w-60"></div>
+                <div class="aurora-blob aurora-blob-d right-0 bottom-0 h-40 w-40 bg-emerald-300/35 blur-[100px] lg:h-52 lg:w-52"></div>
+
+                {{-- The "data flow" dust: tsParticles (see
+                     resources/js/aurora-particles.js, loaded via a
+                     dynamic import in app.js so the library only
+                     downloads on this page), dots drifting slowly upward
+                     with faint connecting lines between nearby ones. --}}
+                <div id="aurora-particles" class="absolute inset-0"></div>
 
                 {{-- Faint candlestick chart in the background — fits a
                      finance app's branding. Static, just ambient texture. --}}
-                <div class="pointer-events-none absolute right-8 top-10 flex items-end gap-1 opacity-[0.15] dark:opacity-20" style="height: 9rem">
+                <div class="pointer-events-none absolute right-6 top-6 flex items-end gap-1 opacity-20 lg:right-8 lg:top-10" style="height: 5rem">
                     @foreach ($auroraCandles as [$height, $isUp])
-                        <span class="w-1.5 rounded-sm {{ $isUp ? 'bg-emerald-400' : 'bg-brand-700' }}" style="height: {{ $height }}%"></span>
+                        <span class="w-1 rounded-sm lg:w-1.5 {{ $isUp ? 'bg-emerald-400' : 'bg-brand-700' }}" style="height: {{ $height }}%"></span>
                     @endforeach
                 </div>
 
                 @foreach ($auroraSparks as [$top, $left, $size, $delay])
                     <span
-                        class="aurora-spark absolute rounded-full bg-brand-700/80 shadow-[0_0_6px_rgba(21,128,61,0.6)] dark:bg-white dark:shadow-[0_0_8px_rgba(255,255,255,0.9)]"
+                        class="aurora-spark absolute rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]"
                         style="top: {{ $top }}%; left: {{ $left }}%; width: {{ $size }}px; height: {{ $size }}px; animation-delay: {{ $delay }}s"
                     ></span>
                 @endforeach
 
-                <div class="relative z-10 flex max-w-sm flex-col items-center gap-3 text-center">
-                    <img src="{{ asset('images/logo-dark.png') }}" alt="KashaFin" class="h-16 w-16 object-contain dark:hidden">
-                    <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="hidden h-16 w-16 object-contain dark:block">
-                    <h1 class="text-4xl font-extrabold">
-                        <span class="text-brand-dark dark:text-white">Kasha</span><span class="text-brand-600 dark:text-brand-light">Fin</span>
+                <div class="relative z-10 flex max-w-sm flex-col items-center gap-2 text-center lg:gap-3">
+                    <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="h-12 w-12 object-contain lg:h-16 lg:w-16">
+                    <h1 class="text-3xl font-extrabold lg:text-4xl">
+                        <span class="text-white">Kasha</span><span class="text-brand-light">Fin</span>
                     </h1>
-                    <p class="text-gray-600 dark:text-gray-400">Tu libertad financiera, hoy.</p>
+                    <p class="text-sm text-gray-400 lg:text-base">Tu libertad financiera, hoy.</p>
                 </div>
             </div>
 
             {{-- Form panel --}}
             <div class="flex min-h-screen flex-1 flex-col bg-white dark:bg-gray-900 lg:ml-[42%] xl:ml-[38%]">
-                <div class="flex items-center justify-between px-6 py-4 lg:justify-end">
-                    <a href="/" class="flex items-center gap-2 text-brand-dark dark:text-brand-light lg:hidden">
-                        <img src="{{ asset('images/logo-dark.png') }}" alt="KashaFin" class="h-8 w-8 object-contain dark:hidden">
-                        <img src="{{ asset('images/logo-light.png') }}" alt="KashaFin" class="hidden h-8 w-8 object-contain dark:block">
-                        <span class="text-lg font-bold">KashaFin</span>
-                    </a>
-
+                <div class="flex items-center justify-end px-6 py-4">
                     <button
                         type="button"
                         x-data="{ dark: document.documentElement.classList.contains('dark') }"
