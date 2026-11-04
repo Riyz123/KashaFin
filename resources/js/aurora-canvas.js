@@ -1,12 +1,12 @@
 import { createNoise2D } from 'simplex-noise';
 
 /**
- * Real aurora borealis — drawn with Canvas2D, driven by simplex noise
- * instead of a fixed sine wave, so each ribbon drifts organically and
- * never repeats on a visible cycle the way a hand-tuned CSS keyframe
- * does. Used on the login/register brand panel (layouts/guest.blade.php)
- * — the panel itself is desktop-only, so this never even starts on a
- * phone.
+ * The LIGHT-mode aurora on the login/register brand panel — thin glowing
+ * ribbons driven by simplex noise instead of a fixed sine wave, so they
+ * drift organically and never repeat on a visible cycle. Canvas2D is
+ * enough here (no bloom/lighting needed against a pale background); dark
+ * mode gets the full WebGL version instead (see aurora-three.js) since
+ * that's where a glowing wireframe mesh actually reads well.
  *
  * Each ribbon is a set of points sampled across the canvas width, where
  * the y-offset at point `i` and time `t` comes from
@@ -17,7 +17,7 @@ import { createNoise2D } from 'simplex-noise';
  * independently instead of in lockstep.
  */
 export function registerAuroraCanvas() {
-    const canvas = document.getElementById('aurora-canvas');
+    const canvas = document.getElementById('aurora-canvas-light');
 
     if (!canvas) {
         return;
@@ -35,16 +35,21 @@ export function registerAuroraCanvas() {
         { noise: createNoise2D(), baseline: 0.76, amplitude: 60, frequency: 0.012, speed: -0.00065, width: 2, points: 70 },
     ];
 
-    const palettes = {
-        light: { ribbons: ['#166534', '#15803d', '#047857', '#0f766e'], blend: 'multiply', alpha: 0.5 },
-        dark: { ribbons: ['#34d399', '#2dd4bf', '#6ee7b7', '#22d3ee'], blend: 'lighter', alpha: 0.55 },
-    };
+    const colors = ['#166534', '#15803d', '#047857', '#0f766e'];
 
     let width = 0;
     let height = 0;
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
     let frameId = null;
     let running = false;
+
+    function isDark() {
+        return document.documentElement.classList.contains('dark');
+    }
+
+    function shouldRun() {
+        return desktopQuery.matches && !isDark();
+    }
 
     function resize() {
         const rect = panel.getBoundingClientRect();
@@ -57,11 +62,7 @@ export function registerAuroraCanvas() {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    function palette() {
-        return document.documentElement.classList.contains('dark') ? palettes.dark : palettes.light;
-    }
-
-    function drawRibbon(ribbon, color, time, alpha) {
+    function drawRibbon(ribbon, color, time) {
         const step = width / ribbon.points;
 
         ctx.beginPath();
@@ -79,7 +80,7 @@ export function registerAuroraCanvas() {
         }
 
         ctx.strokeStyle = color;
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = 0.5;
         ctx.lineWidth = ribbon.width;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
@@ -90,11 +91,9 @@ export function registerAuroraCanvas() {
 
     function draw(time) {
         ctx.clearRect(0, 0, width, height);
+        ctx.globalCompositeOperation = 'multiply';
 
-        const { ribbons: colors, blend, alpha } = palette();
-        ctx.globalCompositeOperation = blend;
-
-        ribbons.forEach((ribbon, i) => drawRibbon(ribbon, colors[i % colors.length], time, alpha));
+        ribbons.forEach((ribbon, i) => drawRibbon(ribbon, colors[i % colors.length], time));
 
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
@@ -106,7 +105,7 @@ export function registerAuroraCanvas() {
     }
 
     function start() {
-        if (running) {
+        if (running || !shouldRun()) {
             return;
         }
 
@@ -131,31 +130,34 @@ export function registerAuroraCanvas() {
         }
     }
 
-    // The panel (and this canvas) is only ever shown at `lg` and up —
-    // don't run a rendering loop at all behind a `display: none` panel
-    // on phones, and start/stop cleanly if the window is resized across
-    // that breakpoint.
-    const handleBreakpointChange = (e) => (e.matches ? start() : stop());
-    const handleResize = () => running && resize();
-
-    desktopQuery.addEventListener('change', handleBreakpointChange);
-    window.addEventListener('resize', handleResize);
-
-    if (desktopQuery.matches) {
-        start();
+    function sync() {
+        if (shouldRun()) {
+            start();
+        } else {
+            stop();
+        }
     }
+
+    const handleResize = () => running && resize();
+    const handleThemeChange = sync;
+
+    desktopQuery.addEventListener('change', sync);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('kashafin:theme-change', handleThemeChange);
+
+    sync();
 
     // Same reasoning as every other interval/rAF loop in this app (see
     // notifications-poll.js) — Turbo Drive swaps <body> on navigation
     // without a full reload. The rAF loop alone would leak like any
-    // other interval, but the two addEventListener calls above leak
-    // worse: `document` and `window` survive the swap, so without this
-    // they'd pile up one extra stale listener (holding a reference to
-    // this closure's now-detached canvas) per login/register visit for
-    // the rest of the tab's life.
+    // other interval, but the addEventListener calls above leak worse:
+    // `document`/`window` survive the swap, so without this they'd pile
+    // up one extra stale listener (holding a reference to this closure's
+    // now-detached canvas) per login/register visit for the tab's life.
     document.addEventListener('turbo:before-cache', () => {
         stop();
-        desktopQuery.removeEventListener('change', handleBreakpointChange);
+        desktopQuery.removeEventListener('change', sync);
         window.removeEventListener('resize', handleResize);
+        window.removeEventListener('kashafin:theme-change', handleThemeChange);
     }, { once: true });
 }

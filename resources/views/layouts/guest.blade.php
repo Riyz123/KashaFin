@@ -92,18 +92,31 @@
                 <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-500/55 blur-[150px] mix-blend-multiply dark:bg-brand-500/45 dark:mix-blend-screen"></div>
                 <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-teal-300/55 blur-[130px] mix-blend-multiply dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
 
-                {{-- The actual moving aurora: simplex-noise-driven ribbons
-                     drawn on a <canvas>, not a fixed CSS/SVG keyframe —
-                     see resources/js/aurora-canvas.js (registerAuroraCanvas,
-                     wired up in app.js on turbo:load). Noise-driven motion
-                     never repeats on a visible cycle the way a hand-tuned
-                     wave animation does, each ribbon moves independently,
-                     and it resizes itself to the panel on every resize —
-                     genuinely responsive, not just "looks fine at common
-                     widths". It reads the current theme (light/dark) and
-                     prefers-reduced-motion itself, so no dark: classes are
-                     needed here. --}}
-                <canvas id="aurora-canvas" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+                {{-- The actual moving aurora — two different renderers
+                     depending on the theme, each only active for its own
+                     theme (resources/js/aurora-canvas.js / aurora-three.js,
+                     wired up in app.js on turbo:load; they start/stop
+                     themselves on the kashafin:theme-change event
+                     theme-toggle.js fires, so switching themes doesn't
+                     leave the wrong one running in the background).
+
+                     Light: simplex-noise-driven lines on a plain 2D
+                     canvas — enough against a pale background.
+
+                     Dark: a real WebGL scene (three.js) — a glowing
+                     wireframe mesh rippling via 3D simplex noise, bloom
+                     post-processing for the actual glow, and a particle
+                     field. This is what a hand-drawn 2D sketch can't
+                     fake: real depth, real light bleed from the bloom
+                     pass, genuinely different from a flat line drawing.
+
+                     Both resize themselves to the panel on every resize
+                     — genuinely responsive, not just "looks fine at
+                     common widths" — and both respect
+                     prefers-reduced-motion by rendering one static frame
+                     instead of looping. --}}
+                <canvas id="aurora-canvas-light" class="pointer-events-none absolute inset-0 h-full w-full dark:hidden" aria-hidden="true"></canvas>
+                <canvas id="aurora-canvas-dark" class="pointer-events-none absolute inset-0 hidden h-full w-full dark:block" aria-hidden="true"></canvas>
 
                 {{-- Faint candlestick chart in the background — fits a
                      finance app's branding. Static, just ambient texture. --}}

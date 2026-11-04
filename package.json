@@ -21,6 +21,7 @@
     "dependencies": {
         "@hotwired/turbo": "^8.0.23",
         "chart.js": "^4.5.1",
-        "simplex-noise": "^4.0.3"
+        "simplex-noise": "^4.0.3",
+        "three": "^0.187.0"
     }
 }

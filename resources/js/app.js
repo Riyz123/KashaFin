@@ -42,4 +42,13 @@ document.addEventListener('turbo:load', () => {
     mountLiquidityChart();
     mountReportCharts();
     registerAuroraCanvas();
+
+    // three.js + its postprocessing passes are ~900kb on their own —
+    // far too heavy to ship in the main bundle every other page in the
+    // app pays for too. Dynamic import() makes Vite split it into its
+    // own chunk, fetched only when the dark-mode aurora canvas is
+    // actually on the page (login/register), never anywhere else.
+    if (document.getElementById('aurora-canvas-dark')) {
+        import('./aurora-three').then(({ registerAuroraThree }) => registerAuroraThree());
+    }
 });

@@ -16,6 +16,11 @@
 function animateThemeSwitch(dark, event, persist) {
     const apply = () => {
         document.documentElement.classList.toggle('dark', dark);
+        // Lets anything that renders differently per theme — the aurora
+        // canvases on the login/register panel, for instance — react
+        // immediately instead of polling classList on a timer. Toggling
+        // the class alone doesn't fire any DOM event on its own.
+        window.dispatchEvent(new CustomEvent('kashafin:theme-change', { detail: { dark } }));
     };
 
     persist();
