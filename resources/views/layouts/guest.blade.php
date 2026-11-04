@@ -77,46 +77,26 @@
             <div class="auth-brand-panel pointer-events-none fixed inset-y-0 left-0 z-10 hidden overflow-hidden lg:flex lg:w-[calc(42%+4rem)] xl:w-[calc(38%+4rem)] flex-col items-center justify-center gap-4 bg-gradient-to-br from-white via-brand-100 to-brand-400 p-12 dark:from-black dark:via-gray-950 dark:to-emerald-950">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.white/80%),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
 
-                {{-- Aurora: four wide, heavily-blurred, slow-drifting color
-                     bands behind the logo (see aurora-drift-* in app.css).
-                     Wide + short + rotated reads as a drifting ribbon of
-                     light instead of a lava-lamp bubble; the heavy blur
-                     (more than Tailwind's built-in blur-3xl gives) is what
-                     keeps it soft and misty even at this size instead of a
-                     solid-edged disc. Blend mode flips with the theme:
-                     screen in dark brightens overlapping colors into each
-                     other, multiply in light deepens them into pools of
-                     green instead of washing the panel one flat tint. --}}
-                <div class="aurora-blob aurora-blob-a -left-24 top-10 h-40 w-[34rem] -rotate-[18deg] bg-brand-400/70 blur-[150px] mix-blend-multiply dark:bg-emerald-400/50 dark:mix-blend-screen"></div>
-                <div class="aurora-blob aurora-blob-b -right-24 top-1/4 h-36 w-[30rem] rotate-[22deg] bg-emerald-400/60 blur-[150px] mix-blend-multiply dark:bg-teal-400/45 dark:mix-blend-screen"></div>
-                <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-500/55 blur-[150px] mix-blend-multiply dark:bg-brand-500/45 dark:mix-blend-screen"></div>
-                <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-teal-300/55 blur-[130px] mix-blend-multiply dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
-
-                {{-- The actual moving aurora — two different renderers
-                     depending on the theme, each only active for its own
-                     theme (resources/js/aurora-canvas.js / aurora-three.js,
-                     wired up in app.js on turbo:load; they start/stop
-                     themselves on the kashafin:theme-change event
-                     theme-toggle.js fires, so switching themes doesn't
-                     leave the wrong one running in the background).
-
-                     Light: simplex-noise-driven lines on a plain 2D
-                     canvas — enough against a pale background.
-
-                     Dark: a real WebGL scene (three.js) — a glowing
-                     wireframe mesh rippling via 3D simplex noise, bloom
-                     post-processing for the actual glow, and a particle
-                     field. This is what a hand-drawn 2D sketch can't
-                     fake: real depth, real light bleed from the bloom
-                     pass, genuinely different from a flat line drawing.
-
-                     Both resize themselves to the panel on every resize
-                     — genuinely responsive, not just "looks fine at
-                     common widths" — and both respect
-                     prefers-reduced-motion by rendering one static frame
-                     instead of looping. --}}
-                <canvas id="aurora-canvas-light" class="pointer-events-none absolute inset-0 h-full w-full dark:hidden" aria-hidden="true"></canvas>
-                <canvas id="aurora-canvas-dark" class="pointer-events-none absolute inset-0 hidden h-full w-full dark:block" aria-hidden="true"></canvas>
+                {{-- The actual moving aurora: a real WebGL scene
+                     (three.js, see resources/js/aurora-three.js —
+                     registerAuroraThree, wired up in app.js on
+                     turbo:load via a dynamic import so the ~900kb
+                     three.js chunk only loads on this page). Two
+                     translucent ribbons, glossy gradient fill plus a
+                     fine wireframe mesh over the same geometry, rippling
+                     from 3D simplex noise every frame and lit with real
+                     bloom post-processing — not a flat 2D line drawing.
+                     It runs in both themes: only the color palette and
+                     blend mode change (additive in dark so overlapping
+                     light brightens like real light; normal blending in
+                     light, where additive would just bleach everything
+                     to white), reacting instantly to the
+                     kashafin:theme-change event theme-toggle.js fires.
+                     It resizes itself to the panel on every resize —
+                     genuinely responsive, not just "looks fine at
+                     common widths" — and respects prefers-reduced-motion
+                     by rendering one static frame instead of looping. --}}
+                <canvas id="aurora-canvas" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
 
                 {{-- Faint candlestick chart in the background — fits a
                      finance app's branding. Static, just ambient texture. --}}

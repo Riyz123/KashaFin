@@ -110,66 +110,12 @@
     36%, 60% { filter: drop-shadow(0 0 16px rgba(110, 231, 183, 0.55)) drop-shadow(0 0 42px rgba(16, 185, 129, 0.35)); }
 }
 
-/* Slow-drifting, slow-recoloring blurred blobs behind the brand panel's
-   logo — an "aurora" effect built from plain CSS (no canvas/video asset
-   to ship or fail to load). Each blob's base color comes from Tailwind
-   classes in the markup (with dark: variants), so it already reacts to
-   the theme toggle; these keyframes handle the drifting motion and,
-   via hue-rotate, the slow color-cycling real aurora light has — big and
-   saturated enough to actually read from across the panel, not just a
-   faint tint. The reduce-motion media query above this already freezes
-   them for anyone who asked for less motion. */
-.aurora-blob {
-    position: absolute;
-    border-radius: 9999px;
-    will-change: transform, filter;
-}
-
-.aurora-blob-a {
-    animation: aurora-drift-a 20s ease-in-out infinite;
-}
-
-.aurora-blob-b {
-    animation: aurora-drift-b 25s ease-in-out infinite;
-}
-
-.aurora-blob-c {
-    animation: aurora-drift-c 16s ease-in-out infinite;
-}
-
-.aurora-blob-d {
-    animation: aurora-drift-d 30s ease-in-out infinite;
-}
-
+/* Twinkling spark dots scattered over the brand panel (see $auroraSparks
+   in layouts/guest.blade.php) — layered on top of the WebGL aurora
+   canvas (aurora-three.js) as cheap, cross-theme dust that doesn't need
+   its own render pass. */
 .aurora-spark {
     animation: aurora-twinkle 3.5s ease-in-out infinite;
-}
-
-/* These three also animate `filter` (for the hue-rotate color-cycling),
-   which means the whole `filter` shorthand — including the blur-[…]
-   utility class's own blur(…) — gets replaced by whatever this animation
-   says for the full duration it's running, not merged with it. So each
-   keyframe re-states its blob's blur value here too, matching the
-   Tailwind class in the markup; otherwise the blob would render
-   perfectly sharp the instant the animation starts. */
-@keyframes aurora-drift-a {
-    0%, 100% { transform: translate(-10%, -8%) rotate(0deg) scale(1); filter: blur(150px) hue-rotate(0deg); }
-    50% { transform: translate(16%, 14%) rotate(14deg) scale(1.35); filter: blur(150px) hue-rotate(35deg); }
-}
-
-@keyframes aurora-drift-b {
-    0%, 100% { transform: translate(14%, 16%) rotate(0deg) scale(1.15); filter: blur(150px) hue-rotate(0deg); }
-    50% { transform: translate(-18%, -10%) rotate(-16deg) scale(0.85); filter: blur(150px) hue-rotate(-30deg); }
-}
-
-@keyframes aurora-drift-c {
-    0%, 100% { transform: translate(0%, 0%) scale(1); opacity: .65; }
-    50% { transform: translate(-14%, 18%) scale(1.4); opacity: .95; }
-}
-
-@keyframes aurora-drift-d {
-    0%, 100% { transform: translate(8%, -10%) scale(1.05); filter: blur(130px) hue-rotate(0deg); }
-    50% { transform: translate(-16%, 12%) scale(1.3); filter: blur(130px) hue-rotate(40deg); }
 }
 
 @keyframes aurora-twinkle {
