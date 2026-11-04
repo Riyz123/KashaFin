@@ -155,7 +155,10 @@
         @if ($loans->isEmpty())
             <x-empty-state message="No se encontraron préstamos con esos filtros." />
         @else
-            <div class="divide-y divide-gray-100 dark:divide-gray-700">
+            <div
+                x-data="loanStatusPoll(@js($loans->mapWithKeys(fn ($loan) => [$loan->id => ['status' => $loan->status, 'paid_amount' => (float) $loan->paid_amount]])), {{ $amortizationRequests->count() }}, '{{ route('loans.statuses') }}')"
+                class="divide-y divide-gray-100 dark:divide-gray-700"
+            >
                 @foreach ($loans as $loan)
                     <div class="flex flex-wrap items-center justify-between gap-3 py-3">
                         <div>

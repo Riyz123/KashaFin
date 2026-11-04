@@ -241,6 +241,41 @@ class LoanController extends Controller
         return back()->with('status', 'Amortización rechazada.');
     }
 
+    /**
+     * Polled from the index page every ~5s so that when the OTHER side of
+     * a loan acts — accepts/rejects an amortization, confirms a payment,
+     * sends a new amortization request — this account's own view catches
+     * up on its own, without a manual reload.
+     */
+    public function statuses(Request $request)
+    {
+        $user = $request->user();
+        $ids = array_filter(explode(',', (string) $request->query('ids', '')));
+
+        $loans = Loan::query()
+            ->where('user_id', $user->id)
+            ->whereIn('id', $ids)
+            ->get();
+
+        $creditorCounterpartIds = Loan::query()
+            ->where('user_id', $user->id)
+            ->where('direction', 'prestado')
+            ->pluck('counterpart_loan_id')
+            ->filter();
+
+        $amortizationRequestsCount = LoanAmortization::query()
+            ->whereIn('loan_id', $creditorCounterpartIds)
+            ->where('status', 'pendiente')
+            ->count();
+
+        return response()->json([
+            'loans' => $loans->mapWithKeys(fn (Loan $loan) => [
+                $loan->id => ['status' => $loan->status, 'paid_amount' => (float) $loan->paid_amount],
+            ]),
+            'amortization_requests_count' => $amortizationRequestsCount,
+        ]);
+    }
+
     private function authorizeOwnership(Loan $loan): void
     {
         abort_unless($loan->user_id === auth()->id(), 403);

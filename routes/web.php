@@ -99,6 +99,7 @@ Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(fu
             ->parameters(['prestamos' => 'loan'])
             ->names('loans')
             ->except(['show', 'edit', 'update']);
+        Route::get('prestamos/estados', [LoanController::class, 'statuses'])->name('loans.statuses');
         Route::patch('prestamos/{loan}/pagado', [LoanController::class, 'markPaid'])->name('loans.mark-paid');
         Route::patch('prestamos/{loan}/aprobar', [LoanController::class, 'approve'])->name('loans.approve');
         Route::patch('prestamos/{loan}/rechazar', [LoanController::class, 'reject'])->name('loans.reject');

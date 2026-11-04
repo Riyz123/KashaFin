@@ -18,6 +18,7 @@ import { registerLoadingSpinner } from './loading-spinner';
 import { registerAdminSupportPoll } from './admin-support-poll';
 import { registerSupportListPoll } from './support-list-poll';
 import { registerAiTrafficPoll } from './ai-traffic-poll';
+import { registerLoanStatusPoll } from './loan-status-poll';
 
 window.Alpine = Alpine;
 
@@ -29,6 +30,7 @@ registerLoadingSpinner();
 registerAdminSupportPoll(Alpine);
 registerSupportListPoll(Alpine);
 registerAiTrafficPoll(Alpine);
+registerLoanStatusPoll(Alpine);
 
 Alpine.start();
 
