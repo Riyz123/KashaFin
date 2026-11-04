@@ -82,23 +82,15 @@
                  the light/dark toggle in the form panel below/beside it
                  — a deliberate choice (the brand side is a fixed brand
                  moment, not a themed UI surface), not an oversight. --}}
-            <div class="auth-brand-panel pointer-events-none relative flex h-[42vh] min-h-[320px] w-full flex-col items-center justify-center gap-4 overflow-hidden bg-gradient-to-br from-black via-gray-950 to-emerald-950 p-8 lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:min-h-0 lg:w-[calc(42%+4rem)] lg:p-12 xl:w-[calc(38%+4rem)]">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
-
-                {{-- Aureolas: plain CSS blur blobs that float and rescale
-                     on a slow loop (see .aurora-blob / aurora-float-* in
-                     app.css) — no canvas, no WebGL, no library. --}}
-                <div class="aurora-blob aurora-blob-a -left-16 top-4 h-56 w-56 bg-emerald-500/50 blur-[100px] lg:h-72 lg:w-72"></div>
-                <div class="aurora-blob aurora-blob-b -right-12 top-1/3 h-52 w-52 bg-brand-400/45 blur-[100px] lg:h-64 lg:w-64"></div>
-                <div class="aurora-blob aurora-blob-c -bottom-10 left-1/4 h-48 w-48 bg-teal-400/40 blur-[100px] lg:h-60 lg:w-60"></div>
-                <div class="aurora-blob aurora-blob-d right-0 bottom-0 h-40 w-40 bg-emerald-300/35 blur-[100px] lg:h-52 lg:w-52"></div>
-
-                {{-- The "data flow" dust: tsParticles (see
-                     resources/js/aurora-particles.js, loaded via a
-                     dynamic import in app.js so the library only
-                     downloads on this page), dots drifting slowly upward
-                     with faint connecting lines between nearby ones. --}}
-                <div id="aurora-particles" class="absolute inset-0"></div>
+            <div class="auth-brand-panel pointer-events-none relative flex h-[42vh] min-h-[320px] w-full flex-col items-center justify-center gap-4 overflow-hidden bg-[#020a07] p-8 lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:min-h-0 lg:w-[calc(42%+4rem)] lg:p-12 xl:w-[calc(38%+4rem)]">
+                {{-- The animated aureola: Vanta.js's FOG effect (built on
+                     three.js), see resources/js/aurora-vanta.js —
+                     registerAuroraVanta, loaded via a dynamic import in
+                     app.js so the library only downloads on this page.
+                     `#020a07` above is the same dark base Vanta.FOG
+                     clears to, so there's no flash of a different color
+                     in the instant before it finishes initializing. --}}
+                <div id="vanta-bg" class="absolute inset-0"></div>
 
                 {{-- Faint candlestick chart in the background — fits a
                      finance app's branding. Static, just ambient texture. --}}

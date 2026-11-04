@@ -109,47 +109,9 @@
     36%, 60% { filter: drop-shadow(0 0 16px rgba(110, 231, 183, 0.55)) drop-shadow(0 0 42px rgba(16, 185, 129, 0.35)); }
 }
 
-/* Aureolas: plain CSS blur blobs (not WebGL, not a canvas) — a handful
-   of large blurred circles whose own `transform` drifts and rescales on
-   a slow loop, giving a "living energy" feel without animating `filter`
-   at all (blur(100px) stays a static Tailwind class; the KEYFRAMES only
-   ever touch `transform`, which is what keeps this fast and avoids the
-   filter-clobbering bug an earlier draft of this hit when it tried to
-   animate blur and movement in the same property). */
-.aurora-blob {
-    position: absolute;
-    border-radius: 9999px;
-    will-change: transform;
-}
-
-.aurora-blob-a { animation: aurora-float-a 18s ease-in-out infinite; }
-.aurora-blob-b { animation: aurora-float-b 22s ease-in-out infinite; }
-.aurora-blob-c { animation: aurora-float-c 15s ease-in-out infinite; }
-.aurora-blob-d { animation: aurora-float-d 26s ease-in-out infinite; }
-
-@keyframes aurora-float-a {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(8%, 12%) scale(1.3); }
-}
-
-@keyframes aurora-float-b {
-    0%, 100% { transform: translate(0, 0) scale(1.1); }
-    50% { transform: translate(-10%, -8%) scale(0.85); }
-}
-
-@keyframes aurora-float-c {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(6%, -10%) scale(1.2); }
-}
-
-@keyframes aurora-float-d {
-    0%, 100% { transform: translate(0, 0) scale(0.95); }
-    50% { transform: translate(-7%, 9%) scale(1.15); }
-}
-
 /* Twinkling spark dots scattered over the brand panel (see $auroraSparks
    in layouts/guest.blade.php) — cheap ambient dust layered above the
-   blobs and below the tsParticles canvas (aurora-particles.js). */
+   Vanta.FOG background (aurora-vanta.js). */
 .aurora-spark {
     animation: aurora-twinkle 3.5s ease-in-out infinite;
 }

@@ -20,8 +20,8 @@
     },
     "dependencies": {
         "@hotwired/turbo": "^8.0.23",
-        "@tsparticles/engine": "^4.5.1",
-        "@tsparticles/slim": "^4.5.1",
-        "chart.js": "^4.5.1"
+        "chart.js": "^4.5.1",
+        "three": "^0.187.0",
+        "vanta": "^0.5.24"
     }
 }
