@@ -177,40 +177,6 @@
     50% { opacity: .9; }
 }
 
-/* Thin curved aurora line strokes (see the <svg> in layouts/guest.blade.php)
-   — matching the reference image, which is actual curved lines, not
-   filled shapes. The two groups drift in DIFFERENT directions (one up
-   toward the right, the other down toward the left) on different
-   durations, so the lines visibly move independently of each other
-   instead of the whole picture sliding as one piece. transform-box:
-   fill-box makes the rotation pivot around each group's own curves
-   instead of the SVG viewport's corner, which is the default and looks
-   wrong the moment rotate is involved. */
-.aurora-lines-1,
-.aurora-lines-2 {
-    transform-box: fill-box;
-    transform-origin: center;
-    will-change: transform;
-}
-
-.aurora-lines-1 {
-    animation: aurora-lines-drift-1 19s ease-in-out infinite;
-}
-
-.aurora-lines-2 {
-    animation: aurora-lines-drift-2 24s ease-in-out infinite;
-}
-
-@keyframes aurora-lines-drift-1 {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    50% { transform: translate(34px, -22px) rotate(2.5deg); }
-}
-
-@keyframes aurora-lines-drift-2 {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    50% { transform: translate(-30px, 20px) rotate(-2deg); }
-}
-
 /* RF: configurable text size, independent of the browser/OS zoom. */
 html.text-scale-large {
     font-size: 112.5%;

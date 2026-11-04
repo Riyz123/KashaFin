@@ -54,30 +54,6 @@
                 [88, 15, 2, 2.7], [15, 48, 2, 1.3], [97, 60, 2, 0.7], [36, 78, 2, 2.2],
             ];
 
-            // The reference video's "aurora" isn't a single curved line, it's
-            // several thin strands woven together like a ribbon (close to a
-            // DNA-helix look) undulating through full waves, not one gentle
-            // arc. This builds that wave as repeated cubic-bezier bumps
-            // alternating up/down from a baseline — not a mathematically
-            // exact sine curve, but indistinguishable from one at this
-            // scale, and far easier to tune by eye than hardcoding every
-            // curve point by hand.
-            $auroraWave = function (float $baseline, float $amplitude, float $step, bool $startUp, float $xStart = -60, float $xEnd = 660) {
-                $amp = $amplitude * 1.3;
-                $dir = $startUp ? -1 : 1;
-                $d = sprintf('M %.0f %.0f', $xStart, $baseline);
-                $x = $xStart;
-                while ($x < $xEnd) {
-                    $nextX = $x + $step;
-                    $midY = $baseline + $dir * $amp;
-                    $d .= sprintf(' C %.0f %.0f, %.0f %.0f, %.0f %.0f', $x + $step * 0.33, $midY, $x + $step * 0.67, $midY, $nextX, $baseline);
-                    $dir *= -1;
-                    $x = $nextX;
-                }
-
-                return $d;
-            };
-
             // Faint candlestick-chart bars in the background, like the
             // reference video has — an upward trend, fitting "libertad
             // financiera". [height %, is the bar an "up" candle]
@@ -101,57 +77,36 @@
             <div class="auth-brand-panel pointer-events-none fixed inset-y-0 left-0 z-10 hidden overflow-hidden lg:flex lg:w-[calc(42%+4rem)] xl:w-[calc(38%+4rem)] flex-col items-center justify-center gap-4 bg-gradient-to-br from-white via-brand-100 to-brand-400 p-12 dark:from-black dark:via-gray-950 dark:to-emerald-950">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.white/80%),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
 
-                {{-- Aurora: four wide, heavily-blurred, slow-drifting/
-                     recoloring color bands behind the logo — a "northern
-                     lights" feel built with pure CSS (see aurora-drift-*
-                     in app.css), no video/image asset to ship. Wide +
-                     short + rotated reads as a drifting ribbon of light
-                     instead of a lava-lamp bubble; the heavy blur (more
-                     than Tailwind's built-in blur-3xl gives) is what
-                     keeps it soft and misty even at this size instead of
-                     a solid-edged disc. Blend mode flips with the theme:
+                {{-- Aurora: four wide, heavily-blurred, slow-drifting color
+                     bands behind the logo (see aurora-drift-* in app.css).
+                     Wide + short + rotated reads as a drifting ribbon of
+                     light instead of a lava-lamp bubble; the heavy blur
+                     (more than Tailwind's built-in blur-3xl gives) is what
+                     keeps it soft and misty even at this size instead of a
+                     solid-edged disc. Blend mode flips with the theme:
                      screen in dark brightens overlapping colors into each
                      other, multiply in light deepens them into pools of
-                     green instead of just washing the whole panel one
-                     flat tint — a plain opacity blob on a pale background
-                     barely reads at all, multiply is what gives it shape. --}}
+                     green instead of washing the panel one flat tint. --}}
                 <div class="aurora-blob aurora-blob-a -left-24 top-10 h-40 w-[34rem] -rotate-[18deg] bg-brand-400/70 blur-[150px] mix-blend-multiply dark:bg-emerald-400/50 dark:mix-blend-screen"></div>
                 <div class="aurora-blob aurora-blob-b -right-24 top-1/4 h-36 w-[30rem] rotate-[22deg] bg-emerald-400/60 blur-[150px] mix-blend-multiply dark:bg-teal-400/45 dark:mix-blend-screen"></div>
                 <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-500/55 blur-[150px] mix-blend-multiply dark:bg-brand-500/45 dark:mix-blend-screen"></div>
                 <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-teal-300/55 blur-[130px] mix-blend-multiply dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
 
-                {{-- Woven ribbon strands, like the reference video — each
-                     "ribbon" is 3 parallel wave strands (not 1 line) with
-                     offset baselines/amplitudes so they cross over each
-                     other, braided/helix-like, instead of just one curve.
-                     Two groups, each its own <g> so it drifts as one
-                     piece; the two groups get opposite drift directions
-                     (aurora-lines-1 up-right, aurora-lines-2 down-left —
-                     see app.css) so they visibly move independently
-                     instead of the whole picture sliding one way.
-                     currentColor + Tailwind's text-*/dark: classes color
-                     each group without a second dark-mode copy of the
-                     SVG. --}}
-                <svg class="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 600 700" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
-                    <g class="aurora-lines-1 text-brand-800/70 dark:text-emerald-400/70">
-                        <path d="{{ $auroraWave(120, 55, 140, true) }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        <path d="{{ $auroraWave(155, 45, 140, false) }}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
-                        <path d="{{ $auroraWave(95, 30, 140, true) }}" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.6" />
-                    </g>
-                    <g class="aurora-lines-2 text-brand-dark/60 dark:text-teal-300/60">
-                        <path d="{{ $auroraWave(520, 55, 150, true) }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        <path d="{{ $auroraWave(558, 45, 150, false) }}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
-                        <path d="{{ $auroraWave(488, 28, 150, true) }}" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.6" />
-                    </g>
-                    <g class="aurora-lines-2 text-red-500/35 dark:text-red-400/25" style="animation-delay: -4s">
-                        <path d="{{ $auroraWave(440, 35, 160, false) }}" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
-                    </g>
-                </svg>
+                {{-- The actual moving aurora: simplex-noise-driven ribbons
+                     drawn on a <canvas>, not a fixed CSS/SVG keyframe —
+                     see resources/js/aurora-canvas.js (registerAuroraCanvas,
+                     wired up in app.js on turbo:load). Noise-driven motion
+                     never repeats on a visible cycle the way a hand-tuned
+                     wave animation does, each ribbon moves independently,
+                     and it resizes itself to the panel on every resize —
+                     genuinely responsive, not just "looks fine at common
+                     widths". It reads the current theme (light/dark) and
+                     prefers-reduced-motion itself, so no dark: classes are
+                     needed here. --}}
+                <canvas id="aurora-canvas" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
 
-                {{-- Faint candlestick chart in the background — a detail
-                     the reference video also has, and it fits a finance
-                     app's branding. Static (not part of the aurora
-                     motion), just ambient texture. --}}
+                {{-- Faint candlestick chart in the background — fits a
+                     finance app's branding. Static, just ambient texture. --}}
                 <div class="pointer-events-none absolute right-8 top-10 flex items-end gap-1 opacity-[0.15] dark:opacity-20" style="height: 9rem">
                     @foreach ($auroraCandles as [$height, $isUp])
                         <span class="w-1.5 rounded-sm {{ $isUp ? 'bg-emerald-400' : 'bg-brand-700' }}" style="height: {{ $height }}%"></span>

@@ -19,6 +19,7 @@ import { registerAdminSupportPoll } from './admin-support-poll';
 import { registerSupportListPoll } from './support-list-poll';
 import { registerAiTrafficPoll } from './ai-traffic-poll';
 import { registerLoanStatusPoll } from './loan-status-poll';
+import { registerAuroraCanvas } from './aurora-canvas';
 
 window.Alpine = Alpine;
 
@@ -40,4 +41,5 @@ Alpine.start();
 document.addEventListener('turbo:load', () => {
     mountLiquidityChart();
     mountReportCharts();
+    registerAuroraCanvas();
 });
