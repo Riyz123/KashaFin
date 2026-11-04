@@ -63,8 +63,8 @@
                  blobs, the logo mark itself — has a dark: variant, so
                  toggling the theme updates this whole panel instantly,
                  automatically, together with the rest of the page. --}}
-            <div class="auth-brand-panel pointer-events-none fixed inset-y-0 left-0 z-10 hidden overflow-hidden lg:flex lg:w-[calc(42%+4rem)] xl:w-[calc(38%+4rem)] flex-col items-center justify-center gap-4 bg-gradient-to-br from-brand-100 via-brand-200 to-brand-300 p-12 dark:from-black dark:via-gray-950 dark:to-emerald-950">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.300/75%),transparent_60%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
+            <div class="auth-brand-panel pointer-events-none fixed inset-y-0 left-0 z-10 hidden overflow-hidden lg:flex lg:w-[calc(42%+4rem)] xl:w-[calc(38%+4rem)] flex-col items-center justify-center gap-4 bg-gradient-to-br from-white via-brand-100 to-brand-400 p-12 dark:from-black dark:via-gray-950 dark:to-emerald-950">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme(colors.white/80%),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,theme(colors.brand.500/40%),transparent_60%)]"></div>
 
                 {{-- Aurora: four wide, heavily-blurred, slow-drifting/
                      recoloring color bands behind the logo — a "northern
@@ -74,15 +74,16 @@
                      instead of a lava-lamp bubble; the heavy blur (more
                      than Tailwind's built-in blur-3xl gives) is what
                      keeps it soft and misty even at this size instead of
-                     a solid-edged disc. Screen blend in dark mode is what
-                     makes overlapping colors brighten into each other
-                     instead of just looking like flat tinted shapes; it's
-                     dark:-only because on the light panel it would wash
-                     everything out to white instead. --}}
-                <div class="aurora-blob aurora-blob-a -left-24 top-10 h-40 w-[34rem] -rotate-[18deg] bg-brand-300/60 blur-[150px] dark:bg-emerald-400/50 dark:mix-blend-screen"></div>
-                <div class="aurora-blob aurora-blob-b -right-24 top-1/4 h-36 w-[30rem] rotate-[22deg] bg-emerald-300/55 blur-[150px] dark:bg-teal-400/45 dark:mix-blend-screen"></div>
-                <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-400/50 blur-[150px] dark:bg-brand-500/45 dark:mix-blend-screen"></div>
-                <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-emerald-200/45 blur-[130px] dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
+                     a solid-edged disc. Blend mode flips with the theme:
+                     screen in dark brightens overlapping colors into each
+                     other, multiply in light deepens them into pools of
+                     green instead of just washing the whole panel one
+                     flat tint — a plain opacity blob on a pale background
+                     barely reads at all, multiply is what gives it shape. --}}
+                <div class="aurora-blob aurora-blob-a -left-24 top-10 h-40 w-[34rem] -rotate-[18deg] bg-brand-400/70 blur-[150px] mix-blend-multiply dark:bg-emerald-400/50 dark:mix-blend-screen"></div>
+                <div class="aurora-blob aurora-blob-b -right-24 top-1/4 h-36 w-[30rem] rotate-[22deg] bg-emerald-400/60 blur-[150px] mix-blend-multiply dark:bg-teal-400/45 dark:mix-blend-screen"></div>
+                <div class="aurora-blob aurora-blob-c -bottom-16 left-0 h-44 w-[32rem] rotate-[8deg] bg-brand-500/55 blur-[150px] mix-blend-multiply dark:bg-brand-500/45 dark:mix-blend-screen"></div>
+                <div class="aurora-blob aurora-blob-d right-0 top-0 h-32 w-[24rem] -rotate-[10deg] bg-teal-300/55 blur-[130px] mix-blend-multiply dark:bg-cyan-400/35 dark:mix-blend-screen"></div>
 
                 {{-- Thin curved line strokes, like the reference image —
                      not filled shapes. Two groups of curves, each its own
@@ -95,16 +96,16 @@
                      color each group without needing a second dark-mode
                      copy of the SVG. --}}
                 <svg class="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 600 700" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
-                    <g class="aurora-lines-1 text-brand-500/60 dark:text-emerald-400/70">
+                    <g class="aurora-lines-1 text-brand-800/70 dark:text-emerald-400/70">
                         <path d="M -50 90 C 130 20, 260 170, 420 60 C 500 5, 560 55, 650 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                         <path d="M -50 180 C 160 90, 300 260, 470 130 C 540 80, 590 120, 650 90" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                         <path d="M -50 10 C 180 -40, 320 80, 650 -60" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
                     </g>
-                    <g class="aurora-lines-2 text-emerald-600/50 dark:text-teal-300/60">
+                    <g class="aurora-lines-2 text-brand-dark/60 dark:text-teal-300/60">
                         <path d="M -50 540 C 130 460, 270 610, 440 500 C 520 450, 580 495, 650 455" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                         <path d="M -50 630 C 160 560, 300 690, 470 580" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                     </g>
-                    <g class="aurora-lines-2 text-red-400/30 dark:text-red-400/25" style="animation-delay: -4s">
+                    <g class="aurora-lines-2 text-red-500/35 dark:text-red-400/25" style="animation-delay: -4s">
                         <path d="M -50 470 C 120 410, 240 520, 400 440" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
                     </g>
                 </svg>
