@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Category;
 use App\Models\Expense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class ExpenseController extends Controller
 {
@@ -23,6 +24,9 @@ class ExpenseController extends Controller
             })
             ->when($request->filled('category_id'), function ($query) use ($request) {
                 $query->where('category_id', $request->integer('category_id'));
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->string('type'));
             })
             ->when($request->filled('from'), function ($query) use ($request) {
                 $query->whereDate('date', '>=', $request->date('from'));
@@ -48,12 +52,27 @@ class ExpenseController extends Controller
             ->whereYear('date', now()->year)
             ->sum('amount');
 
+        $fixedMonth = $user->expenses()
+            ->fixed()
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->sum('amount');
+
+        $variableMonth = $user->expenses()
+            ->variable()
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->sum('amount');
+
         return view('expenses.index', [
             'expenses' => $expenses,
             'categories' => $categories,
             'totalMonth' => (float) $totalMonth,
+            'fixedMonth' => (float) $fixedMonth,
+            'variableMonth' => (float) $variableMonth,
             'search' => $request->string('search')->toString(),
             'categoryId' => $request->string('category_id')->toString(),
+            'type' => $request->string('type')->toString(),
             'from' => $request->string('from')->toString(),
             'to' => $request->string('to')->toString(),
         ]);
@@ -70,6 +89,15 @@ class ExpenseController extends Controller
     {
         $data = $request->validated();
         $data['user_id'] = $request->user()->id;
+
+        if ($data['type'] === 'fijo') {
+            $date = Carbon::parse($data['date']);
+            $expense = new Expense($data);
+            $data['next_occurrence_date'] = $expense->nextOccurrenceAfter($date)->toDateString();
+        } else {
+            $data['frequency'] = null;
+            $data['next_occurrence_date'] = null;
+        }
 
         Expense::create($data);
 
@@ -89,7 +117,18 @@ class ExpenseController extends Controller
     {
         $this->authorizeOwnership($expense);
 
-        $expense->update($request->validated());
+        $data = $request->validated();
+
+        if ($data['type'] === 'fijo') {
+            $date = Carbon::parse($data['date']);
+            $temp = new Expense($data);
+            $data['next_occurrence_date'] = $temp->nextOccurrenceAfter($date)->toDateString();
+        } else {
+            $data['frequency'] = null;
+            $data['next_occurrence_date'] = null;
+        }
+
+        $expense->update($data);
 
         return redirect()->route('expenses.index')->with('status', 'Gasto actualizado correctamente.');
     }

@@ -24,6 +24,9 @@ class NotificationLink
             $kind === 'income_confirmation' => [
                 'section' => 'Ingresos', 'url' => route('incomes.index'), 'label' => 'Ir a ingresos',
             ],
+            $kind === 'expense_confirmation' => [
+                'section' => 'Gastos', 'url' => route('expenses.index'), 'label' => 'Ir a gastos',
+            ],
             isset($data['shared_expense_id']) => [
                 'section' => 'Gastos compartidos', 'url' => route('shared-expenses.index'), 'label' => 'Ir a gastos compartidos',
             ],

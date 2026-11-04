@@ -24,6 +24,7 @@ class ActivityLogTest extends TestCase
             'date' => now()->toDateString(),
             'category_id' => $category->id,
             'description' => 'Pasaje',
+            'type' => 'variable',
         ])->assertRedirect();
 
         $activity = Activity::where('log_name', 'expense')->first();
@@ -60,6 +61,7 @@ class ActivityLogTest extends TestCase
             'date' => now()->toDateString(),
             'category_id' => $category->id,
             'description' => 'y',
+            'type' => 'variable',
         ])->assertRedirect();
 
         $this->assertSame(0, Activity::count());

@@ -1,6 +1,6 @@
 @props(['expense' => null, 'categories'])
 
-<div x-data="{ showNewCategory: false }" class="space-y-5">
+<div x-data="{ showNewCategory: false, type: '{{ old('type', $expense->type ?? 'variable') }}' }" class="space-y-5">
     <div>
         <x-input-label for="amount" value="Monto" />
         <x-text-input id="amount" name="amount" type="number" step="0.01" min="0.01" class="mt-1 block w-full" :value="old('amount', $expense->amount ?? '')" required autofocus />
@@ -56,6 +56,32 @@
         <x-input-label for="description" value="Descripción (opcional)" />
         <x-text-input id="description" name="description" type="text" class="mt-1 block w-full" :value="old('description', $expense->description ?? '')" />
         <x-input-error :messages="$errors->get('description')" class="mt-2" />
+    </div>
+
+    <div>
+        <x-input-label value="Tipo" />
+        <div class="mt-2 flex gap-4">
+            <label class="flex items-center gap-2 text-sm">
+                <input type="radio" name="type" value="variable" x-model="type" class="text-brand-600 focus:ring-brand-500">
+                Variable
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+                <input type="radio" name="type" value="fijo" x-model="type" class="text-brand-600 focus:ring-brand-500">
+                Fijo
+            </label>
+        </div>
+        <x-input-error :messages="$errors->get('type')" class="mt-2" />
+    </div>
+
+    <div x-show="type === 'fijo'" x-cloak>
+        <x-input-label for="frequency" value="Frecuencia" />
+        <select id="frequency" name="frequency" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
+            <option value="">Selecciona una frecuencia</option>
+            <option value="semanal" @selected(old('frequency', $expense->frequency ?? '') === 'semanal')>Semanal</option>
+            <option value="quincenal" @selected(old('frequency', $expense->frequency ?? '') === 'quincenal')>Quincenal</option>
+            <option value="mensual" @selected(old('frequency', $expense->frequency ?? '') === 'mensual')>Mensual</option>
+        </select>
+        <x-input-error :messages="$errors->get('frequency')" class="mt-2" />
     </div>
 
     <div class="flex items-center gap-3 pt-2">

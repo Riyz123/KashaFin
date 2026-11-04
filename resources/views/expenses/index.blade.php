@@ -9,10 +9,12 @@
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
         <x-stat-card label="Total del mes" :value="'S/ ' . number_format($totalMonth, 2)" tone="negative" />
+        <x-stat-card label="Gastos fijos" :value="'S/ ' . number_format($fixedMonth, 2)" tone="negative" />
+        <x-stat-card label="Gastos variables" :value="'S/ ' . number_format($variableMonth, 2)" tone="negative" />
     </div>
 
     <x-card class="mb-6">
-        <form method="GET" action="{{ route('expenses.index') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end">
+        <form method="GET" action="{{ route('expenses.index') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">
             <div class="lg:col-span-2">
                 <x-input-label for="search" value="Descripción" />
                 <x-text-input id="search" name="search" type="text" class="mt-1 block w-full" placeholder="Buscar por descripción..." :value="$search" />
@@ -27,6 +29,14 @@
                 </select>
             </div>
             <div>
+                <x-input-label for="type" value="Tipo" />
+                <select id="type" name="type" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                    <option value="">Todos</option>
+                    <option value="fijo" @selected($type === 'fijo')>Fijo</option>
+                    <option value="variable" @selected($type === 'variable')>Variable</option>
+                </select>
+            </div>
+            <div>
                 <x-input-label for="from" value="Desde" />
                 <x-text-input id="from" name="from" type="date" class="mt-1 block w-full" :value="$from" />
             </div>
@@ -34,7 +44,7 @@
                 <x-input-label for="to" value="Hasta" />
                 <x-text-input id="to" name="to" type="date" class="mt-1 block w-full" :value="$to" />
             </div>
-            <div class="lg:col-span-5">
+            <div class="lg:col-span-6">
                 <x-primary-button>Filtrar</x-primary-button>
                 <a href="{{ route('expenses.index') }}" class="ml-2 text-sm text-gray-500 hover:underline dark:text-gray-400">Limpiar filtros</a>
             </div>
@@ -51,7 +61,7 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="font-medium text-gray-800 dark:text-gray-100">{{ $expense->description ?: ($expense->category?->name ?? 'Gasto') }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $expense->date->format('d/m/Y') }} &middot; {{ $expense->category?->name ?? 'Sin categoría' }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $expense->date->format('d/m/Y') }} &middot; {{ $expense->category?->name ?? 'Sin categoría' }} &middot; {{ $expense->type === 'fijo' ? 'Fijo' : 'Variable' }}</p>
                             </div>
                             <span class="font-semibold text-red-600 dark:text-red-400">S/ {{ number_format($expense->amount, 2) }}</span>
                         </div>
@@ -73,6 +83,7 @@
                             <x-sortable-th field="date" label="Fecha" />
                             <th class="py-2 pr-4">Descripción</th>
                             <x-sortable-th field="category" label="Categoría" />
+                            <th class="py-2 pr-4">Tipo</th>
                             <x-sortable-th field="amount" label="Monto" />
                             <th class="py-2 pr-4 text-right">Acciones</th>
                         </tr>
@@ -83,6 +94,7 @@
                                 <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $expense->date->format('d/m/Y') }}</td>
                                 <td class="py-3 pr-4 text-gray-800 dark:text-gray-100">{{ $expense->description ?: '—' }}</td>
                                 <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $expense->category?->name ?? 'Sin categoría' }}</td>
+                                <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ $expense->type === 'fijo' ? 'Fijo' : 'Variable' }}</td>
                                 <td class="py-3 pr-4 font-semibold text-red-600 dark:text-red-400">S/ {{ number_format($expense->amount, 2) }}</td>
                                 <td class="py-3 pr-4 text-right space-x-3">
                                     <a href="{{ route('expenses.edit', $expense) }}" class="text-brand-600 hover:underline">Editar</a>

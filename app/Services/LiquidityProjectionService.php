@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Expense;
 use App\Models\Income;
 use App\Models\User;
 use Carbon\Carbon;
@@ -10,12 +11,11 @@ use Illuminate\Support\Collection;
 /**
  * Projects the student's available balance forward.
  *
- * Fixed ("fijo") incomes are projected on their exact scheduled dates by
- * walking each template's frequency forward from next_occurrence_date.
- * Variable incomes and all expenses (which have no recurring flag in this
- * build) are smoothed into a daily rate from up to the last 4 weeks of
- * history — documented here so the formula is easy to revisit without a
- * schema change.
+ * Fixed ("fijo") incomes AND fixed expenses are each projected on their
+ * exact scheduled dates by walking their template's frequency forward from
+ * next_occurrence_date. Variable incomes and variable expenses are smoothed
+ * into a daily rate from up to the last 4 weeks of history — documented
+ * here so the formula is easy to revisit without a schema change.
  *
  * The smoothing window shrinks for a brand-new account: dividing by a flat
  * 28 days when the account only has, say, 5 days of real activity would
@@ -55,10 +55,12 @@ class LiquidityProjectionService
             ->sum('amount') / $smoothingDays;
 
         $expenseDailyRate = (float) $user->expenses()
+            ->variable()
             ->between($windowStart, $today)
             ->sum('amount') / $smoothingDays;
 
-        $fixedOccurrences = $this->projectFixedOccurrences($user, $today, $days);
+        $fixedIncomeOccurrences = $this->projectFixedIncomeOccurrences($user, $today, $days);
+        $fixedExpenseOccurrences = $this->projectFixedExpenseOccurrences($user, $today, $days);
 
         $balance = $this->currentBalance($user);
         $series = collect();
@@ -67,7 +69,8 @@ class LiquidityProjectionService
             $date = $today->copy()->addDays($offset);
 
             $balance += $variableDailyRate - $expenseDailyRate;
-            $balance += $fixedOccurrences->get($date->toDateString(), 0.0);
+            $balance += $fixedIncomeOccurrences->get($date->toDateString(), 0.0);
+            $balance -= $fixedExpenseOccurrences->get($date->toDateString(), 0.0);
 
             $series->push([
                 'date' => $date->toDateString(),
@@ -108,6 +111,7 @@ class LiquidityProjectionService
             ->sum('amount') / $smoothingDays;
 
         $expenseDailyRate = (float) $user->expenses()
+            ->variable()
             ->between($windowStart, $today)
             ->sum('amount') / $smoothingDays;
 
@@ -115,7 +119,8 @@ class LiquidityProjectionService
             'window_days' => $smoothingDays,
             'variable_daily_rate' => round($variableDailyRate, 2),
             'expense_daily_rate' => round($expenseDailyRate, 2),
-            'upcoming_fixed' => $this->projectFixedOccurrences($user, $today, $days),
+            'upcoming_fixed' => $this->projectFixedIncomeOccurrences($user, $today, $days),
+            'upcoming_fixed_expenses' => $this->projectFixedExpenseOccurrences($user, $today, $days),
         ];
     }
 
@@ -183,7 +188,7 @@ class LiquidityProjectionService
      * occurrence date, stepping by its frequency, until the horizon is
      * exceeded. Returns a [date-string => total amount landing that day].
      */
-    private function projectFixedOccurrences(User $user, Carbon $today, int $days): Collection
+    private function projectFixedIncomeOccurrences(User $user, Carbon $today, int $days): Collection
     {
         $horizon = $today->copy()->addDays($days);
         $occurrences = collect();
@@ -194,6 +199,34 @@ class LiquidityProjectionService
             ->whereNotNull('next_occurrence_date')
             ->get()
             ->each(function (Income $template) use ($occurrences, $horizon) {
+                $date = Carbon::parse($template->next_occurrence_date);
+
+                while ($date->lte($horizon)) {
+                    $key = $date->toDateString();
+                    $occurrences->put($key, $occurrences->get($key, 0.0) + (float) $template->amount);
+                    $date = $template->nextOccurrenceAfter($date);
+                }
+            });
+
+        return $occurrences;
+    }
+
+    /**
+     * Same walk as projectFixedIncomeOccurrences(), for fixed expense
+     * templates (rent, subscriptions) — kept as a separate method/map
+     * since the caller subtracts this one instead of adding it.
+     */
+    private function projectFixedExpenseOccurrences(User $user, Carbon $today, int $days): Collection
+    {
+        $horizon = $today->copy()->addDays($days);
+        $occurrences = collect();
+
+        $user->expenses()
+            ->fixed()
+            ->whereNull('parent_expense_id')
+            ->whereNotNull('next_occurrence_date')
+            ->get()
+            ->each(function (Expense $template) use ($occurrences, $horizon) {
                 $date = Carbon::parse($template->next_occurrence_date);
 
                 while ($date->lte($horizon)) {

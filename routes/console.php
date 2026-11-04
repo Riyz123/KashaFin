@@ -9,5 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('incomes:generate-recurring')->daily();
+Schedule::command('expenses:generate-recurring')->daily();
 Schedule::command('reminders:inactivity')->daily();
 Schedule::command('reports:send-weekly-summary')->weeklyOn(1, '08:00');

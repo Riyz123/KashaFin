@@ -18,6 +18,8 @@ class StoreExpenseRequest extends FormRequest
             'date' => ['required', 'date'],
             'description' => ['nullable', 'string', 'max:255'],
             'category_id' => ['nullable', 'exists:categories,id'],
+            'type' => ['required', 'in:fijo,variable'],
+            'frequency' => ['required_if:type,fijo', 'nullable', 'in:semanal,quincenal,mensual'],
         ];
     }
 
@@ -25,6 +27,7 @@ class StoreExpenseRequest extends FormRequest
     {
         return [
             'amount.gt' => 'El monto debe ser mayor a cero.',
+            'frequency.required_if' => 'Selecciona una frecuencia para los gastos fijos.',
         ];
     }
 }
