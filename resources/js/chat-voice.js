@@ -94,7 +94,7 @@ export function registerChatWidget(Alpine) {
 
                     if (message) {
                         this.draft = message;
-                        this.send();
+                        void this.send();
                     }
                 };
             }
@@ -152,7 +152,7 @@ export function registerChatWidget(Alpine) {
                 return;
             }
 
-            this.pollLiveSupport();
+            void this.pollLiveSupport();
             this.livePollInterval = setInterval(() => this.pollLiveSupport(), 5000);
 
             document.addEventListener('turbo:before-cache', () => clearInterval(this.livePollInterval), { once: true });

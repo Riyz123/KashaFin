@@ -14,7 +14,7 @@ export function registerPresencePoll(Alpine) {
                 return;
             }
 
-            this.poll();
+            void this.poll();
 
             const intervalId = setInterval(() => this.poll(), 5000);
 

@@ -53,8 +53,8 @@ class StudentOnboardingTest extends TestCase
         $response->assertRedirect(route('password.force-edit'));
 
         $this->actingAs($user)->put(route('password.force-update'), [
-            'password' => 'nueva-contrasena',
-            'password_confirmation' => 'nueva-contrasena',
+            'password' => 'Nueva-contrasena!',
+            'password_confirmation' => 'Nueva-contrasena!',
         ])->assertRedirect(route('dashboard'));
 
         $this->assertFalse($user->refresh()->must_change_password);

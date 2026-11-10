@@ -52,12 +52,12 @@ class PasswordRecoveryTest extends TestCase
         $this->assertNull(Cache::get('password_reset_code:ana.torres@upn.pe'));
 
         $reset = $this->post(route('password.store'), [
-            'password' => 'nueva-contrasena-segura',
-            'password_confirmation' => 'nueva-contrasena-segura',
+            'password' => 'Nueva-contrasena-segura',
+            'password_confirmation' => 'Nueva-contrasena-segura',
         ]);
 
         $reset->assertRedirect(route('login'));
-        $this->assertTrue(Hash::check('nueva-contrasena-segura', $user->fresh()->password));
+        $this->assertTrue(Hash::check('Nueva-contrasena-segura', $user->fresh()->password));
     }
 
     public function test_entering_the_wrong_code_does_not_allow_resetting(): void
@@ -117,8 +117,8 @@ class PasswordRecoveryTest extends TestCase
         $this->post(route('password.verify.submit'), ['code' => $code]);
 
         $this->post(route('password.store'), [
-            'password' => 'otra-contrasena-123',
-            'password_confirmation' => 'otra-contrasena-123',
+            'password' => 'Otra-contrasena-123',
+            'password_confirmation' => 'Otra-contrasena-123',
         ]);
 
         $this->assertFalse($user->fresh()->must_change_password);

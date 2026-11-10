@@ -12,7 +12,7 @@ export function registerAiTrafficPoll(Alpine) {
         loaded: false,
 
         init() {
-            this.poll();
+            void this.poll();
 
             const intervalId = setInterval(() => this.poll(), 10000);
 

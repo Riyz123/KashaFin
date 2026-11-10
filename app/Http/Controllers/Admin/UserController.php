@@ -265,7 +265,10 @@ class UserController extends Controller
         $actor = $request->user();
 
         $data = $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt'],
+            // max is in kilobytes — 2MB comfortably covers even a roster of
+            // several thousand students as plain text, while still capping
+            // how much a single upload can make this request process.
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
             'faculty_id' => [$actor->isAdmin() ? 'required' : 'nullable', 'exists:faculties,id'],
         ]);
 

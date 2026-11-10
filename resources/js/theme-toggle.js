@@ -49,9 +49,13 @@ function animateThemeSwitch(dark, event, persist) {
             { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`] },
             { duration: 400, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' }
         );
+    }).catch(() => {
+        // The browser couldn't start the clip-path animation — the actual
+        // theme switch already applied via startViewTransition(apply)
+        // regardless, this only skips the circle-expand flourish.
     });
 
-    transition.finished.finally(() => {
+    transition.finished.catch(() => {}).finally(() => {
         document.documentElement.classList.remove('theme-transition');
     });
 }
@@ -63,6 +67,10 @@ export function registerThemeToggle() {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
                 body: JSON.stringify({ theme: dark ? 'dark' : 'light' }),
+            }).catch(() => {
+                // Same as the guest/localStorage path below: the toggle
+                // still works for the rest of this page view, it just
+                // won't be remembered server-side if this request fails.
             });
         });
     };

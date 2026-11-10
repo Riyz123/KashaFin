@@ -61,7 +61,8 @@
                             </div>
                             <div>
                                 <x-input-label value="Contraseña temporal" />
-                                <x-text-input name="password" type="password" class="mt-1 block w-full" required />
+                                <x-text-input id="dean-password-{{ $faculty->id }}" name="password" type="password" class="mt-1 block w-full" required />
+                                <x-password-requirements :for="'dean-password-'.$faculty->id" />
                             </div>
                             <div class="sm:col-span-3">
                                 <x-primary-button>Crear cuenta de decano</x-primary-button>

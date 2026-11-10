@@ -19,7 +19,7 @@ class DeanAccountCreationTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.faculties.deans.store', $faculty), [
             'name' => 'Decano Nuevo',
             'email' => 'decano@gmail.com',
-            'password' => 'password123',
+            'password' => 'Password123!',
         ]);
 
         $response->assertSessionHasErrors('email');
@@ -34,7 +34,7 @@ class DeanAccountCreationTest extends TestCase
         $this->actingAs($admin)->post(route('admin.faculties.deans.store', $faculty), [
             'name' => 'Decano Nuevo',
             'email' => 'D00012345@upn.pe',
-            'password' => 'password123',
+            'password' => 'Password123!',
         ])->assertRedirect();
 
         $this->assertDatabaseHas('users', ['email' => 'd00012345@upn.pe', 'role' => 'decano']);

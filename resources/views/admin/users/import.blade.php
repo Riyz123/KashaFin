@@ -14,9 +14,9 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 Descarga la plantilla de la facultad que vas a importar: ya trae la columna "facultad" llena, así no hace falta elegirla abajo.
             </p>
-            <ul class="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+            <ul class="flex flex-wrap text-sm">
                 @foreach ($faculties as $faculty)
-                    <li>
+                    <li class="mr-3 mb-1">
                         <a class="text-brand-600 hover:underline" href="{{ route('admin.users.import-template', $faculty) }}">{{ $faculty->name }}</a>
                     </li>
                 @endforeach

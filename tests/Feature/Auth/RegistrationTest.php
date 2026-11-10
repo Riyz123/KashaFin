@@ -48,8 +48,8 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'test@upn.pe']);
 
         $response = $this->post(route('register.password.store'), [
-            'password' => 'contrasena-segura',
-            'password_confirmation' => 'contrasena-segura',
+            'password' => 'Contrasena-segura!',
+            'password_confirmation' => 'Contrasena-segura!',
         ]);
 
         $response->assertRedirect(route('dashboard'));

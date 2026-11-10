@@ -74,8 +74,8 @@ class RegistrationEmailVerificationTest extends TestCase
         $this->post(route('register.verify.submit'), ['code' => $code]);
 
         $response = $this->post(route('register.password.store'), [
-            'password' => 'contrasena-segura',
-            'password_confirmation' => 'contrasena-segura',
+            'password' => 'Contrasena-segura!',
+            'password_confirmation' => 'Contrasena-segura!',
         ]);
 
         $response->assertRedirect(route('dashboard'));
@@ -83,7 +83,7 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $user = User::where('email', 'ana.torres@upn.pe')->first();
         $this->assertFalse($user->must_change_password);
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('contrasena-segura', $user->password));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Contrasena-segura!', $user->password));
     }
 
     public function test_setting_a_mismatched_password_confirmation_leaves_the_temporary_password_in_place(): void
@@ -102,7 +102,7 @@ class RegistrationEmailVerificationTest extends TestCase
         $userBefore = User::where('email', 'ana.torres@upn.pe')->first();
 
         $response = $this->post(route('register.password.store'), [
-            'password' => 'contrasena-segura',
+            'password' => 'Contrasena-segura!',
             'password_confirmation' => 'otra-cosa',
         ]);
 

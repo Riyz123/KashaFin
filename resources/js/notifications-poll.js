@@ -11,7 +11,7 @@ export function registerNotificationsPoll(Alpine) {
         count: 0,
 
         init() {
-            this.poll();
+            void this.poll();
 
             const intervalId = setInterval(() => this.poll(), 5000);
 
