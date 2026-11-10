@@ -40,11 +40,12 @@ class RegistrationTest extends TestCase
         $code = Cache::get('registration_code:test@upn.pe')['code'];
         $response = $this->post(route('register.verify.submit'), ['code' => $code]);
 
-        // Still no account yet — the code only proves the inbox; next comes
-        // picking a password, with no dean-approval wait after that.
+        // The code proves the inbox — the account exists from here on, with
+        // a temporary password already emailed, no dean-approval wait.
+        // Next comes picking a real password in its place.
         $this->assertGuest();
         $response->assertRedirect(route('register.password'));
-        $this->assertDatabaseMissing('users', ['email' => 'test@upn.pe']);
+        $this->assertDatabaseHas('users', ['email' => 'test@upn.pe']);
 
         $response = $this->post(route('register.password.store'), [
             'password' => 'contrasena-segura',

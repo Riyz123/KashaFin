@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\Auth\RegistrationVerificationController;
 use App\Mail\RegistrationCodeMail;
+use App\Mail\TemporaryPasswordMail;
 use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,7 +31,7 @@ class RegistrationEmailVerificationTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'ana.torres@upn.pe']);
     }
 
-    public function test_entering_the_correct_code_sends_to_the_password_step_without_creating_the_account_yet(): void
+    public function test_entering_the_correct_code_creates_an_active_account_with_a_temporary_password(): void
     {
         Mail::fake();
         $faculty = Faculty::factory()->create();
@@ -47,12 +47,19 @@ class RegistrationEmailVerificationTest extends TestCase
         $response = $this->post(route('register.verify.submit'), ['code' => $code]);
 
         $response->assertRedirect(route('register.password'));
-        $this->assertDatabaseMissing('users', ['email' => 'ana.torres@upn.pe']);
+        $this->assertGuest();
         $this->assertNull(Cache::get('registration_code:ana.torres@upn.pe'));
-        $this->assertNotNull(Cache::get(RegistrationVerificationController::verifiedKey('ana.torres@upn.pe')));
+
+        $user = User::where('email', 'ana.torres@upn.pe')->first();
+        $this->assertNotNull($user);
+        $this->assertSame($faculty->id, $user->faculty_id);
+        $this->assertTrue($user->is_active);
+        $this->assertTrue($user->must_change_password);
+        $this->assertFalse($user->isPendingApproval());
+        Mail::assertSent(TemporaryPasswordMail::class, fn ($mail) => $mail->hasTo('ana.torres@upn.pe'));
     }
 
-    public function test_setting_a_password_creates_an_already_active_account_with_no_approval_wait(): void
+    public function test_setting_a_password_replaces_the_temporary_one_and_logs_in(): void
     {
         Mail::fake();
         $faculty = Faculty::factory()->create();
@@ -75,14 +82,11 @@ class RegistrationEmailVerificationTest extends TestCase
         $this->assertAuthenticated();
 
         $user = User::where('email', 'ana.torres@upn.pe')->first();
-        $this->assertNotNull($user);
-        $this->assertSame($faculty->id, $user->faculty_id);
-        $this->assertTrue($user->is_active);
-        $this->assertFalse($user->isPendingApproval());
-        $this->assertNull(Cache::get(RegistrationVerificationController::verifiedKey('ana.torres@upn.pe')));
+        $this->assertFalse($user->must_change_password);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('contrasena-segura', $user->password));
     }
 
-    public function test_setting_a_mismatched_password_confirmation_does_not_create_an_account(): void
+    public function test_setting_a_mismatched_password_confirmation_leaves_the_temporary_password_in_place(): void
     {
         Mail::fake();
         $faculty = Faculty::factory()->create();
@@ -95,6 +99,7 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $code = Cache::get('registration_code:ana.torres@upn.pe')['code'];
         $this->post(route('register.verify.submit'), ['code' => $code]);
+        $userBefore = User::where('email', 'ana.torres@upn.pe')->first();
 
         $response = $this->post(route('register.password.store'), [
             'password' => 'contrasena-segura',
@@ -103,7 +108,45 @@ class RegistrationEmailVerificationTest extends TestCase
 
         $response->assertSessionHasErrors('password');
         $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['email' => 'ana.torres@upn.pe']);
+
+        $user = $userBefore->fresh();
+        $this->assertTrue($user->must_change_password);
+        $this->assertSame($userBefore->password, $user->password);
+    }
+
+    /**
+     * The whole point of emailing a temporary password up front: a student
+     * who never comes back to finish picking their own can still get in
+     * with it, and the existing EnsurePasswordIsFresh middleware takes it
+     * from there exactly like a dean-created account would.
+     */
+    public function test_abandoning_the_password_step_still_allows_logging_in_with_the_temporary_password(): void
+    {
+        Mail::fake();
+        $faculty = Faculty::factory()->create();
+
+        $this->post(route('register'), [
+            'name' => 'Ana Torres',
+            'email' => 'ana.torres@upn.pe',
+            'faculty_id' => $faculty->id,
+        ]);
+        $code = Cache::get('registration_code:ana.torres@upn.pe')['code'];
+        $this->post(route('register.verify.submit'), ['code' => $code]);
+
+        $sentMail = null;
+        Mail::assertSent(TemporaryPasswordMail::class, function ($mail) use (&$sentMail) {
+            $sentMail = $mail;
+
+            return true;
+        });
+
+        $this->post(route('login'), [
+            'email' => 'ana.torres@upn.pe',
+            'password' => $sentMail->temporaryPassword,
+        ]);
+
+        $this->assertAuthenticated();
+        $this->get(route('dashboard'))->assertRedirect(route('password.force-edit'));
     }
 
     public function test_visiting_the_password_step_without_having_verified_a_code_redirects_to_register(): void

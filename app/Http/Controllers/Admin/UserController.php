@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\TemporaryPasswordMail;
 use App\Models\Faculty;
 use App\Models\User;
+use App\Services\TemporaryPasswordService;
 use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
+    public function __construct(private TemporaryPasswordService $temporaryPasswords) {}
+
     public function index(Request $request)
     {
         $users = $this->scopedStudents($request)
@@ -86,7 +87,7 @@ class UserController extends Controller
             'faculty_id' => $actor->isAdmin() ? $data['faculty_id'] : $actor->faculty_id,
         ]);
 
-        $temporaryPassword = $this->grantAccess($user);
+        $temporaryPassword = $this->temporaryPasswords->grant($user);
 
         return back()->with('status', "Estudiante agregado. Se intentó enviar la contraseña a {$user->email} — por si el correo no llega, esta es su contraseña temporal (no vence, pero solo sirve para el primer ingreso): {$temporaryPassword}");
     }
@@ -130,7 +131,7 @@ class UserController extends Controller
         abort_unless($request->user()->canManage($user), 403, 'No tienes permisos para aprobar esta cuenta.');
         abort_unless($user->isPendingApproval(), 422, 'Esta solicitud ya fue procesada.');
 
-        $temporaryPassword = $this->grantAccess($user);
+        $temporaryPassword = $this->temporaryPasswords->grant($user);
 
         return back()->with('status', "Solicitud aprobada. Se intentó enviar la contraseña a {$user->email} — por si el correo no llega, esta es su contraseña temporal (no vence, pero solo sirve para el primer ingreso): {$temporaryPassword}");
     }
@@ -139,15 +140,15 @@ class UserController extends Controller
      * Approves every pending request visible to this actor in one go (a
      * dean's own faculty only, scopedStudents() already enforces that) —
      * for when there's a backlog and going one by one is tedious. Each one
-     * still goes through grantAccess() individually, same as a single
-     * approve(), so nothing about the per-student behavior changes.
+     * still goes through TemporaryPasswordService individually, same as a
+     * single approve(), so nothing about the per-student behavior changes.
      */
     public function approveAll(Request $request)
     {
         $pending = $this->scopedStudents($request)->whereNull('approved_at')->get();
 
         foreach ($pending as $student) {
-            $this->grantAccess($student);
+            $this->temporaryPasswords->grant($student);
         }
 
         return back()->with('status', $pending->isEmpty()
@@ -168,7 +169,7 @@ class UserController extends Controller
         abort_if($user->isPendingApproval(), 422, 'Esta solicitud todavía no fue aprobada.');
         abort_unless($user->must_change_password, 422, 'Este estudiante ya inició sesión con su propia contraseña.');
 
-        $temporaryPassword = $this->grantAccess($user);
+        $temporaryPassword = $this->temporaryPasswords->grant($user);
 
         return back()->with('status', "Se intentó enviar una nueva contraseña a {$user->email} — por si el correo no llega, esta es la contraseña temporal (no vence, pero solo sirve para el primer ingreso): {$temporaryPassword}");
     }
@@ -336,7 +337,7 @@ class UserController extends Controller
                 'faculty_id' => $facultyId,
             ]);
 
-            $passwords[] = "{$email}: ".$this->grantAccess($user);
+            $passwords[] = "{$email}: ".$this->temporaryPasswords->grant($user);
             $created++;
         }
 
@@ -353,38 +354,6 @@ class UserController extends Controller
         return back()->with('status', $status);
     }
 
-    /**
-     * Shared by store()/approve()/import()/resendPassword(): generates and
-     * persists a real password, marks the account approved/active, forces a
-     * password change on first login, attempts to email it, and returns it
-     * in plain text so the caller can show it on screen too — email
-     * delivery to real institutional addresses isn't always reliable (spam
-     * filters, quarantine), so staff always has a fallback way to hand the
-     * student their password.
-     */
-    private function grantAccess(User $user): string
-    {
-        $temporaryPassword = Str::password(10, symbols: false);
-
-        $user->forceFill([
-            'password' => Hash::make($temporaryPassword),
-            'approved_at' => now(),
-            'is_active' => true,
-            'must_change_password' => true,
-        ])->save();
-
-        // Best-effort: if the mailer throws (connection refused, rejected,
-        // whatever), the account is still fully usable — the caller always
-        // shows $temporaryPassword on screen as a fallback, so one broken
-        // delivery should never block staff from handing it over another way.
-        try {
-            Mail::to($user)->send(new TemporaryPasswordMail($user, $temporaryPassword));
-        } catch (\Throwable $e) {
-            report($e);
-        }
-
-        return $temporaryPassword;
-    }
 
     private function scopedStudents(Request $request)
     {

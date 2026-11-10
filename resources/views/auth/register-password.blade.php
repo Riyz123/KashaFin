@@ -1,7 +1,8 @@
 <x-guest-layout>
     <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Crea tu contraseña</h2>
     <p class="mt-1 mb-4 text-sm text-gray-600 dark:text-gray-400">
-        Verificamos <strong>{{ $email }}</strong>. Último paso: elige la contraseña con la que vas a ingresar.
+        Verificamos <strong>{{ $email }}</strong> y tu cuenta ya está activa. Te enviamos una contraseña temporal por
+        correo por si acaso, pero puedes elegir la tuya aquí mismo.
     </p>
 
     <form method="POST" action="{{ route('register.password.store') }}">

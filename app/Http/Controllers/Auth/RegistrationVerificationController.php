@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\RegistrationCodeMail;
 use App\Models\User;
+use App\Services\TemporaryPasswordService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class RegistrationVerificationController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
 
-    public const VERIFIED_TTL_MINUTES = 15;
+    public function __construct(private TemporaryPasswordService $temporaryPasswords) {}
 
     public function show(Request $request): View|RedirectResponse
     {
@@ -36,11 +37,14 @@ class RegistrationVerificationController extends Controller
     }
 
     /**
-     * Only once the code matches is the inbox considered proven — the
-     * account still isn't created here. Instead the verified name/faculty
-     * move to their own short-lived cache entry and the student is sent to
-     * set their own password (see showPassword()/store()); that's the
-     * actual account-creation step now, with no dean-approval wait after it.
+     * Once the code matches, the inbox is proven — the account is created
+     * right here (no dean-approval wait: proving control of the @upn.pe
+     * inbox is what that approval used to stand in for), with a
+     * system-generated temporary password emailed as a fallback. The
+     * student is then sent to set their own password (store() below); if
+     * they never finish that, the temp password still gets them in, and
+     * EnsurePasswordIsFresh forces the same "set a real password" screen on
+     * that first login.
      */
     public function verify(Request $request): RedirectResponse
     {
@@ -73,45 +77,52 @@ class RegistrationVerificationController extends Controller
             return back()->withErrors(['code' => 'Código incorrecto. Te quedan '.(self::MAX_ATTEMPTS - $pending['attempts']).' intento(s).']);
         }
 
-        Cache::put(self::verifiedKey($email), [
+        $student = User::create([
             'name' => $pending['name'],
+            'email' => $email,
+            'password' => Hash::make(Str::random(40)),
+            'role' => 'estudiante',
             'faculty_id' => $pending['faculty_id'],
-        ], now()->addMinutes(self::VERIFIED_TTL_MINUTES));
+        ]);
+
+        $this->temporaryPasswords->grant($student);
+
+        event(new Registered($student));
 
         Cache::forget($key);
+        $request->session()->put('registration_user_id', $student->id);
 
         return redirect()->route('register.password');
     }
 
     /**
-     * Shows the "create your password" form — only reachable once the code
-     * from verify() above actually matched.
+     * Shows the "create your password" form — only reachable for the
+     * account verify() just created, and only until it either gets its own
+     * password here or the student logs in with the temporary one instead
+     * (must_change_password flips to false either way).
      */
     public function showPassword(Request $request): View|RedirectResponse
     {
-        $email = $request->session()->get('registration_email');
+        $student = $this->pendingPasswordUser($request);
 
-        if (! $email || ! Cache::has(self::verifiedKey($email))) {
+        if (! $student) {
             return redirect()->route('register')->withErrors([
                 'email' => 'Tu verificación expiró. Regístrate de nuevo.',
             ]);
         }
 
-        return view('auth.register-password', ['email' => $email]);
+        return view('auth.register-password', ['email' => $student->email]);
     }
 
     /**
-     * Final step: the student picks their own password and the account is
-     * created already active — no random temporary password, no dean
-     * approval wait. Proving control of the @upn.pe inbox in verify() above
-     * is what used to be the dean's job of confirming this is a real student.
+     * Final step: the student picks their own password in place of the
+     * temporary one that was already emailed to them.
      */
     public function store(Request $request): RedirectResponse
     {
-        $email = $request->session()->get('registration_email');
-        $verified = $email ? Cache::get(self::verifiedKey($email)) : null;
+        $student = $this->pendingPasswordUser($request);
 
-        if (! $email || ! $verified) {
+        if (! $student) {
             return redirect()->route('register')->withErrors([
                 'email' => 'Tu verificación expiró. Regístrate de nuevo.',
             ]);
@@ -121,30 +132,35 @@ class RegistrationVerificationController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $student = User::create([
-            'name' => $verified['name'],
-            'email' => $email,
+        $student->forceFill([
             'password' => Hash::make($data['password']),
-            'role' => 'estudiante',
-            'is_active' => true,
-            'faculty_id' => $verified['faculty_id'],
-        ]);
+            'must_change_password' => false,
+        ])->save();
 
-        $student->forceFill(['approved_at' => now()])->save();
-
-        Cache::forget(self::verifiedKey($email));
-        $request->session()->forget('registration_email');
-
-        event(new Registered($student));
+        $request->session()->forget(['registration_user_id', 'registration_email']);
 
         Auth::login($student);
 
         return redirect()->route('dashboard');
     }
 
-    public static function verifiedKey(string $email): string
+    /**
+     * must_change_password is the actual guard, not just the session key's
+     * presence — once the student logs in with the emailed temporary
+     * password instead of coming back here, EnsurePasswordIsFresh already
+     * sent them to password.force-edit, so this step has nothing left to do.
+     */
+    private function pendingPasswordUser(Request $request): ?User
     {
-        return 'registration_verified:'.$email;
+        $userId = $request->session()->get('registration_user_id');
+
+        if (! $userId) {
+            return null;
+        }
+
+        $student = User::find($userId);
+
+        return $student?->must_change_password ? $student : null;
     }
 
     public function resend(Request $request): RedirectResponse
