@@ -48,9 +48,13 @@ class LoanController extends Controller
             ->where('direction', 'prestado')
             ->values();
 
+        // remaining_amount (amount - paid_amount), not the raw amount — a
+        // partial amortization already reduced what's actually still
+        // pending, even though the loan's own status stays "pendiente"
+        // until it's fully paid off.
         $totals = [
-            'owed_to_me' => (float) $loans->where('direction', 'prestado')->where('status', 'pendiente')->sum('amount'),
-            'i_owe' => (float) $loans->where('direction', 'recibido')->where('status', 'pendiente')->sum('amount'),
+            'owed_to_me' => (float) $loans->where('direction', 'prestado')->where('status', 'pendiente')->sum(fn (Loan $loan) => $loan->remaining_amount),
+            'i_owe' => (float) $loans->where('direction', 'recibido')->where('status', 'pendiente')->sum(fn (Loan $loan) => $loan->remaining_amount),
         ];
 
         // Amortization requests waiting on ME to accept/decline — I'm the

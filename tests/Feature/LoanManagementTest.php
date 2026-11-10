@@ -68,6 +68,28 @@ class LoanManagementTest extends TestCase
         $this->assertSame(30.0, $response->viewData('totals')['i_owe']);
     }
 
+    /**
+     * A partial amortization already reduces what's actually left to pay
+     * (remaining_amount), even though the loan's own status stays
+     * "pendiente" until it's fully settled — the summary totals must track
+     * that, not the original loan amount.
+     */
+    public function test_the_index_page_totals_reflect_partial_amortizations(): void
+    {
+        $student = User::factory()->create();
+        $debt = Loan::create(['user_id' => $student->id, 'person_name' => 'Luis', 'direction' => 'recibido', 'amount' => 30, 'date' => now(), 'status' => 'pendiente']);
+        $credit = Loan::create(['user_id' => $student->id, 'person_name' => 'Ana', 'direction' => 'prestado', 'amount' => 50, 'date' => now(), 'status' => 'pendiente']);
+
+        $debt->requestAmortization(10);
+        $credit->update(['paid_amount' => 15]);
+
+        $response = $this->actingAs($student)->get(route('loans.index'));
+
+        $response->assertOk();
+        $this->assertSame(20.0, $response->viewData('totals')['i_owe']);
+        $this->assertSame(35.0, $response->viewData('totals')['owed_to_me']);
+    }
+
     public function test_a_loan_can_be_linked_to_a_real_institutional_account(): void
     {
         $student = User::factory()->create();
