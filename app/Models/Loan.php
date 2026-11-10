@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Notifications\LoanAmortizationRequestedNotification;
 use App\Notifications\LoanAmortizationResolvedNotification;
+use App\Services\LiquidityProjectionService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,9 +18,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * account (person_user_id, searched the same way as shared-expense
  * participants), but doesn't have to be — an external person or entity
  * (a store, a bank, a family member) is just a free-text person_name with
- * no linked account. Deliberately NOT wired into LiquidityProjectionService:
- * these are debts between people, not the student's own income/expense, so
- * they stay out of the balance projection math.
+ * no linked account. A "recibido" debt counts toward
+ * LiquidityProjectionService::currentBalance() the moment it's created
+ * (it's real cash in hand) — applyAmortization() is what removes it again,
+ * as a normal expense, once (and only as much as) it's actually paid back.
  *
  * When linked to a real account, both the loan's creation AND its payment
  * go through a confirmation step by the other side (same spirit as
@@ -185,10 +187,16 @@ class Loan extends Model
         $this->counterpart?->update(['status' => 'pago_pendiente_confirmacion']);
     }
 
+    /**
+     * Called on the CREDITOR's loan row (same asymmetry as
+     * acceptAmortization() below) — the debtor's side is what actually owes
+     * money, so applyAmortization() (and its expense record/balance check)
+     * runs on the counterpart, not on $this.
+     */
     public function confirmPayment(): void
     {
+        $this->counterpart?->applyAmortization($this->counterpart->remaining_amount);
         $this->update(['status' => 'pagado', 'paid_amount' => $this->amount]);
-        $this->counterpart?->update(['status' => 'pagado', 'paid_amount' => $this->amount]);
     }
 
     /**
@@ -201,9 +209,16 @@ class Loan extends Model
         $this->counterpart?->update(['status' => 'pendiente']);
     }
 
+    /**
+     * A one-click full payoff is just an amortization for whatever's still
+     * left — routed through applyAmortization() so it gets the same expense
+     * record and the same "can't pay more than you actually have" check as
+     * a stepped amortization, instead of silently moving paid_amount with
+     * no trace in the student's expense history.
+     */
     public function markPaid(): void
     {
-        $this->update(['status' => 'pagado', 'paid_amount' => $this->amount]);
+        $this->applyAmortization($this->remaining_amount);
     }
 
     /**
@@ -300,13 +315,27 @@ class Loan extends Model
     }
 
     /**
-     * Shared by both the immediate (unlinked) and confirmed (linked) paths:
-     * bumps paid_amount, flips to "pagado" once the debt is fully covered,
-     * and registers the payment as a real expense for the debtor — this is
-     * the only place a loan ever touches the student's expense history.
+     * Shared by every path that actually moves money — the immediate
+     * (unlinked) and confirmed (linked) amortization flows, and a one-click
+     * markPaid()/confirmPayment() full payoff: bumps paid_amount, flips to
+     * "pagado" once the debt is fully covered, and registers the payment as
+     * a real expense for the debtor, clearly labeled as a loan payment —
+     * this is the only place a loan ever touches the student's expense
+     * history, so it's also the one place that enforces they can't pay back
+     * more than they currently actually have.
      */
     private function applyAmortization(float $amount): void
     {
+        if ($amount <= 0) {
+            return;
+        }
+
+        $available = app(LiquidityProjectionService::class)->currentBalance($this->user);
+
+        abort_if($amount > $available, 422,
+            'No se puede registrar este pago: el saldo actual (S/ '.number_format($available, 2).') no alcanza para S/ '.number_format($amount, 2).'.'
+        );
+
         $this->increment('paid_amount', $amount);
 
         if ($this->remaining_amount <= 0) {
