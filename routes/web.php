@@ -59,6 +59,7 @@ Route::middleware(['auth', 'active', 'password-fresh'])->group(function () {
 
 Route::middleware(['auth', 'active', 'password-fresh', 'student-app'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/saldo', [DashboardController::class, 'balance'])->name('dashboard.balance');
 
     Route::middleware('feature:incomes')->group(function () {
         Route::resource('ingresos', IncomeController::class)

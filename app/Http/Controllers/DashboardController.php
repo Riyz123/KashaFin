@@ -44,4 +44,47 @@ class DashboardController extends Controller
             'showOnboarding' => $user->settings->onboarding_completed_at === null,
         ]);
     }
+
+    /**
+     * "¿De dónde sale el saldo actual?" — the exact same query shape as
+     * LiquidityProjectionService::currentBalance(), just broken into its
+     * four terms with counts, so a student can check it against their own
+     * numbers instead of trusting a single total.
+     */
+    public function balance(Request $request)
+    {
+        $user = $request->user();
+        $today = now()->startOfDay();
+
+        $startingBalance = (float) $user->settings->starting_balance;
+
+        $incomes = $user->incomes()->whereDate('date', '<=', $today);
+        $incomeTotal = (float) (clone $incomes)->sum('amount');
+        $incomeCount = (clone $incomes)->count();
+
+        $expenses = $user->expenses()->whereDate('date', '<=', $today);
+        $expenseTotal = (float) (clone $expenses)->sum('amount');
+        $expenseCount = (clone $expenses)->count();
+
+        $loans = $user->loans()
+            ->where('direction', 'recibido')
+            ->whereNotIn('status', ['pendiente_confirmacion', 'rechazado'])
+            ->whereDate('date', '<=', $today);
+        $loanTotal = (float) (clone $loans)->sum('amount');
+        $loanCount = (clone $loans)->count();
+
+        $currentBalance = $startingBalance + $incomeTotal - $expenseTotal + $loanTotal;
+
+        return view('dashboard.balance', [
+            'startingBalance' => $startingBalance,
+            'incomeTotal' => $incomeTotal,
+            'incomeCount' => $incomeCount,
+            'expenseTotal' => $expenseTotal,
+            'expenseCount' => $expenseCount,
+            'loanTotal' => $loanTotal,
+            'loanCount' => $loanCount,
+            'currentBalance' => $currentBalance,
+            'asOf' => $today,
+        ]);
+    }
 }

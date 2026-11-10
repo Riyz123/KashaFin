@@ -17,7 +17,9 @@
     @endif
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
-        <x-stat-card label="Saldo actual" :value="'S/ ' . number_format($currentBalance, 2)" icon="wallet" />
+        <x-stat-card label="Saldo actual" :value="'S/ ' . number_format($currentBalance, 2)" icon="wallet">
+            <a href="{{ route('dashboard.balance') }}" class="text-brand-600 hover:underline">Ver cómo se calcula</a>
+        </x-stat-card>
         <x-stat-card label="Ingresos del mes" :value="'S/ ' . number_format($incomeThisMonth, 2)" tone="positive" icon="income" />
         <x-stat-card label="Gastos del mes" :value="'S/ ' . number_format($expenseThisMonth, 2)" tone="negative" icon="expense" />
         <x-stat-card label="Liquidez disponible (7 días)" :value="'S/ ' . number_format($lowest['balance'], 2)" icon="chart" />
