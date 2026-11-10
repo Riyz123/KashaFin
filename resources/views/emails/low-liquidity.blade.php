@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Alerta: riesgo de iliquidez en KashaFin</title>
+</head>
 <body style="font-family: -apple-system, Arial, sans-serif; background: #f3f4f6; padding: 24px; margin: 0;">
     <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px;">
         <h1 style="font-size: 18px; color: #111827;">Alerta de liquidez</h1>
@@ -11,11 +15,11 @@
 
         <table style="width: 100%; margin: 16px 0; border-collapse: collapse;">
             <tr>
-                <td style="padding: 8px 0; color: #374151; font-size: 14px;">Saldo proyectado más bajo</td>
+                <th scope="row" style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: normal; text-align: left;">Saldo proyectado más bajo</th>
                 <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #dc2626;">S/ {{ number_format($projectedBalance, 2) }}</td>
             </tr>
             <tr>
-                <td style="padding: 8px 0; color: #374151; font-size: 14px;">Umbral configurado</td>
+                <th scope="row" style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: normal; text-align: left;">Umbral configurado</th>
                 <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">S/ {{ number_format($threshold, 2) }}</td>
             </tr>
         </table>

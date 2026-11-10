@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="utf-8">
+    <title>KashaFin — Reporte financiero</title>
     <style>
         body { font-family: Helvetica, Arial, sans-serif; color: #1f2937; font-size: 12px; }
         h1 { color: #14532D; font-size: 20px; margin-bottom: 0; }
@@ -11,6 +12,7 @@
         th { background-color: #DCFCE7; color: #14532D; text-transform: uppercase; font-size: 10px; }
         .summary { margin-top: 20px; }
         .summary td { border: none; padding: 4px 8px; }
+        .summary th { border: none; padding: 4px 8px; background-color: transparent; color: inherit; text-transform: none; font-size: inherit; text-align: left; font-weight: bold; }
         .positive { color: #15803D; font-weight: bold; }
         .negative { color: #DC2626; font-weight: bold; }
     </style>
@@ -21,11 +23,11 @@
 
     <table class="summary">
         <tr>
-            <td><strong>Ingresos:</strong></td>
+            <th scope="row">Ingresos:</th>
             <td>S/ {{ number_format($summary['income'], 2) }}</td>
-            <td><strong>Gastos:</strong></td>
+            <th scope="row">Gastos:</th>
             <td>S/ {{ number_format($summary['expense'], 2) }}</td>
-            <td><strong>Balance:</strong></td>
+            <th scope="row">Balance:</th>
             <td class="{{ $summary['balance'] >= 0 ? 'positive' : 'negative' }}">S/ {{ number_format($summary['balance'], 2) }}</td>
         </tr>
     </table>
