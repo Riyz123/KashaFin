@@ -27,6 +27,13 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:3,1')
         ->name('register.verify.resend');
 
+    Route::get('register/verificar/contrasena', [RegistrationVerificationController::class, 'showPassword'])
+        ->name('register.password');
+
+    Route::post('register/verificar/contrasena', [RegistrationVerificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('register.password.store');
+
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

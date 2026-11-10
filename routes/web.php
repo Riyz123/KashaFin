@@ -166,6 +166,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'password-
     Route::get('usuarios/presencia', [AdminUserController::class, 'presence'])->name('users.presence');
     Route::get('usuarios/importar', [AdminUserController::class, 'importForm'])->name('users.import-form');
     Route::post('usuarios/importar', [AdminUserController::class, 'import'])->name('users.import');
+    Route::get('usuarios/importar/plantilla/{faculty?}', [AdminUserController::class, 'importTemplate'])->name('users.import-template');
     Route::patch('usuarios/{user}/estado', [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::patch('usuarios/{user}/aprobar', [AdminUserController::class, 'approve'])->name('users.approve');
     Route::patch('usuarios/solicitudes/aprobar-todas', [AdminUserController::class, 'approveAll'])->name('users.approve-all');

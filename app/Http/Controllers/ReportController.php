@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ReportService;
+use App\Support\Csv;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -48,14 +49,15 @@ class ReportController extends Controller
 
         return response()->streamDownload(function () use ($user, $from, $to) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto']);
+            Csv::start($handle);
+            Csv::row($handle, ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto']);
 
             $user->incomes()->between($from, $to)->orderBy('date')->get()->each(function ($income) use ($handle) {
-                fputcsv($handle, [$income->date->toDateString(), 'Ingreso', '-', $income->description, $income->amount]);
+                Csv::row($handle, [$income->date->toDateString(), 'Ingreso', '-', $income->description, $income->amount]);
             });
 
             $user->expenses()->with('category')->between($from, $to)->orderBy('date')->get()->each(function ($expense) use ($handle) {
-                fputcsv($handle, [
+                Csv::row($handle, [
                     $expense->date->toDateString(),
                     'Gasto',
                     $expense->category?->name ?? 'Sin categoría',

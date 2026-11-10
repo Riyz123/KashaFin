@@ -100,4 +100,118 @@ class StudentOnboardingTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'malo@gmail.com']);
         $this->assertDatabaseHas('users', ['email' => 'bien@upn.pe']);
     }
+
+    /**
+     * Excel's plain "CSV (delimitado por comas)" save format (as opposed to
+     * "CSV UTF-8") writes tildes/ñ as Windows-1252, not UTF-8 — reading that
+     * straight in used to silently corrupt the name. Csv::normalizeCell()
+     * detects and converts it.
+     */
+    public function test_csv_import_reads_accented_names_saved_as_windows_1252(): void
+    {
+        Mail::fake();
+
+        $faculty = Faculty::factory()->create();
+        $dean = User::factory()->create(['role' => 'decano', 'faculty_id' => $faculty->id]);
+
+        $csv = mb_convert_encoding("nombre,correo\nJosé Díaz Ramírez,jose.diaz@upn.pe\n", 'Windows-1252', 'UTF-8');
+        $file = UploadedFile::fake()->createWithContent('alumnos.csv', $csv);
+
+        $this->actingAs($dean)->post(route('admin.users.import'), ['file' => $file]);
+
+        $this->assertDatabaseHas('users', ['email' => 'jose.diaz@upn.pe', 'name' => 'José Díaz Ramírez']);
+    }
+
+    /**
+     * Excel on a Spanish-locale Windows defaults a CSV's own column
+     * separator to ";" (since "," is the decimal separator there) —
+     * Csv::detectDelimiter() picks that up instead of assuming ",".
+     */
+    public function test_csv_import_accepts_a_semicolon_delimited_file(): void
+    {
+        Mail::fake();
+
+        $faculty = Faculty::factory()->create();
+        $dean = User::factory()->create(['role' => 'decano', 'faculty_id' => $faculty->id]);
+
+        $csv = "nombre;correo\nAna Torres;ana.torres@upn.pe\n";
+        $file = UploadedFile::fake()->createWithContent('alumnos.csv', $csv);
+
+        $this->actingAs($dean)->post(route('admin.users.import'), ['file' => $file]);
+
+        $this->assertDatabaseHas('users', ['email' => 'ana.torres@upn.pe', 'name' => 'Ana Torres']);
+    }
+
+    /**
+     * A per-faculty template (importTemplate()) carries a "facultad" column
+     * already filled in — the admin master shouldn't have to also pick it
+     * from the dropdown for that row to land in the right faculty.
+     */
+    public function test_csv_import_uses_the_facultad_column_over_the_form_dropdown(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->admin()->create();
+        $ingenieria = Faculty::factory()->create(['name' => 'Ingeniería']);
+        $negocios = Faculty::factory()->create(['name' => 'Negocios']);
+
+        $csv = "nombre,correo,facultad\nAna Torres,ana.torres@upn.pe,Ingeniería\n";
+        $file = UploadedFile::fake()->createWithContent('alumnos.csv', $csv);
+
+        $this->actingAs($admin)->post(route('admin.users.import'), [
+            'file' => $file,
+            'faculty_id' => $negocios->id,
+        ]);
+
+        $this->assertDatabaseHas('users', ['email' => 'ana.torres@upn.pe', 'faculty_id' => $ingenieria->id]);
+    }
+
+    /**
+     * A repeated student code within the same uploaded file (not only one
+     * already in the database) must not create a second row or overwrite
+     * the first.
+     */
+    public function test_csv_import_skips_a_repeated_student_code_within_the_same_file(): void
+    {
+        Mail::fake();
+
+        $faculty = Faculty::factory()->create();
+        $dean = User::factory()->create(['role' => 'decano', 'faculty_id' => $faculty->id]);
+
+        $csv = "nombre,correo\nAna Torres,n00321428@upn.pe\nAna T. Repetida,N00321428@UPN.PE\n";
+        $file = UploadedFile::fake()->createWithContent('alumnos.csv', $csv);
+
+        $this->actingAs($dean)->post(route('admin.users.import'), ['file' => $file]);
+
+        $this->assertSame(1, User::where('email', 'n00321428@upn.pe')->count());
+        $this->assertDatabaseHas('users', ['email' => 'n00321428@upn.pe', 'name' => 'Ana Torres']);
+    }
+
+    public function test_export_writes_a_utf8_bom_and_semicolon_delimited_columns(): void
+    {
+        $faculty = Faculty::factory()->create(['name' => 'Ingeniería']);
+        $admin = User::factory()->admin()->create();
+        User::factory()->create(['name' => 'José Díaz', 'faculty_id' => $faculty->id]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.export'));
+
+        $content = $response->streamedContent();
+
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
+        $this->assertStringContainsString("Nombre;Correo;Facultad;Estado;Registrado\n", $content);
+        $this->assertStringContainsString('José Díaz', $content);
+    }
+
+    public function test_import_template_is_prefilled_with_the_given_faculty(): void
+    {
+        $faculty = Faculty::factory()->create(['name' => 'Ingeniería']);
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->get(route('admin.users.import-template', $faculty));
+
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('nombre;correo;facultad', $content);
+        $this->assertStringContainsString('Ingeniería', $content);
+    }
 }

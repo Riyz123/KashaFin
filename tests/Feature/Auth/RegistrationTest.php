@@ -20,7 +20,7 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_new_users_create_a_pending_request_instead_of_logging_in(): void
+    public function test_new_users_verify_their_email_then_set_a_password_and_are_logged_in(): void
     {
         Mail::fake();
         $faculty = Faculty::factory()->create();
@@ -40,14 +40,23 @@ class RegistrationTest extends TestCase
         $code = Cache::get('registration_code:test@upn.pe')['code'];
         $response = $this->post(route('register.verify.submit'), ['code' => $code]);
 
-        // No password field at all — the account isn't usable until a dean
-        // approves it and a real password gets generated and emailed.
+        // Still no account yet — the code only proves the inbox; next comes
+        // picking a password, with no dean-approval wait after that.
         $this->assertGuest();
-        $response->assertRedirect(route('login'));
+        $response->assertRedirect(route('register.password'));
+        $this->assertDatabaseMissing('users', ['email' => 'test@upn.pe']);
+
+        $response = $this->post(route('register.password.store'), [
+            'password' => 'contrasena-segura',
+            'password_confirmation' => 'contrasena-segura',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertAuthenticated();
 
         $user = User::where('email', 'test@upn.pe')->first();
         $this->assertNotNull($user);
-        $this->assertTrue($user->isPendingApproval());
+        $this->assertFalse($user->isPendingApproval());
     }
 
     public function test_registration_is_rejected_for_non_upn_emails(): void

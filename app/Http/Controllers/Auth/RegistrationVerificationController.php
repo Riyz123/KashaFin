@@ -4,20 +4,23 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\RegistrationCodeMail;
-use App\Models\Faculty;
 use App\Models\User;
-use App\Notifications\NewPendingStudentNotification;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class RegistrationVerificationController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
+
+    public const VERIFIED_TTL_MINUTES = 15;
 
     public function show(Request $request): View|RedirectResponse
     {
@@ -33,11 +36,11 @@ class RegistrationVerificationController extends Controller
     }
 
     /**
-     * Only once the code matches does the real pending-approval account get
-     * created — same shape as before (unusable random password,
-     * approved_at null, waiting on the dean) — this step just replaces
-     * "typing an email" with "proving you control that inbox" before that
-     * request ever reaches the dean's queue.
+     * Only once the code matches is the inbox considered proven — the
+     * account still isn't created here. Instead the verified name/faculty
+     * move to their own short-lived cache entry and the student is sent to
+     * set their own password (see showPassword()/store()); that's the
+     * actual account-creation step now, with no dean-approval wait after it.
      */
     public function verify(Request $request): RedirectResponse
     {
@@ -70,21 +73,78 @@ class RegistrationVerificationController extends Controller
             return back()->withErrors(['code' => 'Código incorrecto. Te quedan '.(self::MAX_ATTEMPTS - $pending['attempts']).' intento(s).']);
         }
 
-        $student = User::create([
+        Cache::put(self::verifiedKey($email), [
             'name' => $pending['name'],
-            'email' => $email,
-            'password' => Hash::make(Str::random(40)),
             'faculty_id' => $pending['faculty_id'],
-        ]);
-
-        $this->notifyApprovers($student);
+        ], now()->addMinutes(self::VERIFIED_TTL_MINUTES));
 
         Cache::forget($key);
+
+        return redirect()->route('register.password');
+    }
+
+    /**
+     * Shows the "create your password" form — only reachable once the code
+     * from verify() above actually matched.
+     */
+    public function showPassword(Request $request): View|RedirectResponse
+    {
+        $email = $request->session()->get('registration_email');
+
+        if (! $email || ! Cache::has(self::verifiedKey($email))) {
+            return redirect()->route('register')->withErrors([
+                'email' => 'Tu verificación expiró. Regístrate de nuevo.',
+            ]);
+        }
+
+        return view('auth.register-password', ['email' => $email]);
+    }
+
+    /**
+     * Final step: the student picks their own password and the account is
+     * created already active — no random temporary password, no dean
+     * approval wait. Proving control of the @upn.pe inbox in verify() above
+     * is what used to be the dean's job of confirming this is a real student.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $email = $request->session()->get('registration_email');
+        $verified = $email ? Cache::get(self::verifiedKey($email)) : null;
+
+        if (! $email || ! $verified) {
+            return redirect()->route('register')->withErrors([
+                'email' => 'Tu verificación expiró. Regístrate de nuevo.',
+            ]);
+        }
+
+        $data = $request->validate([
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        $student = User::create([
+            'name' => $verified['name'],
+            'email' => $email,
+            'password' => Hash::make($data['password']),
+            'role' => 'estudiante',
+            'is_active' => true,
+            'faculty_id' => $verified['faculty_id'],
+        ]);
+
+        $student->forceFill(['approved_at' => now()])->save();
+
+        Cache::forget(self::verifiedKey($email));
         $request->session()->forget('registration_email');
 
-        return redirect()->route('login')->with('status',
-            'Correo verificado. Tu solicitud fue enviada: tu decano la revisará y te enviaremos tu contraseña cuando sea aprobada.'
-        );
+        event(new Registered($student));
+
+        Auth::login($student);
+
+        return redirect()->route('dashboard');
+    }
+
+    public static function verifiedKey(string $email): string
+    {
+        return 'registration_verified:'.$email;
     }
 
     public function resend(Request $request): RedirectResponse
@@ -107,25 +167,6 @@ class RegistrationVerificationController extends Controller
         Mail::to($email)->send(new RegistrationCodeMail($pending['name'], $pending['code']));
 
         return back()->with('status', 'Te enviamos un nuevo código.');
-    }
-
-    /**
-     * The dean of that faculty (if one exists yet) plus every master admin
-     * — whoever actually has the power to approve this student should
-     * find out the moment the request lands, not whenever they next
-     * happen to check the Usuarios page.
-     */
-    private function notifyApprovers(User $student): void
-    {
-        $approvers = User::where('role', 'admin')->get();
-
-        if ($dean = Faculty::find($student->faculty_id)?->dean()) {
-            $approvers->push($dean);
-        }
-
-        foreach ($approvers as $approver) {
-            $approver->notify(new NewPendingStudentNotification($student));
-        }
     }
 
     private function maskEmail(string $email): string

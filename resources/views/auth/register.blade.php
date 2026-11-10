@@ -1,8 +1,8 @@
 <x-guest-layout>
     <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Crea tu cuenta</h2>
     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-        Te enviaremos un código a tu correo para confirmarlo. Después, tu solicitud quedará pendiente hasta que tu
-        decano la apruebe y te enviemos tu contraseña.
+        Te enviaremos un código a tu correo para confirmarlo. Después eliges tu contraseña y tu cuenta queda lista
+        al instante.
     </p>
 
     <form method="POST" action="{{ route('register') }}" class="mt-6">

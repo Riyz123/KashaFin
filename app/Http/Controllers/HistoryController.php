@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Expense;
 use App\Models\Income;
+use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -75,10 +76,11 @@ class HistoryController extends Controller
 
         return response()->streamDownload(function () use ($user) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto']);
+            Csv::start($handle);
+            Csv::row($handle, ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto']);
 
             $user->incomes()->orderBy('date')->get()->each(function (Income $income) use ($handle) {
-                fputcsv($handle, [
+                Csv::row($handle, [
                     $income->date->toDateString(),
                     'Ingreso',
                     $income->type === 'fijo' ? 'Ingreso fijo' : 'Ingreso variable',
@@ -88,7 +90,7 @@ class HistoryController extends Controller
             });
 
             $user->expenses()->with('category')->orderBy('date')->get()->each(function (Expense $expense) use ($handle) {
-                fputcsv($handle, [
+                Csv::row($handle, [
                     $expense->date->toDateString(),
                     'Gasto',
                     $expense->category?->name ?? 'Sin categoría',
