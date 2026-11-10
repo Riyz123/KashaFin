@@ -27,7 +27,7 @@
         <x-input-error :messages="$errors->get('category_id')" class="mt-2" />
 
         <div x-show="showNewCategory" x-cloak class="mt-3 flex gap-2">
-            <input type="text" id="new-category-name" placeholder="Nombre de la categoría" class="flex-1 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+            <input type="text" id="new-category-name" aria-label="Nombre de la nueva categoría" placeholder="Nombre de la categoría" class="flex-1 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
             <button
                 type="button"
                 class="rounded-md bg-brand-600 px-3 py-1 text-xs font-semibold text-white hover:bg-brand-700"

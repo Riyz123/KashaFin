@@ -9,7 +9,8 @@
         </p>
         <form method="POST" action="{{ route('admin.ai.prompt.update') }}">
             @csrf @method('PUT')
-            <textarea name="system_prompt" rows="5" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" placeholder="{{ \App\Models\AiSetting::DEFAULT_PROMPT }}">{{ old('system_prompt', $aiSetting->system_prompt) }}</textarea>
+            <x-input-label for="system_prompt" value="Prompt del asistente" class="sr-only" />
+            <textarea id="system_prompt" name="system_prompt" rows="5" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" placeholder="{{ \App\Models\AiSetting::DEFAULT_PROMPT }}">{{ old('system_prompt', $aiSetting->system_prompt) }}</textarea>
             <x-input-error :messages="$errors->get('system_prompt')" class="mt-1" />
             <x-primary-button class="mt-3">Guardar prompt</x-primary-button>
         </form>
@@ -182,39 +183,39 @@
                     <form x-show="editing" x-cloak method="POST" action="{{ route('admin.ai.update', $provider) }}" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 border-t border-gray-100 dark:border-gray-700 pt-4">
                         @csrf @method('PUT')
                         <div>
-                            <x-input-label value="Nombre" />
-                            <x-text-input name="name" type="text" class="mt-1 block w-full" :value="$provider->name" required />
+                            <x-input-label :for="'name-'.$provider->id" value="Nombre" />
+                            <x-text-input :id="'name-'.$provider->id" name="name" type="text" class="mt-1 block w-full" :value="$provider->name" required />
                         </div>
                         <div>
-                            <x-input-label value="Tipo" />
-                            <select name="driver" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" required>
+                            <x-input-label :for="'driver-'.$provider->id" value="Tipo" />
+                            <select id="driver-{{ $provider->id }}" name="driver" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" required>
                                 <option value="openai_compatible" @selected($provider->driver === 'openai_compatible')>Compatible con OpenAI</option>
                                 <option value="gemini" @selected($provider->driver === 'gemini')>Google Gemini</option>
                             </select>
                         </div>
                         <div>
-                            <x-input-label value="URL base" />
-                            <x-text-input name="base_url" type="text" class="mt-1 block w-full" :value="$provider->base_url" required />
+                            <x-input-label :for="'base_url-'.$provider->id" value="URL base" />
+                            <x-text-input :id="'base_url-'.$provider->id" name="base_url" type="text" class="mt-1 block w-full" :value="$provider->base_url" required />
                         </div>
                         <div>
-                            <x-input-label value="Modelo" />
-                            <x-text-input name="model" type="text" class="mt-1 block w-full" :value="$provider->model" required />
+                            <x-input-label :for="'model-'.$provider->id" value="Modelo" />
+                            <x-text-input :id="'model-'.$provider->id" name="model" type="text" class="mt-1 block w-full" :value="$provider->model" required />
                         </div>
                         <div class="sm:col-span-2">
-                            <x-input-label value="API key (dejar en blanco para no cambiar)" />
-                            <x-text-input name="api_key" type="password" class="mt-1 block w-full" placeholder="••••••••" />
+                            <x-input-label :for="'api_key-'.$provider->id" value="API key (dejar en blanco para no cambiar)" />
+                            <x-text-input :id="'api_key-'.$provider->id" name="api_key" type="password" class="mt-1 block w-full" placeholder="••••••••" />
                         </div>
                         <div>
-                            <x-input-label value="Prioridad" />
-                            <x-text-input name="priority" type="number" min="0" class="mt-1 block w-full" :value="$provider->priority" required />
+                            <x-input-label :for="'priority-'.$provider->id" value="Prioridad" />
+                            <x-text-input :id="'priority-'.$provider->id" name="priority" type="number" min="0" class="mt-1 block w-full" :value="$provider->priority" required />
                         </div>
                         <div>
-                            <x-input-label value="Límite de solicitudes" />
-                            <x-text-input name="quota_limit" type="number" min="1" class="mt-1 block w-full" :value="$provider->quota_limit" />
+                            <x-input-label :for="'quota_limit-'.$provider->id" value="Límite de solicitudes" />
+                            <x-text-input :id="'quota_limit-'.$provider->id" name="quota_limit" type="number" min="1" class="mt-1 block w-full" :value="$provider->quota_limit" />
                         </div>
                         <div>
-                            <x-input-label value="Días por periodo" />
-                            <x-text-input name="quota_period_days" type="number" min="1" class="mt-1 block w-full" :value="$provider->quota_period_days" required />
+                            <x-input-label :for="'quota_period_days-'.$provider->id" value="Días por periodo" />
+                            <x-text-input :id="'quota_period_days-'.$provider->id" name="quota_period_days" type="number" min="1" class="mt-1 block w-full" :value="$provider->quota_period_days" required />
                         </div>
                         <div class="sm:col-span-2 lg:col-span-4">
                             <x-primary-button>Guardar cambios</x-primary-button>

@@ -36,6 +36,7 @@
                             <input
                                 x-show="settingDaily" x-cloak
                                 type="number" step="0.01" min="0.01" name="daily_commitment"
+                                aria-label="Cuota diaria sugerida"
                                 value="{{ $invite->daily_commitment }}"
                                 placeholder="S/ por día"
                                 class="w-28 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
@@ -114,12 +115,12 @@
                             <form x-show="paying" x-cloak method="POST" action="{{ route('shared-expenses.contributions.store', $commitment) }}" class="mt-2 flex flex-wrap items-end gap-2">
                                 @csrf
                                 <div>
-                                    <label class="text-xs text-gray-500 dark:text-gray-400">Monto</label>
-                                    <input type="number" step="0.01" min="0.01" name="amount" required class="mt-0.5 w-28 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                                    <label for="contribution-amount-{{ $commitment->id }}" class="text-xs text-gray-500 dark:text-gray-400">Monto</label>
+                                    <input id="contribution-amount-{{ $commitment->id }}" type="number" step="0.01" min="0.01" name="amount" required class="mt-0.5 w-28 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-500 dark:text-gray-400">Fecha</label>
-                                    <input type="date" name="date" value="{{ now()->toDateString() }}" required class="mt-0.5 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                                    <label for="contribution-date-{{ $commitment->id }}" class="text-xs text-gray-500 dark:text-gray-400">Fecha</label>
+                                    <input id="contribution-date-{{ $commitment->id }}" type="date" name="date" value="{{ now()->toDateString() }}" required class="mt-0.5 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
                                 </div>
                                 <x-primary-button type="submit">Guardar</x-primary-button>
                             </form>

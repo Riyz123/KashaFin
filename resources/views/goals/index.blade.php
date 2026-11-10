@@ -63,9 +63,9 @@
 
                     <form x-show="showForm" x-cloak method="POST" action="{{ route('goals.contributions.store', $goal) }}" class="mt-3 space-y-2">
                         @csrf
-                        <input type="number" step="0.01" min="0.01" name="amount" placeholder="Monto" value="{{ old('amount') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500" required>
-                        <input type="date" name="date" value="{{ old('date', now()->toDateString()) }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500" required>
-                        <input type="text" name="note" placeholder="Nota (opcional)" value="{{ old('note') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+                        <input type="number" step="0.01" min="0.01" name="amount" aria-label="Monto aportado" placeholder="Monto" value="{{ old('amount') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500" required>
+                        <input type="date" name="date" aria-label="Fecha del aporte" value="{{ old('date', now()->toDateString()) }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500" required>
+                        <input type="text" name="note" aria-label="Nota del aporte" placeholder="Nota (opcional)" value="{{ old('note') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
                         @if ($warning && $warning['goal_id'] === $goal->id)
                             <input type="hidden" name="confirmed" value="1">
                             <button type="submit" class="w-full rounded-md bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-600">Confirmar de todas formas</button>

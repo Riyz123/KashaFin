@@ -211,8 +211,8 @@
                                     <summary class="cursor-pointer text-brand-600 hover:underline list-none">Amortizar deuda</summary>
                                     <form method="POST" action="{{ route('loans.amortizations.store', $loan) }}" class="absolute right-0 z-10 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
                                         @csrf
-                                        <label class="block text-xs text-gray-600 dark:text-gray-300">¿Cuánto pagaste?</label>
-                                        <input type="number" name="amount" step="0.01" min="0.01" max="{{ $loan->remaining_amount }}" required class="mt-1 block w-full rounded-md border-gray-300 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                                        <label for="amortize-amount-{{ $loan->id }}" class="block text-xs text-gray-600 dark:text-gray-300">¿Cuánto pagaste?</label>
+                                        <input id="amortize-amount-{{ $loan->id }}" type="number" name="amount" step="0.01" min="0.01" max="{{ $loan->remaining_amount }}" required class="mt-1 block w-full rounded-md border-gray-300 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500">
                                         <button type="submit" class="mt-2 w-full rounded-md bg-brand-600 px-3 py-1 text-xs font-semibold text-white hover:bg-brand-700">Enviar</button>
                                     </form>
                                 </details>

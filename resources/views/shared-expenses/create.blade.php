@@ -125,12 +125,12 @@
 
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-xs text-gray-500 dark:text-gray-400">Le toca pagar</label>
-                                <input type="number" step="0.01" min="0.01" :name="`participants[${index}][amount_owed]`" x-model="participant.amount_owed" placeholder="Monto total" class="mt-0.5 w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300" required>
+                                <label :for="`amount_owed-${index}`" class="text-xs text-gray-500 dark:text-gray-400">Le toca pagar</label>
+                                <input type="number" step="0.01" min="0.01" :id="`amount_owed-${index}`" :name="`participants[${index}][amount_owed]`" x-model="participant.amount_owed" placeholder="Monto total" class="mt-0.5 w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300" required>
                             </div>
                             <div>
-                                <label class="text-xs text-gray-500 dark:text-gray-400">Cuota diaria sugerida (opcional)</label>
-                                <input type="number" step="0.01" min="0.01" :name="`participants[${index}][daily_commitment]`" x-model="participant.daily_commitment" placeholder="Ej. 5 soles/día" class="mt-0.5 w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                                <label :for="`daily_commitment-${index}`" class="text-xs text-gray-500 dark:text-gray-400">Cuota diaria sugerida (opcional)</label>
+                                <input type="number" step="0.01" min="0.01" :id="`daily_commitment-${index}`" :name="`participants[${index}][daily_commitment]`" x-model="participant.daily_commitment" placeholder="Ej. 5 soles/día" class="mt-0.5 w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
                             </div>
                         </div>
 

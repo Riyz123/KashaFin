@@ -22,7 +22,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-3 py-3">
                         <form method="POST" action="{{ route('admin.categories.update', $category) }}" class="flex items-center gap-2">
                             @csrf @method('PATCH')
-                            <input type="text" name="name" value="{{ $category->name }}" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input type="text" name="name" aria-label="Nombre de la categoría" value="{{ $category->name }}" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
                             <button type="submit" class="text-sm text-brand-600 hover:underline">Guardar</button>
                         </form>
 

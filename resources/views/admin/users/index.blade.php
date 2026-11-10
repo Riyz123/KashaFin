@@ -25,8 +25,8 @@
             </div>
             @if ($faculties)
                 <div>
-                    <x-input-label value="Facultad" />
-                    <select name="faculty_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" required>
+                    <x-input-label for="faculty_id_filter" value="Facultad" />
+                    <select id="faculty_id_filter" name="faculty_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-500 focus:ring-brand-500" required>
                         <option value="">Selecciona una facultad</option>
                         @foreach ($faculties as $faculty)
                             <option value="{{ $faculty->id }}">{{ $faculty->name }}</option>
@@ -160,7 +160,7 @@
                                     <td class="py-3 pr-4">
                                         <form method="POST" action="{{ route('admin.users.update-faculty', $user) }}">
                                             @csrf @method('PATCH')
-                                            <select name="faculty_id" onchange="this.form.submit()" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-xs focus:border-brand-500 focus:ring-brand-500">
+                                            <select name="faculty_id" onchange="this.form.submit()" aria-label="Facultad de {{ $user->name }}" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 text-xs focus:border-brand-500 focus:ring-brand-500">
                                                 <option value="" @selected(! $user->faculty_id)>Sin facultad</option>
                                                 @foreach ($faculties as $faculty)
                                                     <option value="{{ $faculty->id }}" @selected($user->faculty_id === $faculty->id)>{{ $faculty->name }}</option>
