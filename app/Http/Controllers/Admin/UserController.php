@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\TemporaryPasswordMail;
 use App\Models\Faculty;
 use App\Models\User;
+use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -193,10 +194,11 @@ class UserController extends Controller
 
         return response()->streamDownload(function () use ($students) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Nombre', 'Correo', 'Facultad', 'Estado', 'Registrado']);
+            Csv::start($handle);
+            Csv::row($handle, ['Nombre', 'Correo', 'Facultad', 'Estado', 'Registrado']);
 
             foreach ($students as $student) {
-                fputcsv($handle, [
+                Csv::row($handle, [
                     $student->name,
                     $student->email,
                     $student->faculty?->name ?? '—',
@@ -219,11 +221,43 @@ class UserController extends Controller
     }
 
     /**
+     * A fillable CSV template — "nombre,correo,facultad" with one example
+     * row. When a specific faculty is passed, that column comes pre-filled
+     * with its name on every row, so uploading it back doesn't need the
+     * dropdown touched at all: import() below reads "facultad" straight off
+     * each row when the column is present.
+     */
+    public function importTemplate(Request $request, ?Faculty $faculty = null): StreamedResponse
+    {
+        $actor = $request->user();
+
+        if (! $actor->isAdmin()) {
+            abort_if($faculty && $faculty->id !== $actor->faculty_id, 403);
+            $faculty = $faculty ?? $actor->faculty;
+        }
+
+        $filename = $faculty
+            ? 'plantilla-estudiantes-'.Str::slug($faculty->name).'.csv'
+            : 'plantilla-estudiantes.csv';
+
+        return response()->streamDownload(function () use ($faculty) {
+            $handle = fopen('php://output', 'w');
+            Csv::start($handle);
+            Csv::row($handle, ['nombre', 'correo', 'facultad']);
+            Csv::row($handle, ['Nombre Apellido', 'n00000000@upn.pe', $faculty?->name ?? 'Nombre de la facultad']);
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    /**
      * Bulk-creates already-approved student accounts from a CSV roster
-     * (columns: nombre, correo). Each row gets its own random password,
+     * (columns: nombre, correo, and optionally facultad — see
+     * importTemplate() above). Each row gets its own random password,
      * emailed individually — same mechanism as a single approval, just
      * looped. Invalid/duplicate rows are skipped and reported, never
-     * silently dropped.
+     * silently dropped, and a student already in the system (matched by
+     * their @upn.pe code, the part before the @) is never updated or
+     * overwritten by a later row, even a repeat within the same file.
      */
     public function import(Request $request)
     {
@@ -234,12 +268,21 @@ class UserController extends Controller
             'faculty_id' => [$actor->isAdmin() ? 'required' : 'nullable', 'exists:faculties,id'],
         ]);
 
-        $facultyId = $actor->isAdmin() ? (int) $data['faculty_id'] : $actor->faculty_id;
+        $defaultFacultyId = $actor->isAdmin() ? (int) $data['faculty_id'] : $actor->faculty_id;
+        $facultiesByName = Faculty::all()->keyBy(fn (Faculty $f) => Str::lower(trim($f->name)));
 
         $handle = fopen($data['file']->getRealPath(), 'r');
-        $header = array_map(fn ($value) => Str::lower(trim($value)), fgetcsv($handle) ?: []);
+        $firstLine = fgets($handle) ?: '';
+        rewind($handle);
+        $delimiter = Csv::detectDelimiter($firstLine);
+
+        $header = array_map(
+            fn ($value) => Str::lower(Csv::normalizeCell($value)),
+            fgetcsv($handle, 0, $delimiter) ?: []
+        );
         $nameIndex = array_search('nombre', $header, true);
         $emailIndex = array_search('correo', $header, true);
+        $facultyIndex = array_search('facultad', $header, true);
 
         if ($nameIndex === false || $emailIndex === false) {
             fclose($handle);
@@ -250,10 +293,11 @@ class UserController extends Controller
         $created = 0;
         $skipped = [];
         $passwords = [];
+        $seenCodes = [];
 
-        while (($row = fgetcsv($handle)) !== false) {
-            $name = trim($row[$nameIndex] ?? '');
-            $email = Str::lower(trim($row[$emailIndex] ?? ''));
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+            $name = Csv::normalizeCell($row[$nameIndex] ?? '');
+            $email = Str::lower(Csv::normalizeCell($row[$emailIndex] ?? ''));
 
             if ($name === '' || $email === '') {
                 continue;
@@ -265,10 +309,24 @@ class UserController extends Controller
                 continue;
             }
 
-            if (User::where('email', $email)->exists()) {
-                $skipped[] = "{$email} (ya existe)";
+            // The student's code (e.g. n00321428) is the email's local part
+            // — comparing by it instead of the raw string catches a repeat
+            // row within this same file too, not only one already in the DB.
+            $code = Str::before($email, '@');
+
+            if (isset($seenCodes[$code]) || User::where('email', $email)->exists()) {
+                $skipped[] = "{$email} (ya existe, se mantiene el registro anterior)";
 
                 continue;
+            }
+
+            $seenCodes[$code] = true;
+
+            $facultyId = $defaultFacultyId;
+
+            if ($facultyIndex !== false) {
+                $facultyCell = Str::lower(Csv::normalizeCell($row[$facultyIndex] ?? ''));
+                $facultyId = $facultiesByName->get($facultyCell)?->id ?? $defaultFacultyId;
             }
 
             $user = User::create([

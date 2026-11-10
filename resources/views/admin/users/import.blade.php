@@ -7,6 +7,25 @@
         </div>
     @endif
 
+    <x-card class="max-w-xl mb-4">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Plantillas para llenar</h3>
+
+        @if ($faculties)
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Descarga la plantilla de la facultad que vas a importar: ya trae la columna "facultad" llena, así no hace falta elegirla abajo.
+            </p>
+            <ul class="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                @foreach ($faculties as $faculty)
+                    <li>
+                        <a class="text-brand-600 hover:underline" href="{{ route('admin.users.import-template', $faculty) }}">{{ $faculty->name }}</a>
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <a class="text-sm text-brand-600 hover:underline" href="{{ route('admin.users.import-template') }}">Descargar plantilla</a>
+        @endif
+    </x-card>
+
     <x-card class="max-w-xl">
         <form method="POST" action="{{ route('admin.users.import') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
@@ -20,6 +39,9 @@
                             <option value="{{ $faculty->id }}">{{ $faculty->name }}</option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Si tu CSV ya trae la columna "facultad" (plantilla descargada arriba), se usa esa en lugar de esta selección.
+                    </p>
                 </div>
             @endif
 
