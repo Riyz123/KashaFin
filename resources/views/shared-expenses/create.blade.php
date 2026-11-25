@@ -7,17 +7,22 @@
             action="{{ route('shared-expenses.store') }}"
             x-data="{
                 participants: [{ user_id: null, label: '', amount_owed: '', daily_commitment: '' }],
-                search: '', results: [], activeIndex: null, searching: false, missingError: false,
+                search: '', results: [], resultsIndex: null, searchSeq: 0, activeIndex: null, searching: false, missingError: false,
                 addParticipant() { this.participants.push({ user_id: null, label: '', amount_owed: '', daily_commitment: '' }); },
                 removeParticipant(index) { this.participants.splice(index, 1); },
                 async runSearch(index) {
                     this.activeIndex = index;
                     this.participants[index].user_id = null; // typing again invalidates a previous pick
                     const q = this.participants[index].label;
-                    if (q.length < 2) { this.results = []; return; }
+                    if (q.length < 2) { this.results = []; this.resultsIndex = null; return; }
+                    const seq = ++this.searchSeq;
                     this.searching = true;
                     const res = await fetch(`{{ route('shared-expenses.search-users') }}?q=${encodeURIComponent(q)}`);
-                    this.results = await res.json();
+                    const data = await res.json();
+                    if (seq === this.searchSeq) {
+                        this.results = data;
+                        this.resultsIndex = index;
+                    }
                     this.searching = false;
                 },
                 pick(index, user) {
@@ -106,7 +111,7 @@
                             <input type="hidden" :name="`participants[${index}][user_id]`" :value="participant.user_id">
 
                             <div
-                                x-show="activeIndex === index && results.length > 0"
+                                x-show="activeIndex === index && resultsIndex === index && results.length > 0"
                                 x-cloak
                                 class="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
                             >
