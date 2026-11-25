@@ -38,7 +38,9 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({ name }),
-                    }).then(r => r.json()).then(cat => {
+                    }).then(async r => {
+                        if (!r.ok) { alert('No se pudo crear la categoría.'); return; }
+                        const cat = await r.json();
                         const select = document.getElementById('category_id');
                         const option = document.createElement('option');
                         option.value = cat.id;
@@ -46,7 +48,7 @@
                         option.selected = true;
                         select.appendChild(option);
                         showNewCategory = false;
-                    });
+                    }).catch(() => alert('No se pudo crear la categoría.'));
                 "
             >Agregar</button>
         </div>
